@@ -1,16 +1,31 @@
-# React + Vite
+# STACKS TOOL | GENESIS EDITION
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Project Status](https://img.shields.io/badge/STATUS-OPERATIONAL-success?style=for-the-badge)
+![Network](https://img.shields.io/badge/NETWORK-STACKS%20(BTC%20L2)-5546FF?style=for-the-badge)
+![Framework](https://img.shields.io/badge/CORE-REACT%20%2B%20VITE-blue?style=for-the-badge)
 
-Currently, two official plugins are available:
+**Stacks Tool** is a high-performance NFT Minting Interface designed for the Stacks blockchain (Bitcoin Layer 2). Built with an industrial aesthetic, prioritizing speed, security, and seamless wallet integration.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ⚡ SYSTEM ARCHITECTURE
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend Core:** React 18 + Vite (High-speed HMR)
+- **Styling Engine:** Tailwind CSS v3 (Dark/Industrial Theme)
+- **Blockchain Interaction:** Stacks.js (@stacks/connect, @stacks/network)
+- **Wallet Support:** Leather (formerly Hiro), Xverse, Asigna
+- **Compatibility:** Native Polyfills for Buffer/Stream (Vite-ready)
 
-## Expanding the ESLint configuration
+## 🚀 DEPLOYMENT PROTOCOL
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+- Node.js v18+
+- Stacks Wallet (Leather/Xverse Extension)
+
+### Installation
+Clone the repository and install dependencies:
+
+```bash
+git clone [https://github.com/USERNAME/stacks-tool.git](https://github.com/USERNAME/stacks-tool.git)
+cd stacks-tool
+npm install
