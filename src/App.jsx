@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, UserSession, showConnect } from '@stacks/connect';
-import { supabase } from './supabaseClient'; // Import Supabase
+import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
@@ -12,22 +12,22 @@ const userSession = new UserSession({ appConfig });
 function App() {
   const [userData, setUserData] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
-  const [loading, setLoading] = useState(false); // Loading state untuk DB
+  const [loading, setLoading] = useState(false);
 
-  // --- STATE DATABASE (Disinkronkan dengan Supabase) ---
+  // --- STATE DATABASE ---
   const [userXP, setUserXP] = useState(0);
+  const [userLevel, setUserLevel] = useState(1);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  const [completedTaskIds, setCompletedTaskIds] = useState([]); // Array ID task yg selesai
+  const [completedTaskIds, setCompletedTaskIds] = useState([]);
   const [hasMinted, setHasMinted] = useState(false);
 
-  // Daftar Task Statis
+  // Misi dengan Narasi Profesional
   const allTasks = [
-    { id: 1, name: "Follow Twitter", desc: "Follow @stacks_tool for updates.", reward: 50, icon: "🐦" },
-    { id: 2, name: "Join Discord", desc: "Join our community server.", reward: 50, icon: "💬" },
-    { id: 3, name: "Retweet Pinned", desc: "Spread the word about this airdrop.", reward: 100, icon: "🔁" },
+    { id: 1, name: "Ecosystem Access", desc: "Connect with the official protocol channels.", reward: 50, icon: "🌐" },
+    { id: 2, name: "Identity Verification", desc: "Verify your status in our secure server.", reward: 50, icon: "🛡️" },
+    { id: 3, name: "Network Signal", desc: "Amplify the genesis announcement.", reward: 100, icon: "📡" },
   ];
 
-  // Gabungkan status completed dari DB dengan list task
   const tasksWithStatus = allTasks.map(task => ({
     ...task,
     completed: completedTaskIds.includes(task.id)
@@ -37,50 +37,51 @@ function App() {
     if (userSession.isUserSignedIn()) {
       const data = userSession.loadUserData();
       setUserData(data);
-      // Ambil alamat Mainnet
-      const address = data.profile.stxAddress.mainnet; 
-      fetchUserProfile(address);
+      fetchUserProfile(data.profile.stxAddress.mainnet);
     } else if (userSession.isSignInPending()) {
       userSession.handlePendingSignIn().then((data) => {
         setUserData(data);
-        const address = data.profile.stxAddress.mainnet;
-        fetchUserProfile(address);
+        fetchUserProfile(data.profile.stxAddress.mainnet);
       });
     }
   }, []);
 
-  // --- SUPABASE LOGIC ---
-
-  // 1. Fetch atau Create User saat Login
+  // --- SUPABASE LOGIC (Sesuai Tabel Users) ---
   const fetchUserProfile = async (walletAddress) => {
     setLoading(true);
     
-    // Cek apakah user ada di DB
+    // 1. Cek User di Database
     let { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', walletAddress)
       .single();
 
+    // 2. Jika User Baru -> Buat Record
     if (error && error.code === 'PGRST116') {
-      // Error code PGRST116 artinya data tidak ditemukan (User Baru) -> Kita Create
-      console.log("User baru, mendaftarkan...");
+      console.log("Initializing new genesis user...");
       const { data: newUser, error: createError } = await supabase
         .from('users')
-        .insert([{ wallet_address: walletAddress, xp: 0, completed_tasks: [] }])
+        .insert([{ 
+            wallet_address: walletAddress, 
+            xp: 0, 
+            level: 1,
+            completed_tasks: [] 
+        }])
         .select()
         .single();
       
-      if (createError) console.error("Gagal buat user:", createError);
+      if (createError) console.error("Registration failed:", createError);
       else user = newUser;
     }
 
+    // 3. Set State Lokal
     if (user) {
-      // Set State Lokal dari Database
-      setUserXP(user.xp);
+      setUserXP(user.xp || 0);
+      setUserLevel(user.level || 1);
       setCompletedTaskIds(user.completed_tasks || []);
       
-      // Cek Check-in (Apakah hari ini sudah checkin?)
+      // Cek Check-in Harian
       if (user.last_checkin) {
         const lastDate = new Date(user.last_checkin).toDateString();
         const today = new Date().toDateString();
@@ -92,24 +93,21 @@ function App() {
     setLoading(false);
   };
 
-  // 2. Fungsi Update XP & Data ke DB
   const updateDatabase = async (updates) => {
     if (!userData) return;
     const address = userData.profile.stxAddress.mainnet;
-
-    const { error } = await supabase
-      .from('users')
-      .update(updates)
-      .eq('wallet_address', address);
-
-    if (error) console.error("Gagal update DB:", error);
+    await supabase.from('users').update(updates).eq('wallet_address', address);
   };
 
-  // --- ACTIONS ---
+  const calculateLevel = (currentXP) => Math.floor(currentXP / 500) + 1;
 
+  // --- ACTIONS ---
   const connectWallet = () => {
     showConnect({
-      appDetails: { name: 'Stacks Airdrop', icon: window.location.origin + '/vite.svg' },
+      appDetails: { 
+        name: 'Genesis Platform', 
+        icon: window.location.origin + '/vite.svg' 
+      },
       redirectTo: '/',
       onFinish: () => {
         const data = userSession.loadUserData();
@@ -124,20 +122,25 @@ function App() {
     userSession.signUserOut("/");
     setUserData(null);
     setUserXP(0);
+    setUserLevel(1);
     setCompletedTaskIds([]);
   };
 
   const handleCheckIn = async () => {
     if (hasCheckedIn || !userData) return;
     
-    // Optimistic Update (Update UI dulu biar cepat)
     const newXP = userXP + 20;
+    const newLevel = calculateLevel(newXP);
+
+    // Optimistic Update
     setUserXP(newXP);
+    setUserLevel(newLevel);
     setHasCheckedIn(true);
 
     // Kirim ke Backend
     await updateDatabase({
       xp: newXP,
+      level: newLevel,
       last_checkin: new Date().toISOString()
     });
   };
@@ -147,51 +150,49 @@ function App() {
     const task = allTasks.find(t => t.id === taskId);
     if (!task || completedTaskIds.includes(taskId)) return;
 
-    // Optimistic Update
     const newXP = userXP + task.reward;
+    const newLevel = calculateLevel(newXP);
     const newCompleted = [...completedTaskIds, taskId];
     
     setUserXP(newXP);
+    setUserLevel(newLevel);
     setCompletedTaskIds(newCompleted);
 
-    // Kirim ke Backend (Simpan XP baru dan Array Task yang selesai)
     await updateDatabase({
       xp: newXP,
+      level: newLevel,
       completed_tasks: newCompleted
     });
   };
 
   const handleMint = () => {
-    if (!userData) return alert("Connect wallet first!");
-    // Logika Minting Kontrak nanti disini
+    if (!userData) return alert("Wallet connection required.");
     setHasMinted(true);
-    alert("Smart Contract interaction coming soon!");
+    alert("Smart contract interaction initiated.");
   };
 
   // --- RENDER ---
   const renderContent = () => {
-    if (loading) return <div className="flex h-full items-center justify-center text-stx-accent">Loading Data...</div>;
+    if (loading) return <div className="flex h-full items-center justify-center text-stx-accent font-mono animate-pulse">Synchronizing Node...</div>;
 
     switch (activeTab) {
       case 'home':
         return <Home userData={userData} userXP={userXP} hasMinted={hasMinted} handleMint={handleMint} connectWallet={connectWallet} />;
       case 'tasks':
-        // Pass tasksWithStatus agar UI tahu mana yang completed
         return <Tasks tasks={tasksWithStatus} handleTask={handleTask} />;
       case 'profile':
-        return <Profile userData={userData} userXP={userXP} hasCheckedIn={hasCheckedIn} handleCheckIn={handleCheckIn} />;
+        return <Profile userData={userData} userXP={userXP} userLevel={userLevel} hasCheckedIn={hasCheckedIn} handleCheckIn={handleCheckIn} disconnectWallet={disconnectWallet} />;
       default:
         return <Home />;
     }
   };
 
   const WalletButton = !userData ? (
-    <button onClick={connectWallet} className="bg-stx-accent hover:bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
-      CONNECT WALLET
+    <button onClick={connectWallet} className="bg-stx-accent hover:bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-lg shadow-blue-500/20">
+      CONNECT STACKS
     </button>
   ) : (
-    <button onClick={disconnectWallet} className="border border-stx-accent/50 text-stx-accent hover:bg-stx-accent hover:text-white text-xs font-mono px-4 py-2 rounded-lg transition">
-      {/* Tampilkan address Mainnet */}
+    <button onClick={disconnectWallet} className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-red-500/10 hover:border-red-500 hover:text-red-500 text-xs font-mono px-4 py-2 rounded-lg transition">
       {userData.profile.stxAddress.mainnet.slice(0,4)}...{userData.profile.stxAddress.mainnet.slice(-4)}
     </button>
   );
