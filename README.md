@@ -1,31 +1,90 @@
-# STACKS TOOL | GENESIS EDITION
+# Genesis One | Stacks Ecosystem Interface
 
-![Project Status](https://img.shields.io/badge/STATUS-OPERATIONAL-success?style=for-the-badge)
-![Network](https://img.shields.io/badge/NETWORK-STACKS%20(BTC%20L2)-5546FF?style=for-the-badge)
-![Framework](https://img.shields.io/badge/CORE-REACT%20%2B%20VITE-blue?style=for-the-badge)
+**Genesis One** is a decentralized application (dApp) built on the Stacks blockchain designed to gamify user onboarding and identity verification. The platform integrates secure wallet authentication, an XP-based progression system, and on-chain interaction tasks, powered by a reactive frontend and a Supabase backend.
 
-**Stacks Tool** is a high-performance NFT Minting Interface designed for the Stacks blockchain (Bitcoin Layer 2). Built with an industrial aesthetic, prioritizing speed, security, and seamless wallet integration.
+![Project Status](https://img.shields.io/badge/status-active-success.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+## 🌟 Key Features
+
+### 🔐 Secure Authentication & Identity
+- **Stacks Wallet Integration:** Seamless connection using `@stacks/connect` (supporting Leather, Xverse, and other SIP-18 wallets).
+- **Identity Persistence:** User profiles are automatically synced between the blockchain wallet and the Supabase database.
+
+### 🎮 Gamified Progression System
+- **XP & Leveling:** Users earn Experience Points (XP) to increase their "Security Level" within the platform.
+- **Daily Check-ins:** Recurring rewards for active daily participation.
+- **Real-time Updates:** Immediate UI feedback for level-ups and reward claims.
+
+### 📋 Mission Control
+- **Task Tracking:** Interactive mission list (e.g., Ecosystem Access, Network Signal).
+- **State Management:** Tracks completed tasks prevents duplicate rewards, and persists progress across sessions.
+
+### ⚡ Modern UI/UX
+- **Responsive Dashboard:** Built with **Tailwind CSS** for a futuristic, "Cyber/Dark Mode" aesthetic.
+- **Performance:** Powered by **Vite** for lightning-fast HMR and build times.
 
 ---
 
-## ⚡ SYSTEM ARCHITECTURE
+## 🛠️ Technology Stack
 
-- **Frontend Core:** React 18 + Vite (High-speed HMR)
-- **Styling Engine:** Tailwind CSS v3 (Dark/Industrial Theme)
-- **Blockchain Interaction:** Stacks.js (@stacks/connect, @stacks/network)
-- **Wallet Support:** Leather (formerly Hiro), Xverse, Asigna
-- **Compatibility:** Native Polyfills for Buffer/Stream (Vite-ready)
+- **Frontend:** React 18, Vite
+- **Styling:** Tailwind CSS
+- **Blockchain:** Stacks.js (Connect, Network)
+- **Backend/Database:** Supabase
+- **Polyfills:** Custom buffer/global polyfills for Web3 compatibility
 
-## 🚀 DEPLOYMENT PROTOCOL
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js v18+
-- Stacks Wallet (Leather/Xverse Extension)
+- Node.js (v18 or higher)
+- A Stacks Wallet extension (Leather or Xverse) installed in your browser.
 
 ### Installation
-Clone the repository and install dependencies:
 
-```bash
-git clone [https://github.com/USERNAME/stacks-tool.git](https://github.com/USERNAME/stacks-tool.git)
-cd stacks-tool
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd stacks-tool
+Install Dependencies
+
+Bash
+
 npm install
+Environment Setup
+Create a .env file in the root directory and add your Supabase credentials:
+
+Cuplikan kode
+
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+Run the Development Server
+
+Bash
+
+npm run dev
+📂 Project Structure
+Plaintext
+
+src/
+├── components/      # UI Components (Layout, Sidebar, etc.)
+├── pages/           # Main Views (Home, Tasks, Profile)
+├── assets/          # Static assets
+├── polyfills.js     # Buffer & Global polyfills for Stacks.js
+├── supabaseClient.js # Supabase configuration
+├── App.jsx          # Main Logic & State Management
+└── main.jsx         # Entry point
+🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+Fork the project
+
+Create your feature branch (git checkout -b feature/AmazingFeature)
+
+Commit your changes (git commit -m 'Add some AmazingFeature')
+
+Push to the branch (git push origin feature/AmazingFeature)
+
+Open a Pull Request

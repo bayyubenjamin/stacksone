@@ -1,8 +1,5 @@
-import { Buffer } from 'buffer';
-
-// Polyfill Buffer dan Global secara manual sebelum React jalan
-globalThis.Buffer = Buffer;
-window.Buffer = Buffer;
+// src/main.jsx (Update kode ini)
+import './polyfills'; // <--- WAJIB DI BARIS PERTAMA
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'

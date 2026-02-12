@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { AppConfig, UserSession, showConnect } from '@stacks/connect';
+// UPDATE: Menggunakan API baru dari @stacks/connect v8
+import { connect, disconnect, isConnected, getLocalStorage } from '@stacks/connect';
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
-
-const appConfig = new AppConfig(['store_write', 'publish_data']);
-const userSession = new UserSession({ appConfig });
 
 function App() {
   const [userData, setUserData] = useState(null);
@@ -33,31 +31,38 @@ function App() {
     completed: completedTaskIds.includes(task.id)
   }));
 
+  // UPDATE: Cek status login saat aplikasi dimuat
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      const data = userSession.loadUserData();
-      setUserData(data);
-      fetchUserProfile(data.profile.stxAddress.mainnet);
-    } else if (userSession.isSignInPending()) {
-      userSession.handlePendingSignIn().then((data) => {
-        setUserData(data);
-        fetchUserProfile(data.profile.stxAddress.mainnet);
-      });
+    if (isConnected()) {
+      const storageData = getLocalStorage();
+      // Mengambil alamat STX dari local storage
+      const stxAddress = storageData?.addresses?.stx?.[0]?.address;
+      
+      if (stxAddress) {
+        // Format data agar sesuai dengan struktur lama yang dipakai di komponen lain
+        const legacyUserData = {
+          profile: {
+            stxAddress: {
+              mainnet: stxAddress
+            }
+          }
+        };
+        setUserData(legacyUserData);
+        fetchUserProfile(stxAddress);
+      }
     }
   }, []);
 
-  // --- SUPABASE LOGIC (Sesuai Tabel Users) ---
+  // --- SUPABASE LOGIC ---
   const fetchUserProfile = async (walletAddress) => {
     setLoading(true);
     
-    // 1. Cek User di Database
     let { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', walletAddress)
       .single();
 
-    // 2. Jika User Baru -> Buat Record
     if (error && error.code === 'PGRST116') {
       console.log("Initializing new genesis user...");
       const { data: newUser, error: createError } = await supabase
@@ -75,13 +80,11 @@ function App() {
       else user = newUser;
     }
 
-    // 3. Set State Lokal
     if (user) {
       setUserXP(user.xp || 0);
       setUserLevel(user.level || 1);
       setCompletedTaskIds(user.completed_tasks || []);
       
-      // Cek Check-in Harian
       if (user.last_checkin) {
         const lastDate = new Date(user.last_checkin).toDateString();
         const today = new Date().toDateString();
@@ -101,25 +104,35 @@ function App() {
 
   const calculateLevel = (currentXP) => Math.floor(currentXP / 500) + 1;
 
-  // --- ACTIONS ---
-  const connectWallet = () => {
-    showConnect({
-      appDetails: { 
-        name: 'Genesis Platform', 
-        icon: window.location.origin + '/vite.svg' 
-      },
-      redirectTo: '/',
-      onFinish: () => {
-        const data = userSession.loadUserData();
-        setUserData(data);
-        fetchUserProfile(data.profile.stxAddress.mainnet);
-      },
-      userSession,
-    });
+  // --- ACTIONS (UPDATE: Menggunakan connect baru) ---
+  const connectWallet = async () => {
+    try {
+      const response = await connect({
+        appDetails: { 
+          name: 'Genesis Platform', 
+          icon: window.location.origin + '/vite.svg' 
+        }
+      });
+
+      // Response berisi daftar alamat
+      // Kita ambil alamat STX pertama
+      const addresses = response.addresses;
+      const stxInfo = addresses.find(a => a.symbol === 'STX') || addresses[0];
+      
+      if (stxInfo && stxInfo.address) {
+        const legacyUserData = {
+          profile: { stxAddress: { mainnet: stxInfo.address } }
+        };
+        setUserData(legacyUserData);
+        fetchUserProfile(stxInfo.address);
+      }
+    } catch (error) {
+      console.error("Connection failed or cancelled:", error);
+    }
   };
 
   const disconnectWallet = () => {
-    userSession.signUserOut("/");
+    disconnect(); // UPDATE: Fungsi disconnect baru
     setUserData(null);
     setUserXP(0);
     setUserLevel(1);
@@ -132,12 +145,10 @@ function App() {
     const newXP = userXP + 20;
     const newLevel = calculateLevel(newXP);
 
-    // Optimistic Update
     setUserXP(newXP);
     setUserLevel(newLevel);
     setHasCheckedIn(true);
 
-    // Kirim ke Backend
     await updateDatabase({
       xp: newXP,
       level: newLevel,
