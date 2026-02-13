@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-// UPDATE: Menambahkan openContractCall dan menghapus StacksMainnet yang bermasalah
 import { connect, disconnect, isConnected, getLocalStorage, openContractCall } from '@stacks/connect';
-// HAPUS BARIS INI KARENA BIKIN ERROR BUILD: import { StacksMainnet } from '@stacks/network';
-import { uint, stringAscii } from '@stacks/transactions'; 
+// FIX 1: Ganti import 'uint' -> 'uintCV', 'stringAscii' -> 'stringAsciiCV'
+import { uintCV, stringAsciiCV } from '@stacks/transactions'; 
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -114,7 +113,7 @@ function App() {
     setUserData(null);
   };
 
-  // --- WEB3 INTERACTIONS (FIXED: Menggunakan openContractCall tanpa StacksMainnet import) ---
+  // --- WEB3 INTERACTIONS ---
 
   // 1. Daily Check-in
   const handleCheckIn = async () => {
@@ -125,10 +124,8 @@ function App() {
       contractName: CONTRACT_CORE,
       functionName: 'daily-check-in',
       functionArgs: [], 
-      // network: dihapus (default ke Mainnet)
       onFinish: (data) => {
         console.log("Check-in Tx:", data.txId);
-        
         const newXP = userXP + 20;
         const newLevel = calculateLevel(newXP);
         setUserXP(newXP);
@@ -151,12 +148,12 @@ function App() {
       contractName: CONTRACT_CORE,
       functionName: 'complete-mission',
       functionArgs: [
-        uint(task.id),
-        uint(task.reward)
+        // FIX 2: Gunakan uintCV() bukan uint()
+        uintCV(task.id),
+        uintCV(task.reward)
       ],
       onFinish: (data) => {
         console.log("Mission Tx:", data.txId);
-        
         const newXP = userXP + task.reward;
         const newLevel = calculateLevel(newXP);
         const newCompleted = [...completedTaskIds, taskId];
@@ -178,11 +175,11 @@ function App() {
       contractName: CONTRACT_CORE,
       functionName: 'claim-badge',
       functionArgs: [
-        stringAscii(badgeId)
+        // FIX 3: Gunakan stringAsciiCV() bukan stringAscii()
+        stringAsciiCV(badgeId)
       ],
       onFinish: (data) => {
         console.log("Mint Tx:", data.txId);
-        
         const newBadges = { ...badgesStatus, [badgeId]: true };
         setBadgesStatus(newBadges);
         updateDatabase({ badges: newBadges });
