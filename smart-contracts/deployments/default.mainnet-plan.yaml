@@ -1,0 +1,18 @@
+---
+id: 0
+name: Mainnet deployment
+network: mainnet
+stacks-node: "https://api.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: genesis-core
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 36730
+            path: contracts/genesis-core.clar
+            anchor-block-only: true
+            clarity-version: 2
+      epoch: "2.5"

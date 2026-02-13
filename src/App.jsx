@@ -1,25 +1,34 @@
+// File: src/App.jsx
 import React, { useState, useEffect } from 'react';
-// UPDATE: Menggunakan API baru dari @stacks/connect v8
 import { connect, disconnect, isConnected, getLocalStorage } from '@stacks/connect';
+import { StacksMainnet } from '@stacks/network';
+import { uint, stringAscii } from '@stacks/transactions'; // Penting buat Web3
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 
+// --- KONFIGURASI KONTRAK ---
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3';
+const CONTRACT_CORE = 'genesis-core';
+
 function App() {
   const [userData, setUserData] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [loading, setLoading] = useState(false);
 
-  // --- STATE DATABASE ---
+  // State Database (Tampilan Frontend)
   const [userXP, setUserXP] = useState(0);
   const [userLevel, setUserLevel] = useState(1);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [completedTaskIds, setCompletedTaskIds] = useState([]);
-  const [hasMinted, setHasMinted] = useState(false);
+  const [badgesStatus, setBadgesStatus] = useState({
+    genesis: false,
+    node: false,
+    guardian: false
+  });
 
-  // Misi dengan Narasi Profesional
   const allTasks = [
     { id: 1, name: "Ecosystem Access", desc: "Connect with the official protocol channels.", reward: 50, icon: "🌐" },
     { id: 2, name: "Identity Verification", desc: "Verify your status in our secure server.", reward: 50, icon: "🛡️" },
@@ -31,32 +40,21 @@ function App() {
     completed: completedTaskIds.includes(task.id)
   }));
 
-  // UPDATE: Cek status login saat aplikasi dimuat
   useEffect(() => {
     if (isConnected()) {
       const storageData = getLocalStorage();
-      // Mengambil alamat STX dari local storage
       const stxAddress = storageData?.addresses?.stx?.[0]?.address;
-      
       if (stxAddress) {
-        // Format data agar sesuai dengan struktur lama yang dipakai di komponen lain
-        const legacyUserData = {
-          profile: {
-            stxAddress: {
-              mainnet: stxAddress
-            }
-          }
-        };
+        const legacyUserData = { profile: { stxAddress: { mainnet: stxAddress } } };
         setUserData(legacyUserData);
         fetchUserProfile(stxAddress);
       }
     }
   }, []);
 
-  // --- SUPABASE LOGIC ---
+  // --- SUPABASE SYNC (Untuk UI Cepat) ---
   const fetchUserProfile = async (walletAddress) => {
     setLoading(true);
-    
     let { data: user, error } = await supabase
       .from('users')
       .select('*')
@@ -64,33 +62,25 @@ function App() {
       .single();
 
     if (error && error.code === 'PGRST116') {
-      console.log("Initializing new genesis user...");
-      const { data: newUser, error: createError } = await supabase
+      const { data: newUser } = await supabase
         .from('users')
         .insert([{ 
             wallet_address: walletAddress, 
-            xp: 0, 
-            level: 1,
-            completed_tasks: [] 
-        }])
-        .select()
-        .single();
-      
-      if (createError) console.error("Registration failed:", createError);
-      else user = newUser;
+            xp: 0, level: 1, completed_tasks: [],
+            badges: { genesis: false, node: false, guardian: false }
+        }]).select().single();
+      user = newUser;
     }
 
     if (user) {
       setUserXP(user.xp || 0);
       setUserLevel(user.level || 1);
       setCompletedTaskIds(user.completed_tasks || []);
+      setBadgesStatus(user.badges || { genesis: false, node: false, guardian: false });
       
       if (user.last_checkin) {
         const lastDate = new Date(user.last_checkin).toDateString();
-        const today = new Date().toDateString();
-        setHasCheckedIn(lastDate === today);
-      } else {
-        setHasCheckedIn(false);
+        setHasCheckedIn(lastDate === new Date().toDateString());
       }
     }
     setLoading(false);
@@ -104,97 +94,124 @@ function App() {
 
   const calculateLevel = (currentXP) => Math.floor(currentXP / 500) + 1;
 
-  // --- ACTIONS (UPDATE: Menggunakan connect baru) ---
+  // --- WALLET CONNECT ---
   const connectWallet = async () => {
     try {
       const response = await connect({
-        appDetails: { 
-          name: 'Genesis Platform', 
-          icon: window.location.origin + '/vite.svg' 
-        }
+        appDetails: { name: 'Genesis Platform', icon: window.location.origin + '/vite.svg' }
       });
-
-      // Response berisi daftar alamat
-      // Kita ambil alamat STX pertama
-      const addresses = response.addresses;
-      const stxInfo = addresses.find(a => a.symbol === 'STX') || addresses[0];
-      
-      if (stxInfo && stxInfo.address) {
-        const legacyUserData = {
-          profile: { stxAddress: { mainnet: stxInfo.address } }
-        };
+      const stxInfo = response.addresses.find(a => a.symbol === 'STX') || response.addresses[0];
+      if (stxInfo) {
+        const legacyUserData = { profile: { stxAddress: { mainnet: stxInfo.address } } };
         setUserData(legacyUserData);
         fetchUserProfile(stxInfo.address);
       }
-    } catch (error) {
-      console.error("Connection failed or cancelled:", error);
-    }
+    } catch (error) { console.error("Connect failed:", error); }
   };
 
   const disconnectWallet = () => {
-    disconnect(); // UPDATE: Fungsi disconnect baru
+    disconnect();
     setUserData(null);
-    setUserXP(0);
-    setUserLevel(1);
-    setCompletedTaskIds([]);
   };
 
+  // --- WEB3 INTERACTIONS (SMART CONTRACT CALLS) ---
+
+  // 1. Daily Check-in (Call genesis-core)
   const handleCheckIn = async () => {
     if (hasCheckedIn || !userData) return;
-    
-    const newXP = userXP + 20;
-    const newLevel = calculateLevel(newXP);
 
-    setUserXP(newXP);
-    setUserLevel(newLevel);
-    setHasCheckedIn(true);
-
-    await updateDatabase({
-      xp: newXP,
-      level: newLevel,
-      last_checkin: new Date().toISOString()
+    await window.StacksProvider?.request('stx_callContract', {
+      network: new StacksMainnet(),
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_CORE,
+      functionName: 'daily-check-in',
+      functionArgs: [], // Tidak butuh argumen
+      postConditions: [],
+      onFinish: (data) => {
+        console.log("Check-in Tx:", data.txId);
+        
+        // Optimistic Update (Biar UI langsung berubah tanpa nunggu mining 10 menit)
+        const newXP = userXP + 20;
+        const newLevel = calculateLevel(newXP);
+        setUserXP(newXP);
+        setUserLevel(newLevel);
+        setHasCheckedIn(true);
+        updateDatabase({ xp: newXP, level: newLevel, last_checkin: new Date().toISOString() });
+        alert("Check-in Transaction Broadcasted! +20 XP (Pending Confirmation)");
+      },
     });
   };
 
+  // 2. Complete Task (Call genesis-core)
   const handleTask = async (taskId) => {
     if (!userData) return;
     const task = allTasks.find(t => t.id === taskId);
     if (!task || completedTaskIds.includes(taskId)) return;
 
-    const newXP = userXP + task.reward;
-    const newLevel = calculateLevel(newXP);
-    const newCompleted = [...completedTaskIds, taskId];
-    
-    setUserXP(newXP);
-    setUserLevel(newLevel);
-    setCompletedTaskIds(newCompleted);
-
-    await updateDatabase({
-      xp: newXP,
-      level: newLevel,
-      completed_tasks: newCompleted
+    await window.StacksProvider?.request('stx_callContract', {
+      network: new StacksMainnet(),
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_CORE,
+      functionName: 'complete-mission',
+      functionArgs: [
+        uint(task.id),     // Kirim ID sebagai uint
+        uint(task.reward)  // Kirim reward sebagai uint
+      ],
+      postConditions: [],
+      onFinish: (data) => {
+        console.log("Mission Tx:", data.txId);
+        
+        // Optimistic Update
+        const newXP = userXP + task.reward;
+        const newLevel = calculateLevel(newXP);
+        const newCompleted = [...completedTaskIds, taskId];
+        setUserXP(newXP);
+        setUserLevel(newLevel);
+        setCompletedTaskIds(newCompleted);
+        updateDatabase({ xp: newXP, level: newLevel, completed_tasks: newCompleted });
+        alert(`Mission Submitted! +${task.reward} XP (Pending Confirmation)`);
+      }
     });
   };
 
-  const handleMint = () => {
-    if (!userData) return alert("Wallet connection required.");
-    setHasMinted(true);
-    alert("Smart contract interaction initiated.");
+  // 3. Mint Badge (Call genesis-core)
+  const handleMint = async (badgeId) => {
+    if (!userData) return alert("Connect Wallet Required");
+
+    // badgeId = "genesis", "node", atau "guardian"
+    await window.StacksProvider?.request('stx_callContract', {
+      network: new StacksMainnet(),
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_CORE,
+      functionName: 'claim-badge',
+      functionArgs: [
+        stringAscii(badgeId) // Kirim nama badge sebagai string-ascii
+      ],
+      postConditions: [],
+      onFinish: (data) => {
+        console.log("Mint Tx:", data.txId);
+        
+        // Optimistic Update
+        const newBadges = { ...badgesStatus, [badgeId]: true };
+        setBadgesStatus(newBadges);
+        updateDatabase({ badges: newBadges });
+        alert(`${badgeId.toUpperCase()} Badge Minting... Check your wallet!`);
+      }
+    });
   };
 
   // --- RENDER ---
   const renderContent = () => {
-    if (loading) return <div className="flex h-full items-center justify-center text-stx-accent font-mono animate-pulse">Synchronizing Node...</div>;
+    if (loading) return <div className="flex h-full items-center justify-center text-stx-accent font-mono animate-pulse">Synchronizing On-Chain Data...</div>;
 
     switch (activeTab) {
       case 'home':
-        return <Home userData={userData} userXP={userXP} hasMinted={hasMinted} handleMint={handleMint} connectWallet={connectWallet} />;
+        return <Home userData={userData} userXP={userXP} userLevel={userLevel} badgesStatus={badgesStatus} handleMint={handleMint} connectWallet={connectWallet} />;
       case 'tasks':
-        return <Tasks tasks={tasksWithStatus} handleTask={handleTask} />;
+        return <Tasks tasks={tasksWithStatus} handleTask={handleTask} badgesStatus={badgesStatus} />;
       case 'profile':
         return <Profile userData={userData} userXP={userXP} userLevel={userLevel} hasCheckedIn={hasCheckedIn} handleCheckIn={handleCheckIn} disconnectWallet={disconnectWallet} />;
-      default:
-        return <Home />;
+      default: return <Home />;
     }
   };
 

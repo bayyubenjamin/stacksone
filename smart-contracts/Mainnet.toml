@@ -1,0 +1,5 @@
+[network]
+name = "mainnet"
+
+[accounts.deployer]
+mnemonic = "$MNEMONIC_MAINNET"
