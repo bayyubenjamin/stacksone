@@ -6,13 +6,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // Polyfill untuk Buffer yang dibutuhkan Stacks.js
-      buffer: 'buffer',
+      buffer: 'buffer', // Mengarahkan import 'buffer' ke modul yang benar
     },
   },
   define: {
-    // Polyfill global untuk browser
-    'global': 'window',
-    'process.env': {},
+    'global': 'globalThis', // Gunakan globalThis untuk kompatibilitas terbaik
   },
 })

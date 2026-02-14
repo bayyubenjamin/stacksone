@@ -1,6 +1,8 @@
-// src/polyfills.js
 import { Buffer } from 'buffer';
 
-window.global = window;
-window.Buffer = Buffer;
-globalThis.Buffer = Buffer;
+// Polyfill standar untuk Stacks.js di browser
+if (typeof window !== 'undefined') {
+  window.Buffer = Buffer;
+  window.global = window;
+  window.process = { env: {} }; // Beberapa lib butuh process.env
+}
