@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, UserSession, showConnect } from '@stacks/connect';
-import { uintCV, stringAsciiCV } from '@stacks/transactions'; 
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 
-const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3';
-const CONTRACT_CORE = 'genesis-core-v4';
-
-// Konfigurasi App & Session
+// Konfigurasi App & Session (Pindahkan ke luar komponen agar statis)
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
 
@@ -33,9 +29,12 @@ function App() {
   // Cek sesi login saat komponen dimuat
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
+      console.log("User sudah login, memuat data...");
       const user = userSession.loadUserData();
       setUserData(user);
       fetchUserProfile(user.profile.stxAddress.mainnet);
+    } else {
+      console.log("User belum login.");
     }
   }, []);
 
@@ -80,24 +79,33 @@ function App() {
   };
 
   const connectWallet = () => {
-    showConnect({
-      appDetails: {
-        name: 'Genesis Platform',
-        icon: window.location.origin + '/vite.svg',
-      },
-      redirectTo: '/',
-      onFinish: () => {
-        const user = userSession.loadUserData();
-        setUserData(user);
-        fetchUserProfile(user.profile.stxAddress.mainnet);
-      },
-      userSession,
-    });
+    console.log("Tombol Connect ditekan..."); // Debugging
+    try {
+      showConnect({
+        appDetails: {
+          name: 'Genesis Platform',
+          icon: window.location.origin + '/vite.svg',
+        },
+        redirectTo: '/',
+        onFinish: () => {
+          console.log("Koneksi berhasil!");
+          const user = userSession.loadUserData();
+          setUserData(user);
+          fetchUserProfile(user.profile.stxAddress.mainnet);
+        },
+        userSession,
+      });
+    } catch (err) {
+      console.error("Error saat connect wallet:", err);
+      alert("Gagal memuka wallet popup. Cek console browser.");
+    }
   };
 
   const disconnectWallet = () => {
     userSession.signUserOut();
     setUserData(null);
+    setUserXP(0); // Reset state lokal
+    setHasCheckedIn(false);
   };
 
   const fetchUserProfile = async (walletAddress) => {
@@ -123,31 +131,81 @@ function App() {
     if (hasCheckedIn || !userData) return;
     handleTxStatus('pending', 'Initiating daily check-in...');
     
-    // showConnect call untuk transaksi
-    showConnect({
-      appDetails: { name: 'Genesis Platform', icon: window.location.origin + '/vite.svg' },
-      userSession,
-      finished: (data) => {
-        monitorTransaction(data.txId, () => {
-          const newXP = userXP + 20;
-          setUserXP(newXP); setHasCheckedIn(true);
-          supabase.from('users').update({ xp: newXP, last_checkin: new Date().toISOString() }).eq('wallet_address', userData.profile.stxAddress.mainnet);
-        });
-      }
-    });
+    try {
+      showConnect({
+        appDetails: { name: 'Genesis Platform', icon: window.location.origin + '/vite.svg' },
+        userSession,
+        finished: (data) => {
+          monitorTransaction(data.txId, () => {
+            const newXP = userXP + 20;
+            setUserXP(newXP); setHasCheckedIn(true);
+            supabase.from('users').update({ xp: newXP, last_checkin: new Date().toISOString() }).eq('wallet_address', userData.profile.stxAddress.mainnet);
+          });
+        }
+      });
+    } catch (e) {
+      console.error("Error check-in:", e);
+      handleTxStatus('failed', 'Gagal memulai transaksi');
+    }
   };
 
-  // --- Render ---
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} txStatus={txStatus} walletButton={
-      !userData ? 
-      <button onClick={connectWallet} className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg font-bold text-xs transition-colors">CONNECT WALLET</button> :
-      <button onClick={disconnectWallet} className="bg-slate-800 px-4 py-2 rounded-lg font-mono text-xs">{userData.profile.stxAddress.mainnet.slice(0,5)}...</button>
-    }>
-      {loading ? <div className="p-10 text-center animate-pulse">Syncing...</div> :
-       activeTab === 'home' ? <Home userData={userData} userXP={userXP} userLevel={userLevel} badgesStatus={badgesStatus} handleMint={(id) => console.log('Mint', id)} connectWallet={connectWallet} hasCheckedIn={hasCheckedIn} /> :
-       activeTab === 'tasks' ? <Tasks tasks={[]} handleTask={(id) => console.log('Task', id)} /> :
-       <Profile userData={userData} userXP={userXP} userLevel={userLevel} hasCheckedIn={hasCheckedIn} handleCheckIn={handleCheckIn} disconnectWallet={disconnectWallet} />}
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      walletButton={
+        !userData ? 
+        <button 
+          onClick={connectWallet} 
+          className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg font-bold text-xs transition-colors cursor-pointer relative z-50"
+        >
+          CONNECT WALLET
+        </button> :
+        <button 
+          onClick={disconnectWallet} 
+          className="bg-slate-800 px-4 py-2 rounded-lg font-mono text-xs hover:bg-slate-700 transition-colors"
+        >
+          {userData.profile.stxAddress.mainnet.slice(0,5)}...
+        </button>
+      }
+    >
+      {loading ? (
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <div className="w-8 h-8 border-4 border-stx-accent border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 animate-pulse">Syncing profile...</p>
+        </div>
+      ) : (
+        <>
+          {/* Debug Info Sementara */}
+          <div className="hidden">{JSON.stringify(txStatus)}</div>
+          
+          {activeTab === 'home' ? (
+            <Home 
+              userData={userData} 
+              userXP={userXP} 
+              userLevel={userLevel} 
+              badgesStatus={badgesStatus} 
+              handleMint={(id) => console.log('Mint', id)} 
+              connectWallet={connectWallet} 
+              hasCheckedIn={hasCheckedIn} 
+            />
+          ) : activeTab === 'tasks' ? (
+            <Tasks 
+              tasks={[]} 
+              handleTask={(id) => console.log('Task', id)} 
+            />
+          ) : (
+            <Profile 
+              userData={userData} 
+              userXP={userXP} 
+              userLevel={userLevel} 
+              hasCheckedIn={hasCheckedIn} 
+              handleCheckIn={handleCheckIn} 
+              disconnectWallet={disconnectWallet} 
+            />
+          )}
+        </>
+      )}
     </Layout>
   );
 }
