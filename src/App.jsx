@@ -35,21 +35,32 @@ function App() {
     }
   }, []);
 
-  // Fungsi Login Standar
+  // --- FUNGSI LOGIN DENGAN DEBUGGING ---
   const connectWallet = () => {
-    showConnect({
-      appDetails: {
-        name: 'Genesis Platform',
-        icon: window.location.origin + '/vite.svg',
-      },
-      redirectTo: '/',
-      onFinish: () => {
-        const user = userSession.loadUserData();
-        setUserData(user);
-        fetchUserProfile(user.profile.stxAddress.mainnet);
-      },
-      userSession,
-    });
+    console.log("👆 Tombol Connect ditekan! Memulai inisialisasi wallet..."); // Cek Console browser
+
+    try {
+      showConnect({
+        appDetails: {
+          name: 'Genesis Platform',
+          icon: window.location.origin + '/vite.svg',
+        },
+        redirectTo: '/',
+        onFinish: () => {
+          console.log("✅ Koneksi Wallet Berhasil!");
+          const user = userSession.loadUserData();
+          setUserData(user);
+          fetchUserProfile(user.profile.stxAddress.mainnet);
+        },
+        onCancel: () => {
+          console.log("❌ User membatalkan koneksi (menutup popup).");
+        },
+        userSession,
+      });
+    } catch (error) {
+      console.error("🚨 Error Fatal saat memanggil showConnect:", error);
+      alert("Terjadi error saat membuka wallet: " + error.message);
+    }
   };
 
   const disconnectWallet = () => {
