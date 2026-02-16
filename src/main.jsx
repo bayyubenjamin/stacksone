@@ -1,11 +1,11 @@
-import './polyfills'; // <--- WAJIB DITAMBAHKAN DI BARIS 1
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './index.css';
+import './polyfills'; // <--- TAMBAHKAN INI DI BARIS 1 (WAJIB)
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-);
+)
