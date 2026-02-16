@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
-import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network'; // FIX: Gunakan Constant, bukan Class
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network'; // Update: Menggunakan Constant
 import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions';
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
@@ -9,21 +9,39 @@ import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 
 // --- KONFIGURASI SMART CONTRACT ---
-const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; // Ganti dengan alamat deploy Anda jika beda
-const CONTRACT_NAME = 'genesis-core-v4'; // Sesuai file Anda
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
+const CONTRACT_NAME = 'genesis-core-v4';
 
 // Konfigurasi Stacks Session
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
 
-// --- DATA MISI (Frontend Definition) ---
-// ID harus sesuai dengan ID yang Anda atur di contract jika ada validasi, 
-// tapi untuk V4 core 'complete-mission' menerima task-id uint bebas.
+// --- DATA MISI (UPDATED: PROFESSIONAL PROTOCOL TASKS) ---
 const MISSION_LIST = [
-  { id: 1, name: "Follow Twitter", desc: "Follow @stacksone to stay updated.", reward: 50, icon: "🐦", completed: false },
-  { id: 2, name: "Join Discord", desc: "Join our community server.", reward: 100, icon: "💬", completed: false },
-  { id: 3, name: "First Transaction", desc: "Make your first transaction on Stacks.", reward: 200, icon: "⚡", completed: false },
-  { id: 4, name: "Share Profile", desc: "Share your genesis profile.", reward: 30, icon: "📤", completed: false }
+  { 
+    id: 1, 
+    name: "Credential Analysis", 
+    desc: "Scan wallet history to verify protocol eligibility tier.", 
+    reward: 50, 
+    icon: "🛡️", 
+    completed: false 
+  },
+  { 
+    id: 2, 
+    name: "Identity Verification", 
+    desc: "Authenticate on-chain DID and sync reputation score.", 
+    reward: 100, 
+    icon: "🆔", 
+    completed: false 
+  },
+  { 
+    id: 3, 
+    name: "Protocol Activation", 
+    desc: "Execute the initial state transition to activate node.", 
+    reward: 200, 
+    icon: "⚡", 
+    completed: false 
+  }
 ];
 
 function App() {
@@ -94,7 +112,6 @@ function App() {
         if (user.last_checkin) {
           setHasCheckedIn(new Date(user.last_checkin).toDateString() === new Date().toDateString());
         }
-        // Load completed tasks logic here if saved in DB
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -102,34 +119,30 @@ function App() {
     setLoading(false);
   };
 
-  // --- 1. LOGIKA CHECK-IN (FIXED) ---
+  // --- 1. LOGIKA CHECK-IN ---
   const handleCheckIn = async () => {
     if (!userData) return alert("Connect wallet first!");
     
-    // Panggil fungsi daily-check-in di genesis-core-v4
     await openContractCall({
-      network: STACKS_MAINNET, // FIX: Gunakan constant langsung (tanpa new)
+      network: STACKS_MAINNET,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'daily-check-in',
-      functionArgs: [], // Tidak butuh argumen
+      functionArgs: [],
       postConditionMode: PostConditionMode.Allow,
       onFinish: (data) => {
         console.log("Check-in Transaction sent:", data);
-        setHasCheckedIn(true); // Update UI Optimistik
-        // Opsional: Simpan timestamp ke Supabase agar persisten
+        setHasCheckedIn(true);
       },
     });
   };
 
-  // --- 2. LOGIKA MINT BADGE (FIXED) ---
+  // --- 2. LOGIKA MINT BADGE ---
   const handleMintBadge = async (badgeType) => {
     if (!userData) return alert("Connect wallet first!");
 
-    // Mapping nama badge di UI ke nama di Contract
-    // Pastikan string ini match dengan 'badge-name' di create-badge contract Anda
     const badgeNameMap = {
-      'genesis': 'genesis-badge', // Contoh: sesuaikan dengan nama di contract
+      'genesis': 'genesis-badge',
       'node': 'node-badge',
       'guardian': 'guardian-badge'
     };
@@ -137,7 +150,7 @@ function App() {
     const contractBadgeName = badgeNameMap[badgeType] || badgeType;
 
     await openContractCall({
-      network: STACKS_MAINNET, // FIX: Gunakan constant langsung
+      network: STACKS_MAINNET,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'claim-badge',
@@ -145,22 +158,23 @@ function App() {
       postConditionMode: PostConditionMode.Allow,
       onFinish: (data) => {
         console.log(`Minting ${badgeType} sent:`, data);
-        // Update UI status badge jadi true (loading/pending)
         setBadgesStatus(prev => ({ ...prev, [badgeType]: true }));
       },
     });
   };
 
-  // --- 3. LOGIKA MISSION (FIXED) ---
+  // --- 3. LOGIKA MISSION (UPDATED) ---
   const handleCompleteMission = async (taskId) => {
     if (!userData) return alert("Connect wallet first!");
     
-    // Cari reward task tersebut
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    // Simulasi atau validasi pre-tx bisa ditambahkan di sini
+    // Contoh: Cek apakah user benar-benar sudah verifikasi di backend sebelum buka wallet
+
     await openContractCall({
-      network: STACKS_MAINNET, // FIX: Gunakan constant langsung
+      network: STACKS_MAINNET,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'complete-mission',
@@ -168,7 +182,6 @@ function App() {
       postConditionMode: PostConditionMode.Allow,
       onFinish: (data) => {
         console.log("Mission Transaction sent:", data);
-        // Update state task jadi completed secara lokal
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: true } : t));
       },
     });
@@ -196,7 +209,7 @@ function App() {
     >
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-slate-400 animate-pulse">Memuat profil...</p>
+          <p className="text-slate-400 animate-pulse">Initializing Protocol Interface...</p>
         </div>
       ) : (
         <>
@@ -208,14 +221,12 @@ function App() {
               badgesStatus={badgesStatus} 
               connectWallet={connectWallet} 
               hasCheckedIn={hasCheckedIn} 
-              // PASSING FUNGSI MINT KE HOME
               handleMint={handleMintBadge} 
             />
           )}
           
           {activeTab === 'tasks' && (
             <Tasks 
-              // PASSING DATA TASKS YANG SUDAH DIISI
               tasks={tasks} 
               handleTask={handleCompleteMission} 
             />
@@ -227,7 +238,6 @@ function App() {
               userXP={userXP} 
               userLevel={userLevel} 
               hasCheckedIn={hasCheckedIn} 
-              // PASSING FUNGSI CHECK-IN YANG SUDAH FIX
               handleCheckIn={handleCheckIn} 
               disconnectWallet={disconnectWallet} 
             />
