@@ -6,7 +6,7 @@ import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 
-// Konfigurasi Stacks Session (Standar)
+// Konfigurasi Stacks Session
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
 
@@ -21,23 +21,35 @@ function App() {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [badgesStatus, setBadgesStatus] = useState({ genesis: false, node: false, guardian: false });
 
-  // Cek login saat aplikasi dimuat
+  // --- PERBAIKAN UTAMA: HANDLING SESI ANTI-CRASH ---
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      const user = userSession.loadUserData();
-      setUserData(user);
-      fetchUserProfile(user.profile.stxAddress.mainnet);
-    } else if (userSession.isSignInPending()) {
-      userSession.handlePendingSignIn().then((user) => {
-        setUserData(user);
-        fetchUserProfile(user.profile.stxAddress.mainnet);
-      });
-    }
+    const checkSession = async () => {
+      try {
+        if (userSession.isUserSignedIn()) {
+          // Coba load data user. Jika format data lama (v8) tidak cocok dengan v7, ini akan error.
+          const user = userSession.loadUserData(); 
+          setUserData(user);
+          await fetchUserProfile(user.profile.stxAddress.mainnet);
+        } else if (userSession.isSignInPending()) {
+          const user = await userSession.handlePendingSignIn();
+          setUserData(user);
+          await fetchUserProfile(user.profile.stxAddress.mainnet);
+        }
+      } catch (error) {
+        console.error("⚠️ Terjadi error saat memuat sesi (kemungkinan cache lama):", error);
+        // SOLUSI: Hapus sesi yang rusak agar aplikasi tidak blank selamanya
+        userSession.signUserOut(); 
+        setUserData(null);
+        window.location.reload(); // Refresh otomatis agar bersih
+      }
+    };
+
+    checkSession();
   }, []);
 
-  // --- FUNGSI LOGIN DENGAN DEBUGGING ---
+  // --- FUNGSI LOGIN ---
   const connectWallet = () => {
-    console.log("👆 Tombol Connect ditekan! Memulai inisialisasi wallet..."); // Cek Console browser
+    console.log("👆 Tombol Connect ditekan! Memulai inisialisasi wallet..."); 
 
     try {
       showConnect({
@@ -53,13 +65,13 @@ function App() {
           fetchUserProfile(user.profile.stxAddress.mainnet);
         },
         onCancel: () => {
-          console.log("❌ User membatalkan koneksi (menutup popup).");
+          console.log("❌ User membatalkan koneksi.");
         },
         userSession,
       });
     } catch (error) {
       console.error("🚨 Error Fatal saat memanggil showConnect:", error);
-      alert("Terjadi error saat membuka wallet: " + error.message);
+      alert("Terjadi error: " + error.message);
     }
   };
 
