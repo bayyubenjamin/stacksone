@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
-import { StacksMainnet } from '@stacks/network'; // FIX: Syntax v6
-import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions';
+import { StacksMainnet } from '@stacks/network'; // Library v6
+import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions'; // Library v6
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -131,7 +131,7 @@ function App() {
     
     try {
       await openContractCall({
-        network: new StacksMainnet(), // FIX: Gunakan class v6
+        network: new StacksMainnet(), // FIX: Class v6
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'daily-check-in',
@@ -169,7 +169,7 @@ function App() {
       console.log(`Minting badge: ${safeBadgeName}`);
       
       await openContractCall({
-        network: new StacksMainnet(), // FIX: Gunakan class v6
+        network: new StacksMainnet(), // FIX: Class v6
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'claim-badge',
@@ -202,7 +202,7 @@ function App() {
 
     try {
       await openContractCall({
-        network: new StacksMainnet(), // FIX: Gunakan class v6
+        network: new StacksMainnet(), // FIX: Class v6
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'complete-mission',
