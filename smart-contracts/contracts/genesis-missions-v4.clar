@@ -1,38 +1,65 @@
-;; genesis-missions-v3.clar
-(define-constant REWARD-CHECKIN u20)
-(define-constant BLOCKS-PER-DAY u144)
-(define-constant err-unauthorized (err u401))
-(define-constant err-too-soon (err u500))
-(define-constant err-already-done (err u501))
+;; genesis-core-v4.clar
+;; FINAL VERSION: Pointing to Local Contracts for Validation
 
-(define-data-var game-core-address principal tx-sender)
-(define-map last-checkin-block principal uint)
-(define-map completed-tasks { user: principal, task-id: uint } bool)
+(define-constant URI_GENESIS "ipfs://QmYourGenesisHash/genesis.json")
+(define-constant URI_NODE "ipfs://QmYourNodeHash/node.json")
+(define-constant URI_GUARDIAN "ipfs://QmYourGuardianHash/guardian.json")
 
-(define-public (set-game-core (new-core principal))
+(define-constant err-admin-only (err u100))
+(define-constant err-badge-exists (err u101))
+(define-constant err-badge-not-found (err u102))
+(define-constant err-req-xp (err u601))
+(define-constant err-req-level (err u602))
+(define-constant err-req-prereq (err u603))
+(define-constant err-already-owned (err u604))
+
+(define-data-var admin principal tx-sender)
+
+(define-map badge-registry (string-ascii 20) { uri: (string-ascii 256), min-xp: uint, min-level: uint, prereq: (optional (string-ascii 20)) })
+(define-map user-profile principal { xp: uint, level: uint })
+(define-map wallet-has-badge { user: principal, badge-name: (string-ascii 20) } bool)
+
+(define-private (calculate-level (xp uint)) (+ (/ xp u500) u1))
+
+(define-private (add-xp (user principal) (amount uint))
+  (let ((current-data (default-to { xp: u0, level: u1 } (map-get? user-profile user))))
+    (let ((new-xp (+ (get xp current-data) amount)) (new-level (calculate-level new-xp)))
+      (map-set user-profile user { xp: new-xp, level: new-level })
+      (ok new-xp))))
+
+(define-public (create-badge (name (string-ascii 20)) (uri (string-ascii 256)) (xp-req uint) (level-req uint) (prereq-badge (optional (string-ascii 20))))
   (begin
-    (asserts! (is-eq tx-sender (var-get game-core-address)) err-unauthorized)
-    (var-set game-core-address new-core)
-    (ok true)
-  ))
+    (asserts! (is-eq tx-sender (var-get admin)) err-admin-only)
+    (asserts! (is-none (map-get? badge-registry name)) err-badge-exists)
+    (map-set badge-registry name { uri: uri, min-xp: xp-req, min-level: level-req, prereq: prereq-badge })
+    (ok true)))
 
-(define-read-only (can-check-in (user principal))
-  (let ((last-block (default-to u0 (map-get? last-checkin-block user))) (current-block block-height))
-    (if (or (is-eq last-block u0) (> (- current-block last-block) BLOCKS-PER-DAY)) true false)))
+;; FIX: Menggunakan referensi lokal (.genesis-missions-v4) agar check berhasil
+(define-public (daily-check-in)
+  (let ((sender tx-sender) 
+        (reward-response (as-contract (contract-call? .genesis-missions-v4 record-check-in sender))))
+    (match reward-response reward-amount (add-xp sender reward-amount) err-code (err err-code))))
 
-(define-read-only (is-task-done (user principal) (task-id uint))
-  (default-to false (map-get? completed-tasks { user: user, task-id: task-id })))
+;; FIX: Menggunakan referensi lokal (.genesis-missions-v4) agar check berhasil
+(define-public (complete-mission (task-id uint) (reward uint))
+  (let ((sender tx-sender) 
+        (mission-response (as-contract (contract-call? .genesis-missions-v4 record-task sender task-id reward))))
+    (match mission-response approved-reward (add-xp sender approved-reward) err-code (err err-code))))
 
-(define-public (record-check-in (user principal))
-  (begin
-    (asserts! (is-eq tx-sender (var-get game-core-address)) err-unauthorized)
-    (asserts! (can-check-in user) err-too-soon)
-    (map-set last-checkin-block user block-height)
-    (ok REWARD-CHECKIN)))
-
-(define-public (record-task (user principal) (task-id uint) (reward uint))
-  (begin
-    (asserts! (is-eq tx-sender (var-get game-core-address)) err-unauthorized)
-    (asserts! (not (is-task-done user task-id)) err-already-done)
-    (map-set completed-tasks { user: user, task-id: task-id } true)
-    (ok reward)))
+(define-public (claim-badge (badge-name (string-ascii 20)))
+  (let ((sender tx-sender)
+        (badge-rules (unwrap! (map-get? badge-registry badge-name) err-badge-not-found))
+        (user-data (default-to { xp: u0, level: u1 } (map-get? user-profile sender))))
+    (let ((required-xp (get min-xp badge-rules)) (required-level (get min-level badge-rules)) (required-prereq (get prereq badge-rules)) (badge-uri (get uri badge-rules)))
+      
+      (asserts! (not (default-to false (map-get? wallet-has-badge { user: sender, badge-name: badge-name }))) err-already-owned)
+      
+      (asserts! (>= (get xp user-data) required-xp) err-req-xp)
+      (asserts! (>= (get level user-data) required-level) err-req-level)
+      (match required-prereq prereq-name (asserts! (default-to false (map-get? wallet-has-badge { user: sender, badge-name: prereq-name })) err-req-prereq) true)
+      
+      ;; FIX: Menggunakan referensi lokal (.genesis-badges-v4) agar check berhasil
+      (try! (as-contract (contract-call? .genesis-badges-v4 mint-badge sender badge-uri)))
+      
+      (map-set wallet-has-badge { user: sender, badge-name: badge-name } true)
+      (ok true))))

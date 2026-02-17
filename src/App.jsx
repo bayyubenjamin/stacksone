@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
-import { StacksMainnet } from '@stacks/network'; // Library v6
-import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions'; // Library v6
+import { StacksMainnet, StacksMocknet } from '@stacks/network'; // Tambahkan Mocknet jika testing di devnet
+import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions'; 
 import { supabase } from './supabaseClient';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
+import Vault from './pages/Vault'; // <--- IMPORT BARU
 
 // --- KONFIGURASI SMART CONTRACT ---
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
@@ -131,7 +132,7 @@ function App() {
     
     try {
       await openContractCall({
-        network: new StacksMainnet(), // FIX: Class v6
+        network: new StacksMainnet(), 
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'daily-check-in',
@@ -169,7 +170,7 @@ function App() {
       console.log(`Minting badge: ${safeBadgeName}`);
       
       await openContractCall({
-        network: new StacksMainnet(), // FIX: Class v6
+        network: new StacksMainnet(), 
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'claim-badge',
@@ -202,7 +203,7 @@ function App() {
 
     try {
       await openContractCall({
-        network: new StacksMainnet(), // FIX: Class v6
+        network: new StacksMainnet(), 
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'complete-mission',
@@ -261,6 +262,13 @@ function App() {
             <Tasks 
               tasks={tasks} 
               handleTask={handleCompleteMission} 
+            />
+          )}
+
+          {/* --- TAB BARU: VAULT --- */}
+          {activeTab === 'vault' && (
+            <Vault 
+              userData={userData} 
             />
           )}
           

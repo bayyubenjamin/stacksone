@@ -4,6 +4,7 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
   const menuItems = [
     { id: 'home', label: 'Overview', icon: '📊' },
     { id: 'tasks', label: 'Protocol', icon: '💠' },
+    { id: 'vault', label: 'Vault', icon: '🏦' }, // <--- MENU BARU
     { id: 'profile', label: 'Identity', icon: '🆔' },
   ];
 
@@ -81,3 +82,4 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 };
 
 export default Layout;
+
