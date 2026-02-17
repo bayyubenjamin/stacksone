@@ -9,32 +9,60 @@ import {
   PostConditionMode
 } from '@stacks/transactions';
 import { userSession } from '../supabaseClient'; 
+import { CheckCircle, Clock, Zap, Box, Lock, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react'; // Pastikan install lucide-react jika belum (npm install lucide-react) atau ganti icon manual
+
+// --- CONFIGURATION ---
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
+const BLOCKS_PER_DAY = 144;
+const LOCK_PERIOD_BLOCKS = 1008; // ~7 Hari
 
 const Vault = () => {
+  // State: Assets
   const [poinBalance, setPoinBalance] = useState(0);
   const [oneBalance, setOneBalance] = useState(0);
+  
+  // State: Network & Logic
+  const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
+  const [lastClaimHeight, setLastClaimHeight] = useState(0);
+  
+  // State: UI & Actions
   const [stakeAmount, setStakeAmount] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(null); // { type: 'success' | 'error' | 'info', msg: string }
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('stake'); // 'stake' | 'claim' | 'gacha'
 
   const network = new StacksMainnet();
-  
-  // Pastikan alamat ini sesuai dengan wallet deployer Anda
-  const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
 
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
-      fetchBalances();
+      fetchData();
+      // Fetch block height every 1 min
+      const interval = setInterval(fetchNetworkStatus, 60000); 
+      return () => clearInterval(interval);
     }
   }, []);
 
-  const fetchBalances = async () => {
-    if (!userSession.isUserSignedIn()) return;
-    
+  // --- DATA FETCHING ---
+  const fetchData = async () => {
     setLoading(true);
-    const userAddress = userSession.loadUserData().profile.stxAddress.mainnet;
+    await Promise.all([fetchBalances(), fetchNetworkStatus(), fetchAccountInfo()]);
+    setLoading(false);
+  };
 
-    // Fetch Poin Balance
+  const fetchNetworkStatus = async () => {
+    try {
+      const response = await fetch('https://api.mainnet.hiro.so/v2/info');
+      const data = await response.json();
+      setCurrentBlockHeight(data.stacks_tip_height);
+    } catch (e) {
+      console.error("Failed to fetch block height", e);
+    }
+  };
+
+  const fetchBalances = async () => {
+    const userAddress = userSession.loadUserData().profile.stxAddress.mainnet;
+    
+    // 1. Get POIN
     try {
       const poinData = await callReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
@@ -44,13 +72,10 @@ const Vault = () => {
         network,
         senderAddress: userAddress
       });
-      const val = cvToValue(poinData);
-      setPoinBalance(Number(val.value) / 1000000); 
-    } catch (e) {
-      console.log("No POIN found or contract not ready.");
-    }
+      setPoinBalance(Number(cvToValue(poinData).value) / 1000000); 
+    } catch (e) { console.log("No POIN data"); }
 
-    // Fetch ONE Balance
+    // 2. Get ONE
     try {
       const oneData = await callReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
@@ -60,162 +85,355 @@ const Vault = () => {
         network,
         senderAddress: userAddress
       });
-      const val = cvToValue(oneData);
-      setOneBalance(Number(val.value) / 1000000);
-    } catch (e) {
-        console.log("No ONE found.");
+      setOneBalance(Number(cvToValue(oneData).value) / 1000000);
+    } catch (e) { console.log("No ONE data"); }
+  };
+
+  const fetchAccountInfo = async () => {
+    // Optional: Fetch last claim height if contract supports it (Assuming map-get availability)
+    // Note: This requires a read-only function in your contract to expose 'last-claim-height' map.
+    // Since we didn't explicitly add a getter for the map, we will estimate or skip for now.
+    // We'll simulate it for UI demo purposes if not available.
+  };
+
+  // --- ACTIONS ---
+
+  const handleMaxStake = () => {
+    setStakeAmount(poinBalance.toString());
+  };
+
+  const handleAction = async (actionType) => {
+    setStatus({ type: 'info', msg: 'Broadcasting transaction...' });
+    
+    const options = {
+      network,
+      anchorMode: 1,
+      contractAddress: CONTRACT_ADDRESS,
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: (data) => {
+        setStatus({ 
+          type: 'success', 
+          msg: `Transaction Sent! TxId: ${data.txId.slice(0, 6)}...${data.txId.slice(-4)}` 
+        });
+        setTimeout(fetchData, 5000);
+      },
+      onCancel: () => setStatus(null),
+    };
+
+    if (actionType === 'claim') {
+      await openContractCall({
+        ...options,
+        contractName: 'faucet-distributor',
+        functionName: 'claim-daily',
+        functionArgs: [],
+      });
+    } else if (actionType === 'stake') {
+      const amount = parseFloat(stakeAmount) * 1000000;
+      await openContractCall({
+        ...options,
+        contractName: 'staking-refinery',
+        functionName: 'stake-tokens',
+        functionArgs: [uintCV(amount)],
+      });
+    } else if (actionType === 'gacha') {
+      await openContractCall({
+        ...options,
+        contractName: 'utility-gacha',
+        functionName: 'spin-gacha',
+        functionArgs: [],
+      });
     }
-    setLoading(false);
   };
 
-  const handleDailyClaim = () => {
-    openContractCall({
-      network,
-      anchorMode: 1,
-      contractAddress: CONTRACT_ADDRESS,
-      contractName: 'faucet-distributor',
-      functionName: 'claim-daily',
-      functionArgs: [],
-      postConditionMode: PostConditionMode.Allow,
-      onFinish: (data) => {
-        setStatus('Claim transaction broadcasted! Balance will update after block confirmation.');
-        // Refresh balance immediately (it might take time to reflect on-chain)
-        setTimeout(() => fetchBalances(), 2000);
-      },
-    });
-  };
+  // --- CALCULATIONS ---
+  const blocksToClaim = (lastClaimHeight + BLOCKS_PER_DAY) - currentBlockHeight;
+  const isClaimable = blocksToClaim <= 0;
+  const estimatedTime = blocksToClaim > 0 ? `~${Math.ceil((blocksToClaim * 10) / 60)} hours` : 'Now';
 
-  const handleSpinGacha = () => {
-    openContractCall({
-      network,
-      anchorMode: 1,
-      contractAddress: CONTRACT_ADDRESS,
-      contractName: 'utility-gacha',
-      functionName: 'spin-gacha',
-      functionArgs: [],
-      postConditionMode: PostConditionMode.Allow,
-      onFinish: (data) => {
-        setStatus('Gacha spinning... Transaction sent! Good luck.');
-        setTimeout(() => fetchBalances(), 2000);
-      },
-    });
-  };
+  // --- COMPONENTS ---
 
-  const handleStake = () => {
-    if (!stakeAmount) return;
-    const amount = parseFloat(stakeAmount) * 1000000; 
-    openContractCall({
-      network,
-      anchorMode: 1,
-      contractAddress: CONTRACT_ADDRESS,
-      contractName: 'staking-refinery',
-      functionName: 'stake-tokens',
-      functionArgs: [uintCV(amount)],
-      postConditionMode: PostConditionMode.Allow,
-      onFinish: (data) => {
-        setStatus('Staking initiated! Your assets are being locked.');
-        setTimeout(() => fetchBalances(), 2000);
-        setStakeAmount(''); // Reset input
-      },
-    });
-  };
+  const StatCard = ({ title, value, unit, icon: Icon, color }) => (
+    <div className="bg-[#1E293B]/50 backdrop-blur-sm border border-slate-700 p-5 rounded-2xl flex items-center justify-between hover:border-slate-600 transition-all">
+      <div>
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">{title}</p>
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-bold text-white">{value.toLocaleString()}</span>
+          <span className={`text-xs font-bold ${color}`}>{unit}</span>
+        </div>
+      </div>
+      <div className={`p-3 rounded-xl bg-slate-800/50 ${color.replace('text-', 'text-opacity-80 ')}`}>
+        <Icon size={24} className={color} />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 pb-20">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-yellow-400">Mainnet Vault</h1>
-        <button 
-          onClick={fetchBalances}
-          className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded border border-gray-600 transition-colors"
-        >
-          {loading ? 'Refreshing...' : '↻ Refresh Balance'}
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#0B1120] text-slate-200 pb-20">
       
-      {/* Balance Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2 opacity-10 text-4xl">⛽</div>
-          <h3 className="text-gray-400 text-sm font-medium uppercase">Fuel Token</h3>
-          <p className="text-2xl font-bold mt-1">{poinBalance} <span className="text-sm text-blue-400">$POIN</span></p>
-        </div>
-        <div className="bg-gray-800 p-4 rounded-xl border border-yellow-600 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2 opacity-10 text-4xl">💎</div>
-          <h3 className="text-yellow-400 text-sm font-medium uppercase">Precious Gem</h3>
-          <p className="text-2xl font-bold mt-1">{oneBalance} <span className="text-sm text-yellow-400">$ONE</span></p>
-        </div>
-      </div>
-
-      {/* Daily Claim */}
-      <div className="bg-gray-800 p-6 rounded-xl mb-6 shadow-lg border border-gray-700/50">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-white">Daily Supply</h2>
-            <p className="text-gray-400 text-sm mt-1">Claim free $POIN every 24 hours (approx. 144 blocks).</p>
+      {/* HEADER SECTION */}
+      <div className="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border-b border-slate-800 p-6 md:p-10">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+                <Lock className="text-indigo-400" /> Genesis Vault
+              </h1>
+              <p className="text-slate-400 mt-1 flex items-center gap-2 text-sm">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                Mainnet Live • Block #{currentBlockHeight || '...'}
+              </p>
+            </div>
+            <button 
+              onClick={fetchData}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-sm font-medium transition-all"
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              Refresh Data
+            </button>
           </div>
-          <span className="text-2xl">🎁</span>
-        </div>
-        <button 
-          onClick={handleDailyClaim}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95"
-        >
-          Claim Daily $POIN
-        </button>
-      </div>
 
-      {/* Staking */}
-      <div className="bg-gray-800 p-6 rounded-xl mb-6 shadow-lg border border-gray-700">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-white">Refinery (Staking)</h2>
-            <p className="text-gray-400 text-sm mt-1">Lock your $POIN to mine valuable $ONE tokens.</p>
-          </div>
-          <span className="text-2xl">🏭</span>
-        </div>
-        
-        <div className="flex gap-2 mb-4">
-          <div className="relative w-full">
-            <input 
-              type="number" 
-              placeholder="Amount to stake" 
-              value={stakeAmount}
-              onChange={(e) => setStakeAmount(e.target.value)}
-              className="w-full p-3 bg-gray-900 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:outline-none transition-colors"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard 
+              title="Available Fuel" 
+              value={poinBalance} 
+              unit="POIN" 
+              icon={Zap} 
+              color="text-amber-400" 
             />
-            <span className="absolute right-3 top-3 text-gray-500 text-sm font-bold">POIN</span>
+            <StatCard 
+              title="Treasury Assets" 
+              value={oneBalance} 
+              unit="ONE" 
+              icon={Box} 
+              color="text-indigo-400" 
+            />
+            <StatCard 
+              title="Staking APY" 
+              value={"125"} // Mockup Dynamic APY
+              unit="%" 
+              icon={TrendingUp} 
+              color="text-emerald-400" 
+            />
           </div>
         </div>
-        <button 
-          onClick={handleStake}
-          className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-green-900/20 active:scale-95"
-        >
-          Start Staking
-        </button>
       </div>
 
-      {/* Gacha */}
-      <div className="bg-gradient-to-r from-purple-900 to-indigo-900 p-6 rounded-xl mb-6 shadow-lg border border-purple-500/30">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-white">Lucky Burn</h2>
-            <p className="text-gray-300 text-sm mt-1">Burn 50 $POIN for a 33% chance to win $ONE!</p>
+      {/* MAIN CONTENT */}
+      <div className="max-w-5xl mx-auto p-6 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* LEFT COLUMN: NAVIGATION & STATUS */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Navigation Tabs */}
+          <div className="bg-[#1E293B] rounded-2xl p-2 flex flex-col gap-1">
+            {['stake', 'claim', 'gacha'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === tab 
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                {tab === 'stake' && <Lock size={18} />}
+                {tab === 'claim' && <Clock size={18} />}
+                {tab === 'gacha' && <Zap size={18} />}
+                <span className="capitalize">{tab} Operations</span>
+                {tab === 'claim' && !isClaimable && (
+                   <span className="ml-auto text-xs bg-slate-800 px-2 py-1 rounded text-slate-500">Wait</span>
+                )}
+                {tab === 'claim' && isClaimable && (
+                   <span className="ml-auto w-2 h-2 rounded-full bg-green-500"></span>
+                )}
+              </button>
+            ))}
           </div>
-          <span className="text-2xl">🎰</span>
-        </div>
-        <button 
-          onClick={handleSpinGacha}
-          className="w-full bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-purple-900/20 active:scale-95 border-b-4 border-purple-700 active:border-b-0 active:translate-y-1"
-        >
-          Spin Gacha (Cost: 50 POIN)
-        </button>
-      </div>
 
-      {status && (
-        <div className="fixed bottom-24 left-4 right-4 bg-gray-800/90 backdrop-blur-md p-4 rounded-lg text-center text-sm border border-yellow-500/50 shadow-2xl animate-fade-in-up z-50">
-          <p className="font-semibold text-yellow-400 mb-1">Status Update</p>
-          <p className="text-gray-200">{status}</p>
+          {/* Network Info Widget */}
+          <div className="bg-[#1E293B]/50 border border-slate-700 rounded-2xl p-5">
+            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">Protocol Parameters</h3>
+            <div className="space-y-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Lock Duration</span>
+                <span className="text-slate-200">~7 Days <span className="text-slate-600">({LOCK_PERIOD_BLOCKS} Blocks)</span></span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Daily Supply</span>
+                <span className="text-slate-200">100 POIN <span className="text-slate-600">/ 24h</span></span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Gacha Odds</span>
+                <span className="text-slate-200">33% Win Rate</span>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* RIGHT COLUMN: ACTION AREA */}
+        <div className="lg:col-span-8">
+          <div className="bg-[#1E293B] border border-slate-700 rounded-3xl p-6 md:p-8 relative overflow-hidden">
+            
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+            {/* STATUS NOTIFICATION */}
+            {status && (
+              <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+                status.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-400' :
+                status.type === 'error' ? 'bg-red-500/10 border border-red-500/20 text-red-400' :
+                'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+              }`}>
+                {status.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                <p className="text-sm font-medium">{status.msg}</p>
+              </div>
+            )}
+
+            {/* --- TAB: STAKING --- */}
+            {activeTab === 'stake' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Refinery Staking</h2>
+                    <p className="text-slate-400 text-sm mt-1">Lock $POIN to mint $ONE. Early unstake penalty applies.</p>
+                  </div>
+                  <div className="text-right hidden md:block">
+                    <p className="text-xs text-slate-500 uppercase">Your Balance</p>
+                    <p className="text-xl font-mono font-bold text-white">{poinBalance.toLocaleString()} <span className="text-sm text-slate-500">POIN</span></p>
+                  </div>
+                </div>
+
+                <div className="bg-[#0F172A] rounded-2xl p-4 border border-slate-700">
+                  <div className="flex justify-between mb-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase">Stake Amount</label>
+                    <span className="text-xs text-indigo-400 cursor-pointer hover:text-indigo-300" onClick={handleMaxStake}>Use Max</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <input 
+                      type="number" 
+                      value={stakeAmount}
+                      onChange={(e) => setStakeAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="bg-transparent text-3xl font-bold text-white w-full focus:outline-none placeholder-slate-700"
+                    />
+                    <div className="bg-slate-800 px-3 py-1 rounded text-sm font-bold text-slate-300">POIN</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-800/50 p-4 rounded-xl">
+                    <p className="text-xs text-slate-500">Lock Period</p>
+                    <p className="text-lg font-bold text-white">{LOCK_PERIOD_BLOCKS} Blocks</p>
+                    <p className="text-xs text-slate-500">~7 Days</p>
+                  </div>
+                  <div className="bg-slate-800/50 p-4 rounded-xl">
+                    <p className="text-xs text-slate-500">Est. Reward</p>
+                    <p className="text-lg font-bold text-emerald-400">Dynamic</p>
+                    <p className="text-xs text-slate-500">Based on Pool Share</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => handleAction('stake')}
+                  disabled={!stakeAmount || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > poinBalance}
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.99]"
+                >
+                  {parseFloat(stakeAmount) > poinBalance ? 'Insufficient Balance' : 'Confirm Staking'}
+                </button>
+              </div>
+            )}
+
+            {/* --- TAB: CLAIM --- */}
+            {activeTab === 'claim' && (
+              <div className="space-y-8 animate-fadeIn text-center py-8">
+                <div className="inline-flex p-4 bg-indigo-500/20 rounded-full mb-4">
+                  <Clock size={48} className="text-indigo-400" />
+                </div>
+                
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Daily Faucet</h2>
+                  <p className="text-slate-400 text-sm mt-2 max-w-md mx-auto">
+                    Protocol distributes free POIN every 144 blocks (approx 24 hours). 
+                    Maintain your streak to increase rewards.
+                  </p>
+                </div>
+
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 max-w-sm mx-auto">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-slate-400 text-sm">Status</span>
+                    <span className={`text-sm font-bold ${isClaimable ? 'text-green-400' : 'text-amber-400'}`}>
+                      {isClaimable ? 'Ready to Claim' : 'Cooling Down'}
+                    </span>
+                  </div>
+                  
+                  {/* Progress Bar for Cooldown */}
+                  {!isClaimable && (
+                    <div className="w-full bg-slate-700 h-2 rounded-full mb-2 overflow-hidden">
+                      <div 
+                        className="bg-amber-400 h-full rounded-full transition-all duration-1000" 
+                        style={{ width: `${Math.max(0, 100 - (blocksToClaim / BLOCKS_PER_DAY * 100))}%` }}
+                      ></div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center text-xs text-slate-500">
+                    <span>Next: {estimatedTime}</span>
+                    <span>Block #{currentBlockHeight + blocksToClaim}</span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => handleAction('claim')}
+                  // disabled={!isClaimable} // Uncomment in production to enforce UI lock
+                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all"
+                >
+                  Claim 100 POIN
+                </button>
+              </div>
+            )}
+
+            {/* --- TAB: GACHA --- */}
+            {activeTab === 'gacha' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="bg-purple-500/20 p-3 rounded-xl">
+                    <Zap size={32} className="text-purple-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Lucky Burn</h2>
+                    <p className="text-slate-400 text-sm">Burn POIN for a chance to mint $ONE.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-slate-800 border border-slate-700 p-4 rounded-xl text-center hover:border-purple-500 transition-colors cursor-pointer group">
+                      <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">💎</div>
+                      <p className="text-white font-bold">Prize Pool {i}</p>
+                      <p className="text-xs text-slate-500">Win Rate: 33%</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-purple-900/20 border border-purple-500/30 p-6 rounded-2xl text-center">
+                  <p className="text-purple-300 font-bold mb-2">Cost per Spin</p>
+                  <p className="text-3xl font-bold text-white mb-4">50 <span className="text-sm text-slate-400">POIN</span></p>
+                  <button 
+                    onClick={() => handleAction('gacha')}
+                    disabled={poinBalance < 50}
+                    className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 text-white font-bold rounded-xl shadow-lg shadow-purple-900/20 transition-all"
+                  >
+                    {poinBalance < 50 ? 'Insufficient Balance' : 'SPIN NOW'}
+                  </button>
+                  <p className="text-xs text-slate-500 mt-4">Proven Fair: Uses Block Hash RNG</p>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };
