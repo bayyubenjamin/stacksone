@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
-import { StacksMainnet, StacksMocknet } from '@stacks/network'; // Tambahkan Mocknet jika testing di devnet
-import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions'; 
-import { supabase } from './supabaseClient';
+import { showConnect, openContractCall } from '@stacks/connect'; // Hapus AppConfig & UserSession dari sini
+import { StacksMainnet } from '@stacks/network';
+import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions';
+// Import userSession dari file yang baru kita edit
+import { supabase, userSession } from './supabaseClient'; 
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
-import Vault from './pages/Vault'; // <--- IMPORT BARU
+import Vault from './pages/Vault';
 
 // --- KONFIGURASI SMART CONTRACT ---
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
 const CONTRACT_NAME = 'genesis-core-v4';
 
-// Konfigurasi Stacks Session
-const appConfig = new AppConfig(['store_write', 'publish_data']);
-const userSession = new UserSession({ appConfig });
+// (Hapus baris appConfig dan userSession = new UserSession... yang lama disini)
 
-// --- DATA MISI ---
 const MISSION_LIST = [
   { 
     id: 1, 
@@ -94,7 +92,7 @@ function App() {
           setUserData(user);
           fetchUserProfile(user.profile.stxAddress.mainnet);
         },
-        userSession,
+        userSession, // Ini sekarang mengambil dari import, bukan variabel lokal
       });
     } catch (err) {
       console.error("Connect error:", err);
@@ -265,7 +263,6 @@ function App() {
             />
           )}
 
-          {/* --- TAB BARU: VAULT --- */}
           {activeTab === 'vault' && (
             <Vault 
               userData={userData} 
