@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { openContractCall } from '@stacks/connect';
-import { StacksMainnet } from '@stacks/network'; // <--- PAKAI MAINNET
+import { StacksMainnet } from '@stacks/network'; 
 import { 
   callReadOnlyFunction, 
   standardPrincipalCV, 
   uintCV,
-  cvToValue 
+  cvToValue,
+  PostConditionMode // <--- 1. WAJIB IMPORT INI
 } from '@stacks/transactions';
 import { userSession } from '../supabaseClient'; 
 
@@ -15,11 +16,10 @@ const Vault = () => {
   const [stakeAmount, setStakeAmount] = useState('');
   const [status, setStatus] = useState('');
 
-  // INI CONFIG MAINNET
   const network = new StacksMainnet();
   
-  // PENTING: Nanti ganti ini dengan alamat wallet Anda yang dipakai deploy di Mainnet
-  const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; // Contoh pakai alamat genesis Anda
+  // Pastikan alamat ini sesuai dengan wallet deployer Anda
+  const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
 
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
@@ -28,7 +28,7 @@ const Vault = () => {
   }, []);
 
   const fetchBalances = async () => {
-    const userAddress = userSession.loadUserData().profile.stxAddress.mainnet; // <--- AMBIL ALAMAT MAINNET
+    const userAddress = userSession.loadUserData().profile.stxAddress.mainnet;
 
     // Fetch Poin Balance
     try {
@@ -40,7 +40,6 @@ const Vault = () => {
         network,
         senderAddress: userAddress
       });
-      // Pastikan handle jika return value berbeda format (tergantung respons u128/uint)
       const val = cvToValue(poinData);
       setPoinBalance(Number(val.value) / 1000000); 
     } catch (e) {
@@ -72,6 +71,7 @@ const Vault = () => {
       contractName: 'faucet-distributor',
       functionName: 'claim-daily',
       functionArgs: [],
+      postConditionMode: PostConditionMode.Allow, // Tambahkan ini juga biar aman
       onFinish: (data) => {
         setStatus('Transaksi Claim dikirim! Tunggu konfirmasi blok.');
       },
@@ -86,6 +86,7 @@ const Vault = () => {
       contractName: 'utility-gacha',
       functionName: 'spin-gacha',
       functionArgs: [],
+      postConditionMode: PostConditionMode.Allow, // <--- 2. WAJIB ADA DI SINI (Gacha membakar token)
       onFinish: (data) => {
         setStatus('Gacha diputar... Semoga beruntung!');
       },
@@ -102,6 +103,7 @@ const Vault = () => {
       contractName: 'staking-refinery',
       functionName: 'stake-tokens',
       functionArgs: [uintCV(amount)],
+      postConditionMode: PostConditionMode.Allow, // <--- 3. WAJIB ADA DI SINI (Staking memindahkan token)
       onFinish: (data) => {
         setStatus('Staking dimulai!');
       },
