@@ -1,148 +1,224 @@
-# Genesis One | Stacks Ecosystem Interface
+# StacksOne  
+## Web3 Loyalty & Dual-Token DeFi Ecosystem on Stacks
 
-**Genesis One** is a decentralized application (dApp) built on the Stacks blockchain designed to gamify user onboarding and identity verification. The platform integrates secure wallet authentication, an XP-based progression system, and on-chain interaction tasks, powered by a reactive frontend and a Supabase backend.
+StacksOne is a Web3 loyalty and mini-DeFi ecosystem built on **Stacks (Bitcoin Layer-2)**.  
+The platform combines on-chain reputation mechanics (NFT badges & XP system) with a dual-token economy designed to drive gamification, retention, and long-term engagement.
 
-![Project Status](https://img.shields.io/badge/status-live%20mainnet-success.svg)
-![Blockchain](https://img.shields.io/badge/blockchain-Stacks%20(Bitcoin%20L2)-purple.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-
----
-
-## 🌟 Key Features
-
-### 🔐 Secure Authentication & Identity
-- **Stacks Wallet Integration:** Seamless connection using `@stacks/connect` (supporting Leather, Xverse, and other SIP-18 wallets).
-- **Identity Persistence:** User profiles are automatically synced between the blockchain wallet and the Supabase database.
-
-### 🎮 Gamified Progression System
-- **XP & Leveling:** Users earn Experience Points (XP) to increase their "Security Level" within the platform.
-- **Soulbound Badges:** Non-transferable tokens (SBT) minted directly to the user's wallet upon reaching specific milestones.
-- **Daily Check-ins:** Recurring on-chain rewards for active daily participation.
-- **Real-time Updates:** Immediate UI feedback (Optimistic UI) for level-ups and reward claims.
-
-### 📋 Mission Control
-- **Task Tracking:** Interactive mission list (e.g., Ecosystem Access, Network Signal).
-- **Smart Contract Verification:** Validates task completion on-chain before awarding XP.
-- **State Management:** Tracks completed tasks, prevents duplicate rewards, and persists progress across sessions.
-
-### ⚡ Modern UI/UX
-- **Responsive Dashboard:** Built with **Tailwind CSS** for a futuristic, "Cyber/Dark Mode" aesthetic.
-- **Performance:** Powered by **Vite** for lightning-fast HMR and build times.
+![StacksOne Banner](public/vite.svg)
 
 ---
 
-## 🛠️ Technology Stack
+## 🚀 Overview
 
-### Frontend
-- **Framework:** React 18  
-- **Build Tool:** Vite  
-- **Styling:** Tailwind CSS  
-- **State Management:** React Hooks  
+StacksOne consists of two core pillars:
 
-### Blockchain (Web3)
-- **Language:** Clarity Smart Contracts  
-- **Network:** Stacks Mainnet (Bitcoin Layer 2)  
-- **SDK:** Stacks.js (`@stacks/connect`, `@stacks/transactions`)  
-- **Development Tool:** Clarinet  
+1. **Genesis System** – Loyalty & Reputation Framework  
+2. **Vault Ecosystem** – Dual-Token DeFi Economy  
 
-### Backend (Web2)
-- **Database:** Supabase (PostgreSQL)  
-- **Realtime:** Supabase Realtime Subscription  
+Together, they form a closed-loop on-chain incentive system that rewards participation and sustained engagement.
 
 ---
 
-## 📜 Smart Contracts
+# 1️⃣ Genesis System (Loyalty & Reputation)
 
-The platform operates using three interconnected smart contracts deployed on the Stacks Mainnet:
+The Genesis System rewards users for meaningful on-chain activity.
 
-| Contract Name      | Functionality                                      | Status     |
-|-------------------|----------------------------------------------------|------------|
-| **Genesis Core**  | Main controller for XP, Levels, and Logic.         | ✅ Active  |
-| **Genesis Badges**| SIP-009 NFT (Soulbound) for user achievements.     | ✅ Active  |
-| **Genesis Missions** | Manages daily check-ins and task validation.   | ✅ Active  |
+### 🔹 Missions
+Users complete on-chain tasks (e.g., verification or ecosystem interactions) to earn **XP (Experience Points)**.
 
-> **Deployer Address:** `SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3`
+### 🔹 Daily Check-In
+Users can check in once per day to increase their reputation level and maintain engagement streaks.
 
----
+### 🔹 NFT Badges (SBT-Compatible)
+On-chain certificates (SIP-009 NFTs) representing user achievements:
 
-## 🚀 Getting Started
+- 🛡 **Genesis Badge** – Early adopter recognition  
+- 💠 **Node Badge** – Network participation acknowledgment  
+- 🆔 **Guardian Badge** – High reputation status  
 
-Follow these steps to set up the project locally for development.
-
-### Prerequisites
-- Node.js (v18 or higher)
-- A Stacks Wallet extension (Leather or Xverse) installed in your browser.
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/bayyubenjamin/stacksone.git
-   cd stacksone
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment setup**
-
-   Create a `.env` file in the root directory and add your Supabase credentials:
-
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   ```
+These badges function as proof-of-participation and long-term identity markers within the ecosystem.
 
 ---
 
-## 📂 Project Structure
+# 2️⃣ Vault Ecosystem (Dual-Token DeFi Model)
+
+The Vault is a closed-loop token economy designed for sustainable gamification.
+
+## 💰 Dual-Token Structure
+
+### ⛽ $POIN (Fuel Token)
+- High inflation token  
+- Unlimited supply  
+- Easily earned via daily activity  
+- Designed for frequent use and burn mechanics  
+
+### 💎 $ONE (Gem Token)
+- Scarce premium token  
+- Controlled emission  
+- Earned via staking, burning, or special activities  
+- Represents higher economic value  
+
+---
+
+## 🚰 The Faucet (Daily Distribution)
+
+- Users can claim free `$POIN` every ~24 hours (~144 blocks).
+- **Streak Bonus Mechanism:**  
+  Consecutive claims increase rewards.
+
+This encourages consistent daily engagement.
+
+---
+
+## 🔥 The Refinery (Staking System)
+
+Mechanisms:
+- **Burn-to-Earn**
+- **Lock-to-Earn**
+
+Users burn or lock `$POIN` to mine `$ONE`.
+
+This reduces circulating supply while incentivizing long-term commitment.
+
+---
+
+## 🎰 Lucky Burn (On-Chain Gacha)
+
+- Users burn `$POIN`
+- Receive a probabilistic chance to win `$ONE` jackpots
+- Uses simple on-chain RNG logic
+
+Designed as a gamified sink mechanism for `$POIN`.
+
+---
+
+# 🏗 Smart Contract Architecture
+
+All on-chain logic is written in **Clarity**, the smart contract language for Stacks.
+
+| Contract Name | Primary Function | Category |
+|---------------|------------------|----------|
+| `genesis-core-v4` | Stores XP, levels, and check-in logic | Loyalty |
+| `genesis-missions-v4` | Manages mission list and validation | Loyalty |
+| `genesis-badges-v4` | SIP-009 NFT badge contract | Loyalty |
+| `token-poin` | SIP-010 fungible token (utility token) | DeFi |
+| `token-one` | SIP-010 fungible token (premium token) | DeFi |
+| `faucet-distributor` | Daily reward & streak logic | Protocol Logic |
+| `staking-refinery` | `$POIN` locking/burning → `$ONE` minting | Protocol Logic |
+| `utility-gacha` | RNG-based burn game mechanism | Protocol Logic |
+
+---
+
+# 🛠 Tech Stack
+
+- **Frontend:** React.js, Vite, Tailwind CSS  
+- **Blockchain:** Stacks (Bitcoin Layer-2)  
+- **Smart Contract Language:** Clarity  
+- **Authentication:** Stacks Connect (Wallet-based Auth)  
+- **Off-Chain Storage:** Supabase (non-critical profile metadata)  
+
+---
+
+# 💻 Local Development
+
+## Prerequisites
+
+- Node.js (v16+)
+- Clarinet (for smart contract development)
+- Stacks-compatible wallet (Leather / Xverse)
+
+---
+
+## 1️⃣ Clone & Install
+
+```bash
+git clone https://github.com/username/stacksone.git
+cd stacksone
+npm install
+```
+
+---
+
+## 2️⃣ Run Frontend
+
+```bash
+npm run dev
+```
+
+Open:
 
 ```
-src/
-├── components/        # UI Components (Layout, Sidebar, Cards)
-├── pages/             # Main Views (Home, Tasks, Profile)
-├── assets/            # Static assets (Images, Icons)
-├── contracts/         # Clarity Smart Contracts source code
-├── polyfills.js       # Buffer & Global polyfills for Web3 compatibility
-├── supabaseClient.js  # Supabase configuration
-├── App.jsx            # Main Logic, Routing & Contract Calls
-└── main.jsx           # Entry point
+http://localhost:5173
 ```
 
 ---
 
-## 🤝 Contributing
+## 3️⃣ Run Local Devnet (Optional)
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+To test contracts locally:
 
-1. Fork the project  
-2. Create your feature branch  
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-3. Commit your changes  
-   ```bash
-   git commit -m "Add some AmazingFeature"
-   ```
-4. Push to the branch  
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-5. Open a Pull Request  
+```bash
+cd smart-contracts
+clarinet integrate
+```
 
 ---
 
-## 📄 License
+# 🌐 Mainnet Deployment
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Deployment is managed using **Clarinet**.
 
-<p align="center">
-Built with ❤️ for the Stacks Ecosystem
-</p>
+## Step 1: Configuration
+
+Ensure `Mainnet.toml` contains the deployer wallet mnemonic.
+
+⚠️ **Never commit this file to the repository.**
+
+---
+
+## Step 2: Deploy Contracts
+
+```bash
+clarinet deployment apply --mainnet
+```
+
+---
+
+## Step 3: Post-Deployment Initialization (CRITICAL)
+
+You must manually grant minting permissions between contracts using Stacks Explorer Sandbox:
+
+1. `token-poin` → `add-minter` → `faucet-distributor`
+2. `token-one` → `add-minter` → `staking-refinery`
+3. `token-one` → `add-minter` → `utility-gacha`
+
+Without this step, token emissions will not function.
+
+---
+
+# 🔐 Security Notes
+
+- Dual-token emission is controlled via explicit minter permissions.
+- `$ONE` supply is intentionally restricted.
+- `$POIN` acts as a utility/burn sink token.
+- Always verify deployment plans before executing on mainnet.
+
+---
+
+# 📜 License
+
+This project is open-source and distributed under the **MIT License**.
+
+---
+
+# ✨ Vision
+
+StacksOne aims to demonstrate how:
+
+- Loyalty systems can be fully on-chain  
+- Reputation can be composable  
+- Gamified DeFi can improve retention  
+- Bitcoin Layer-2 ecosystems can host sustainable micro-economies  
+
+Built on Bitcoin. Powered by Stacks.
+
