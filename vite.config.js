@@ -9,13 +9,14 @@ export default defineConfig({
       stream: 'stream-browserify',
       buffer: 'buffer',
     },
-    // FIX: Paksa penggunaan satu instance library Stacks untuk mencegah error "Invalid Clarity Value"
+    // FIX: Paksa penggunaan satu instance library Stacks untuk mencegah error "Invalid Clarity Value" dan "Export missing"
     dedupe: [
       '@stacks/transactions',
       '@stacks/network',
       '@stacks/common',
       '@stacks/connect',
-      '@stacks/auth'
+      '@stacks/auth',
+      '@stacks/encryption' // <--- DITAMBAHKAN
     ],
   },
   plugins: [
