@@ -1,224 +1,179 @@
-# StacksOne  
-## Web3 Loyalty & Dual-Token DeFi Ecosystem on Stacks
+# 🌌 StacksOne Vault Ecosystem
 
-StacksOne is a Web3 loyalty and mini-DeFi ecosystem built on **Stacks (Bitcoin Layer-2)**.  
-The platform combines on-chain reputation mechanics (NFT badges & XP system) with a dual-token economy designed to drive gamification, retention, and long-term engagement.
+![Stacks](https://img.shields.io/badge/Network-Stacks_Mainnet-5546FF?style=for-the-badge&logo=stacks)
+![Clarity](https://img.shields.io/badge/Smart_Contracts-Clarity_2.0-black?style=for-the-badge)
+![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?style=for-the-badge&logo=react)
 
-![StacksOne Banner](public/vite.svg)
-
----
-
-## 🚀 Overview
-
-StacksOne consists of two core pillars:
-
-1. **Genesis System** – Loyalty & Reputation Framework  
-2. **Vault Ecosystem** – Dual-Token DeFi Economy  
-
-Together, they form a closed-loop on-chain incentive system that rewards participation and sustained engagement.
+StacksOne Vault is a gamified Web3 identity and progression protocol built on the **Stacks** blockchain. It allows users to complete on-chain missions, earn Experience Points (XP), level up, and mint exclusive SIP-009 standard NFT badges as proof of their contribution and status within the ecosystem.
 
 ---
 
-# 1️⃣ Genesis System (Loyalty & Reputation)
+## 🏗️ System Architecture (v10 Ecosystem)
 
-The Genesis System rewards users for meaningful on-chain activity.
+The protocol utilizes a highly scalable and upgradable tri-contract architecture:
 
-### 🔹 Missions
-Users complete on-chain tasks (e.g., verification or ecosystem interactions) to earn **XP (Experience Points)**.
+### 1. `genesis-core-v10.clar` (The Brain)
+- Manages the global state of user profiles (XP and Levels).
+- Acts as the central router for claiming badges and completing missions.
+- Calculates level progression dynamically using the formula:
 
-### 🔹 Daily Check-In
-Users can check in once per day to increase their reputation level and maintain engagement streaks.
+```
+level = (XP / 500) + 1
+```
 
-### 🔹 NFT Badges (SBT-Compatible)
-On-chain certificates (SIP-009 NFTs) representing user achievements:
+### 2. `genesis-missions-v10.clar` (The Tracker)
+- Handles daily check-ins with a 144 block-height cooldown.
+- Records completed tasks to prevent duplicate claims.
+- Only accepts write operations from the authorized Core contract.
 
-- 🛡 **Genesis Badge** – Early adopter recognition  
-- 💠 **Node Badge** – Network participation acknowledgment  
-- 🆔 **Guardian Badge** – High reputation status  
-
-These badges function as proof-of-participation and long-term identity markers within the ecosystem.
-
----
-
-# 2️⃣ Vault Ecosystem (Dual-Token DeFi Model)
-
-The Vault is a closed-loop token economy designed for sustainable gamification.
-
-## 💰 Dual-Token Structure
-
-### ⛽ $POIN (Fuel Token)
-- High inflation token  
-- Unlimited supply  
-- Easily earned via daily activity  
-- Designed for frequent use and burn mechanics  
-
-### 💎 $ONE (Gem Token)
-- Scarce premium token  
-- Controlled emission  
-- Earned via staking, burning, or special activities  
-- Represents higher economic value  
+### 3. `genesis-badges-v10.clar` (The Vault)
+- Fully compliant SIP-009 NFT contract.
+- Stores on-chain metadata pointers (IPFS URIs).
+- Minting is strictly restricted to the authorized Core contract when XP/Level requirements are met.
 
 ---
 
-## 🚰 The Faucet (Daily Distribution)
+## 🔐 Dual-Authorization Security Model
 
-- Users can claim free `$POIN` every ~24 hours (~144 blocks).
-- **Streak Bonus Mechanism:**  
-  Consecutive claims increase rewards.
+To prevent lock-outs and ensure future upgradability, supporting contracts (Missions and Badges) implement a Dual-Authorization model:
 
-This encourages consistent daily engagement.
+- **`admin (Principal)`**
+  - The wallet that deployed the contract.
+  - Retains permanent rights to re-route the system to a new Core contract in the future.
+  - Functions: `transfer-admin`, `set-game-core`.
 
----
+- **`game-core-address (Principal)`**
+  - The operational Core contract currently authorized to mint NFTs and add XP.
 
-## 🔥 The Refinery (Staking System)
-
-Mechanisms:
-- **Burn-to-Earn**
-- **Lock-to-Earn**
-
-Users burn or lock `$POIN` to mine `$ONE`.
-
-This reduces circulating supply while incentivizing long-term commitment.
+This structure allows seamless upgrades without breaking the ecosystem.
 
 ---
 
-## 🎰 Lucky Burn (On-Chain Gacha)
+## ✨ Key Features
 
-- Users burn `$POIN`
-- Receive a probabilistic chance to win `$ONE` jackpots
-- Uses simple on-chain RNG logic
+- **Daily On-Chain Check-in**  
+  Users interact with the blockchain daily to earn base XP.
 
-Designed as a gamified sink mechanism for `$POIN`.
+- **Mission Board**  
+  Dynamic task system for protocol-specific actions with higher XP rewards.
 
----
+- **Level Progression System**  
+  XP automatically converts to Levels, gating access to higher-tier rewards.
 
-# 🏗 Smart Contract Architecture
-
-All on-chain logic is written in **Clarity**, the smart contract language for Stacks.
-
-| Contract Name | Primary Function | Category |
-|---------------|------------------|----------|
-| `genesis-core-v4` | Stores XP, levels, and check-in logic | Loyalty |
-| `genesis-missions-v4` | Manages mission list and validation | Loyalty |
-| `genesis-badges-v4` | SIP-009 NFT badge contract | Loyalty |
-| `token-poin` | SIP-010 fungible token (utility token) | DeFi |
-| `token-one` | SIP-010 fungible token (premium token) | DeFi |
-| `faucet-distributor` | Daily reward & streak logic | Protocol Logic |
-| `staking-refinery` | `$POIN` locking/burning → `$ONE` minting | Protocol Logic |
-| `utility-gacha` | RNG-based burn game mechanism | Protocol Logic |
+- **NFT Badge Claiming**
+  - **Genesis Pioneer** → Level 1
+  - **Node Operator** → Level 2 (500 XP) + Genesis badge required
+  - **Protocol Guardian** → Level 5 (2000 XP) + Node badge required
 
 ---
 
-# 🛠 Tech Stack
+## 💻 Tech Stack
 
-- **Frontend:** React.js, Vite, Tailwind CSS  
-- **Blockchain:** Stacks (Bitcoin Layer-2)  
-- **Smart Contract Language:** Clarity  
-- **Authentication:** Stacks Connect (Wallet-based Auth)  
-- **Off-Chain Storage:** Supabase (non-critical profile metadata)  
-
----
-
-# 💻 Local Development
-
-## Prerequisites
-
-- Node.js (v16+)
-- Clarinet (for smart contract development)
-- Stacks-compatible wallet (Leather / Xverse)
+- **Smart Contracts**: Clarity (v2.0, Epoch 2.5), Clarinet
+- **Frontend**: React (Vite), TailwindCSS, Framer Motion
+- **Web3 Integration**:
+  - `@stacks/connect`
+  - `@stacks/network`
+  - `@stacks/transactions`
+- **Off-Chain Database**: Supabase (for caching user sessions and improving UI speed)
 
 ---
 
-## 1️⃣ Clone & Install
+## 🚀 Deployment & Wiring Guide
+
+Follow this exact sequence to ensure contracts communicate correctly without `u401` or `u102` errors.
+
+### 1️⃣ Deploy Contracts
 
 ```bash
-git clone https://github.com/username/stacksone.git
-cd stacksone
-npm install
+clarinet deployment generate --mainnet --low-cost
+clarinet deployment apply --mainnet
+```
+
+### 2️⃣ Contract Authorization (The "Wiring")
+
+After deployment, call the following functions from the `admin` wallet (via Stacks Explorer Sandbox or similar):
+
+1. In `genesis-badges-v10`
+   - Call: `set-game-core`
+   - Input:
+   ```
+   '<YOUR_WALLET>.genesis-core-v10
+   ```
+
+2. In `genesis-missions-v10`
+   - Call: `set-game-core`
+   - Input:
+   ```
+   '<YOUR_WALLET>.genesis-core-v10
+   ```
+
+### 3️⃣ Initialize Badge Registry
+
+Call `create-badge` in `genesis-core-v10` sequentially:
+
+**Genesis Badge**
+```
+name: "genesis"
+uri: "ipfs://..."
+xp-req: u0
+level-req: u1
+prereq-badge: none
+```
+
+**Node Badge**
+```
+name: "node"
+uri: "ipfs://..."
+xp-req: u500
+level-req: u2
+prereq-badge: (some "genesis")
+```
+
+**Guardian Badge**
+```
+name: "guardian"
+uri: "ipfs://..."
+xp-req: u2000
+level-req: u5
+prereq-badge: (some "node")
 ```
 
 ---
 
-## 2️⃣ Run Frontend
+## 🛠️ Frontend Setup
+
+### 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/bayyubenjamin/stacksone-vault.git
+cd stacksone-vault/frontend
+```
+
+### 2️⃣ Install Dependencies
+
+```bash
+npm install
+```
+
+### 3️⃣ Environment Variables
+
+Create a `.env` file in the frontend root and add:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 4️⃣ Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open:
-
-```
-http://localhost:5173
-```
-
 ---
 
-## 3️⃣ Run Local Devnet (Optional)
+## 📜 License & Author
 
-To test contracts locally:
-
-```bash
-cd smart-contracts
-clarinet integrate
-```
-
----
-
-# 🌐 Mainnet Deployment
-
-Deployment is managed using **Clarinet**.
-
-## Step 1: Configuration
-
-Ensure `Mainnet.toml` contains the deployer wallet mnemonic.
-
-⚠️ **Never commit this file to the repository.**
-
----
-
-## Step 2: Deploy Contracts
-
-```bash
-clarinet deployment apply --mainnet
-```
-
----
-
-## Step 3: Post-Deployment Initialization (CRITICAL)
-
-You must manually grant minting permissions between contracts using Stacks Explorer Sandbox:
-
-1. `token-poin` → `add-minter` → `faucet-distributor`
-2. `token-one` → `add-minter` → `staking-refinery`
-3. `token-one` → `add-minter` → `utility-gacha`
-
-Without this step, token emissions will not function.
-
----
-
-# 🔐 Security Notes
-
-- Dual-token emission is controlled via explicit minter permissions.
-- `$ONE` supply is intentionally restricted.
-- `$POIN` acts as a utility/burn sink token.
-- Always verify deployment plans before executing on mainnet.
-
----
-
-# 📜 License
-
-This project is open-source and distributed under the **MIT License**.
-
----
-
-# ✨ Vision
-
-StacksOne aims to demonstrate how:
-
-- Loyalty systems can be fully on-chain  
-- Reputation can be composable  
-- Gamified DeFi can improve retention  
-- Bitcoin Layer-2 ecosystems can host sustainable micro-economies  
-
-Built on Bitcoin. Powered by Stacks.
-
+Developed with passion by **Bayu Benjamin**  
+GitHub: https://github.com/bayyubenjamin
