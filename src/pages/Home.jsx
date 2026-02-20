@@ -51,7 +51,7 @@ const BadgeCard = ({
           <h3 className={`text-xl font-bold mb-1 ${isMinted ? "text-white" : "text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-400"}`}>
             {title}
           </h3>
-          <p className={`text-xs font-bold tracking-widest uppercase mb-3 ${colorClass.replace('bg-', 'text-')}`}>
+          <p className={`text-xs font-bold tracking-widest uppercase mb-3 ${colorClass.includes('stx-accent') ? 'text-indigo-400' : colorClass.replace('bg-', 'text-')}`}>
             {subtitle}
           </p>
           <p className="text-slate-400 text-sm leading-relaxed border-t border-slate-800 pt-3">
@@ -68,7 +68,7 @@ const BadgeCard = ({
               ? "bg-slate-800 text-slate-500 cursor-default border border-slate-700"
               : isLocked
                 ? "bg-slate-800/50 text-slate-600 cursor-not-allowed border border-transparent"
-                : `bg-white text-black hover:bg-${colorClass} hover:text-white shadow-lg shadow-white/5`
+                : `bg-white text-black hover:bg-indigo-500 hover:text-white shadow-lg shadow-white/5`
           }`}
         >
           {isMinted ? "Badge Secured" : isLocked ? "Requirements Not Met" : "Mint Badge"}
@@ -81,36 +81,36 @@ const BadgeCard = ({
 // --- HALAMAN UTAMA (HOME) ---
 const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWallet }) => {
   
-  // Definisi Badge Logic & Data
+  // Definisi Badge Logic & Data (XP/Level disesuaikan dengan registry di smart contract)
   const badges = [
     {
       id: 'genesis',
       title: "Genesis Pioneer",
       subtitle: "Phase 1 Access",
-      reqText: "Requires 100 Reputation Points. Awarded to early protocol adopters who verify their wallet.",
+      reqText: "Awarded to early protocol adopters who verify their wallet. Requires Level 1.",
       icon: "💠",
-      colorClass: "stx-accent", 
-      isLocked: !userData || userXP < 100, 
+      colorClass: "indigo-500", 
+      isLocked: !userData || userLevel < 1, 
       isMinted: badgesStatus?.genesis || false
     },
     {
       id: 'node',
       title: "Node Operator",
       subtitle: "Consistency Tier",
-      reqText: "Requires Level 5 (2500 XP). Validate your commitment by maintaining daily synchronization streaks.",
+      reqText: "Requires Level 2 and 500 XP. Validate your commitment by maintaining protocol synchronization.",
       icon: "⚡",
       colorClass: "purple-500",
-      isLocked: !userData || userLevel < 5,
+      isLocked: !userData || userLevel < 2 || userXP < 500,
       isMinted: badgesStatus?.node || false
     },
     {
       id: 'guardian',
       title: "Protocol Guardian",
       subtitle: "Elite Status",
-      reqText: "Requires Level 10. The highest honor for users who have completed all genesis missions.",
+      reqText: "Requires Level 5 and 2000 XP. The highest honor for users who have secured the genesis protocol.",
       icon: "🛡️",
       colorClass: "amber-500",
-      isLocked: !userData || userLevel < 10,
+      isLocked: !userData || userLevel < 5 || userXP < 2000,
       isMinted: badgesStatus?.guardian || false
     }
   ];
@@ -120,7 +120,6 @@ const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWa
       
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Metric Global */}
         <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-xl backdrop-blur-sm">
           <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">Total Users</p>
           <p className="text-xl font-mono text-white">845</p>
@@ -135,9 +134,9 @@ const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWa
          {/* User Personal Stats */}
          {userData && (
           <>
-            <div className="bg-slate-900/50 border border-stx-accent/30 p-4 rounded-xl backdrop-blur-sm relative overflow-hidden">
+            <div className="bg-slate-900/50 border border-indigo-500/30 p-4 rounded-xl backdrop-blur-sm relative overflow-hidden">
               <div className="absolute right-0 top-0 p-2 opacity-20 text-4xl">💎</div>
-              <p className="text-stx-accent text-[10px] font-bold uppercase mb-1">Your XP</p>
+              <p className="text-indigo-400 text-[10px] font-bold uppercase mb-1">Your XP</p>
               <p className="text-xl font-mono text-white">{userXP}</p>
             </div>
             <div className="bg-slate-900/50 border border-purple-500/30 p-4 rounded-xl backdrop-blur-sm relative overflow-hidden">
@@ -152,7 +151,7 @@ const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWa
       {/* Hero Header */}
       <div className="text-center max-w-2xl mx-auto py-4">
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-          Establish Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-stx-accent to-purple-500">On-Chain Legacy</span>
+          Establish Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">On-Chain Legacy</span>
         </h1>
         <p className="text-slate-400 text-lg leading-relaxed">
           Collect reputation badges to unlock future governance power and airdrop eligibility.
@@ -184,7 +183,7 @@ const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWa
       {/* Footer Info */}
       <div className="text-center border-t border-slate-800 pt-8 mt-8">
         <p className="text-slate-600 text-xs font-mono">
-          GENESIS CONTRACT: <span className="text-slate-500 hover:text-stx-accent cursor-pointer transition">SP3G...9J3</span>
+          GENESIS CONTRACT: <span className="text-slate-500 hover:text-indigo-400 cursor-pointer transition">SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3</span>
         </p>
       </div>
 

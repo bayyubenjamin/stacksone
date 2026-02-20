@@ -90,7 +90,7 @@ function App() {
         </button>
       }
     >
-      {activeTab === 'home' && <Home userData={userData} userXP={userXP} userLevel={userLevel} badgesStatus={badgesStatus} handleMint={() => {}} />}
+      {activeTab === 'home' && <Home userData={userData} userXP={userXP} userLevel={userLevel} badgesStatus={badgesStatus} handleMint={handleMintBadge}
       {activeTab === 'tasks' && <Tasks initialTasks={MISSION_LIST} handleTask={handleCompleteMission} />}
       {activeTab === 'vault' && <Vault userData={userData} />}
       {activeTab === 'profile' && <Profile userData={userData} userXP={userXP} userLevel={userLevel} hasCheckedIn={hasCheckedIn} handleCheckIn={() => {}} disconnectWallet={() => {}} />}
