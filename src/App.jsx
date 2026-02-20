@@ -27,7 +27,6 @@ function App() {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [badgesStatus, setBadgesStatus] = useState({ genesis: false, node: false, guardian: false });
 
-  // --- HANDLING SESI ---
   useEffect(() => {
     const checkSession = async () => {
       if (userSession.isUserSignedIn()) {
@@ -54,37 +53,18 @@ function App() {
           setHasCheckedIn(lastCheck === new Date().toDateString());
         }
       }
-    } catch (error) { console.error("Error fetching profile:", error); }
+    } catch (error) { console.error("Error profile:", error); }
   };
 
-  // --- 1. LOGIKA CHECK-IN ---
-  const handleCheckIn = async () => {
-    if (!userData) return alert("Connect wallet first!");
-    
-    await openContractCall({
-      network: new StacksMainnet(), 
-      contractAddress: CONTRACT_ADDRESS,
-      contractName: CONTRACT_NAME,
-      functionName: 'daily-check-in',
-      functionArgs: [],
-      postConditionMode: PostConditionMode.Allow,
-      onFinish: (data) => {
-        console.log("Check-in tx sent:", data);
-        setHasCheckedIn(true);
-        setUserXP(prev => prev + 20);
-      },
-    });
-  };
-
-  // --- 2. LOGIKA MINT BADGE ---
+  // --- LOGIKA MINT BADGE ---
   const handleMintBadge = async (badgeType) => {
     if (!userData) return alert("Connect wallet first!");
 
-    // DISESUAIKAN: Nama di sini harus SAMA PERSIS dengan yang diisi di create-badge (Explorer)
+    // NAMA-NAMA INI HARUS SAMA PERSIS DENGAN DI EXPLORER
     const badgeNameMap = {
-      'genesis': 'genesis',
-      'node': 'node',
-      'guardian': 'guardian'
+      'genesis': 'genesis-badge',
+      'node': 'node-badge',
+      'guardian': 'guardian-badge'
     };
 
     const rawBadgeName = badgeNameMap[badgeType] || badgeType;
@@ -104,7 +84,6 @@ function App() {
     });
   };
 
-  // --- 3. LOGIKA MISSION ---
   const handleCompleteMission = async (taskId) => {
     if (!userData) { alert("Connect wallet first!"); return false; }
     const task = MISSION_LIST.find(t => t.id === taskId);
@@ -127,6 +106,22 @@ function App() {
     });
   };
 
+  const handleCheckIn = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network: new StacksMainnet(), 
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_NAME,
+      functionName: 'daily-check-in',
+      functionArgs: [],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: (data) => {
+        setHasCheckedIn(true);
+        setUserXP(prev => prev + 20);
+      },
+    });
+  };
+
   const connectWallet = () => {
     showConnect({ 
       userSession, 
@@ -140,7 +135,7 @@ function App() {
       setActiveTab={setActiveTab} 
       walletButton={
         !userData ? 
-        <button onClick={connectWallet} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-lg font-bold text-xs transition-all">
+        <button onClick={connectWallet} className="bg-orange-500 px-4 py-2 rounded-lg font-bold text-xs transition-all">
           CONNECT WALLET
         </button> :
         <button onClick={() => { userSession.signUserOut(); setUserData(null); }} className="bg-slate-800 px-4 py-2 rounded-lg font-mono text-xs hover:bg-slate-700 transition-colors">
