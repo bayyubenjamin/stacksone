@@ -80,13 +80,15 @@ function App() {
   const handleMintBadge = async (badgeType) => {
     if (!userData) return alert("Connect wallet first!");
 
+    // DISESUAIKAN: Nama badge di sini harus sama dengan yang kamu buat di 'create-badge'
     const badgeNameMap = {
-      'genesis': 'genesis-badge',
-      'node': 'node-badge',
-      'guardian': 'guardian-badge'
+      'genesis': 'genesis',
+      'node': 'node',
+      'guardian': 'guardian'
     };
 
     const rawBadgeName = badgeNameMap[badgeType] || badgeType;
+    console.log(`Attempting to claim: ${rawBadgeName}`);
     
     await openContractCall({
       network: new StacksMainnet(), 
@@ -125,16 +127,20 @@ function App() {
     });
   };
 
+  const connectWallet = () => {
+    showConnect({ 
+      userSession, 
+      appDetails: {name: 'Genesis Platform', icon: window.location.origin + '/vite.svg'} 
+    });
+  };
+
   return (
     <Layout 
       activeTab={activeTab} 
       setActiveTab={setActiveTab} 
       walletButton={
         !userData ? 
-        <button onClick={() => showConnect({ 
-          userSession, 
-          appDetails: {name: 'Genesis Platform', icon: window.location.origin + '/vite.svg'} 
-        })} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-lg font-bold text-xs transition-all">
+        <button onClick={connectWallet} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-lg font-bold text-xs transition-all">
           CONNECT WALLET
         </button> :
         <button onClick={() => { userSession.signUserOut(); setUserData(null); }} className="bg-slate-800 px-4 py-2 rounded-lg font-mono text-xs hover:bg-slate-700 transition-colors">
@@ -149,7 +155,7 @@ function App() {
           userLevel={userLevel} 
           badgesStatus={badgesStatus} 
           handleMint={handleMintBadge} 
-          connectWallet={() => showConnect({ userSession, appDetails: {name: 'Genesis'} })}
+          connectWallet={connectWallet}
         />
       )}
       

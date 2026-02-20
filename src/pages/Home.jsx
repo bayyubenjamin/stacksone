@@ -81,13 +81,13 @@ const BadgeCard = ({
 // --- HALAMAN UTAMA (HOME) ---
 const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWallet }) => {
   
-  // Definisi Badge Logic & Data (XP/Level disesuaikan dengan registry di smart contract)
+  // Definisi Badge Logic & Data (Sesuai dengan registry di smart contract v5)
   const badges = [
     {
       id: 'genesis',
       title: "Genesis Pioneer",
       subtitle: "Phase 1 Access",
-      reqText: "Awarded to early protocol adopters who verify their wallet. Requires Level 1.",
+      reqText: "Awarded to early protocol adopters. Requires Level 1.",
       icon: "💠",
       colorClass: "indigo-500", 
       isLocked: !userData || userLevel < 1, 
@@ -97,7 +97,7 @@ const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWa
       id: 'node',
       title: "Node Operator",
       subtitle: "Consistency Tier",
-      reqText: "Requires Level 2 and 500 XP. Validate your commitment by maintaining protocol synchronization.",
+      reqText: "Validate commitment via synchronization. Requires Level 2 and 500 XP.",
       icon: "⚡",
       colorClass: "purple-500",
       isLocked: !userData || userLevel < 2 || userXP < 500,
@@ -107,7 +107,7 @@ const Home = ({ userData, userXP, userLevel, badgesStatus, handleMint, connectWa
       id: 'guardian',
       title: "Protocol Guardian",
       subtitle: "Elite Status",
-      reqText: "Requires Level 5 and 2000 XP. The highest honor for users who have secured the genesis protocol.",
+      reqText: "Highest honor for securing the protocol. Requires Level 5 and 2000 XP.",
       icon: "🛡️",
       colorClass: "amber-500",
       isLocked: !userData || userLevel < 5 || userXP < 2000,
