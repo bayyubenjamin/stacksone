@@ -9,9 +9,9 @@ import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 import Vault from './pages/Vault';
 
-// --- KONFIGURASI SMART CONTRACT V5 ---
+// --- KONFIGURASI SMART CONTRACT V6 ---
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
-const CONTRACT_NAME = 'genesis-core-v5'; 
+const CONTRACT_NAME = 'genesis-core-v6'; // Diperbarui ke v6
 
 const MISSION_LIST = [
   { id: 1, name: "Credential Analysis", desc: "Verify protocol eligibility tier.", reward: 50, icon: "🛡️", completed: false },
@@ -56,29 +56,29 @@ function App() {
     } catch (error) { console.error("Error profile:", error); }
   };
 
-  // --- LOGIKA MINT BADGE ---
+  // --- LOGIKA MINT BADGE (CORE V6) ---
   const handleMintBadge = async (badgeType) => {
     if (!userData) return alert("Connect wallet first!");
 
-    // NAMA-NAMA INI HARUS SAMA PERSIS DENGAN DI EXPLORER
+    // Nama ini harus sama dengan yang didaftarkan via 'create-badge' di Core v6
     const badgeNameMap = {
-      'genesis': 'genesis-badge',
-      'node': 'node-badge',
-      'guardian': 'guardian-badge'
+      'genesis': 'genesis',
+      'node': 'node',
+      'guardian': 'guardian'
     };
 
     const rawBadgeName = badgeNameMap[badgeType] || badgeType;
-    console.log(`Attempting to claim: ${rawBadgeName}`);
+    console.log(`Attempting to claim from Core v6: ${rawBadgeName}`);
     
     await openContractCall({
       network: new StacksMainnet(), 
       contractAddress: CONTRACT_ADDRESS,
-      contractName: CONTRACT_NAME,
+      contractName: CONTRACT_NAME, // genesis-core-v6
       functionName: 'claim-badge',
       functionArgs: [stringAsciiCV(rawBadgeName)], 
       postConditionMode: PostConditionMode.Allow,
       onFinish: (data) => {
-        console.log(`Minting ${badgeType} sent:`, data);
+        console.log(`Minting ${badgeType} via Core v6 sent:`, data);
         setBadgesStatus(prev => ({ ...prev, [badgeType]: true }));
       },
     });
@@ -92,12 +92,12 @@ function App() {
       openContractCall({
         network: new StacksMainnet(), 
         contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
+        contractName: CONTRACT_NAME, // genesis-core-v6
         functionName: 'complete-mission',
         functionArgs: [uintCV(Number(taskId)), uintCV(Number(task.reward))], 
         postConditionMode: PostConditionMode.Allow,
         onFinish: (data) => {
-          console.log("Mission tx sent:", data);
+          console.log("Mission tx sent to Core v6:", data);
           setUserXP(prev => prev + task.reward);
           resolve(true);
         },
@@ -111,11 +111,12 @@ function App() {
     await openContractCall({
       network: new StacksMainnet(), 
       contractAddress: CONTRACT_ADDRESS,
-      contractName: CONTRACT_NAME,
+      contractName: CONTRACT_NAME, // genesis-core-v6
       functionName: 'daily-check-in',
       functionArgs: [],
       postConditionMode: PostConditionMode.Allow,
       onFinish: (data) => {
+        console.log("Check-in via Core v6 success");
         setHasCheckedIn(true);
         setUserXP(prev => prev + 20);
       },

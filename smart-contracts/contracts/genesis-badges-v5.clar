@@ -1,0 +1,57 @@
+;; genesis-badges-v5.clar
+;; Standar SIP-009 NFT dengan sistem Admin yang aman
+(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
+
+(define-non-fungible-token genesis-badge uint)
+
+;; Error Codes
+(define-constant err-admin-only (err u100))
+(define-constant err-not-token-owner (err u101))
+(define-constant err-not-authorized (err u102))
+
+;; Data Vars
+(define-data-var admin principal tx-sender) ;; Wallet Anda sebagai Admin permanen
+(define-data-var game-core-address principal tx-sender) ;; Alamat kontrak Core v5
+(define-data-var last-token-id uint u0)
+
+;; Mapping Metadata
+(define-map token-uri uint (string-ascii 256))
+
+;; --- ADMINISTRATIVE FUNCTIONS ---
+
+;; Hanya Admin (Wallet) yang bisa mengganti Game Core
+(define-public (set-game-core (new-core principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get admin)) err-admin-only)
+    (var-set game-core-address new-core)
+    (ok true)))
+
+;; Jika ingin mengganti wallet admin di masa depan
+(define-public (transfer-admin (new-admin principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get admin)) err-admin-only)
+    (var-set admin new-admin)
+    (ok true)))
+
+;; --- CORE FUNCTIONS ---
+
+(define-public (mint-badge (recipient principal) (uri (string-ascii 256)))
+  (let ((token-id (+ (var-get last-token-id) u1)))
+    ;; Hanya Game Core yang diizinkan untuk memanggil fungsi ini
+    (asserts! (is-eq tx-sender (var-get game-core-address)) err-not-authorized)
+    
+    (try! (nft-mint? genesis-badge token-id recipient))
+    (map-set token-uri token-id uri)
+    (var-set last-token-id token-id)
+    (ok token-id)))
+
+;; --- SIP-009 STANDARD FUNCTIONS ---
+
+(define-read-only (get-last-token-id) (ok (var-get last-token-id)))
+(define-read-only (get-token-uri (token-id uint)) (ok (map-get? token-uri token-id)))
+(define-read-only (get-owner (token-id uint)) (ok (nft-get-owner? genesis-badge token-id)))
+
+(define-public (transfer (token-id uint) (sender principal) (recipient principal))
+  (begin
+    (asserts! (is-eq tx-sender sender) err-not-token-owner)
+    (nft-transfer? genesis-badge token-id sender recipient)))

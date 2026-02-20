@@ -11,14 +11,8 @@ requirements = [
 [project.cache_location]
 path = ".requirements"
 
-# KITA SISAKAN CUMA V5 BIAR CLARINET NGGAK BACA KONTRAK LAMA
-[contracts.genesis-missions-v5]
-path = "contracts/genesis-missions-v5.clar"
+# HANYA SISAKAN INI
+[contracts.genesis-core-v6]
+path = "contracts/genesis-core-v6.clar"
 clarity_version = 2
 epoch = 2.5
-
-[contracts.genesis-core-v5]
-path = "contracts/genesis-core-v5.clar"
-clarity_version = 2
-epoch = 2.5
-depends_on = ["genesis-missions-v5"]
