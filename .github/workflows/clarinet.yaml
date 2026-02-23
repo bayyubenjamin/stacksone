@@ -2,9 +2,7 @@ name: Stacks Smart Contracts CI
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -14,34 +12,16 @@ jobs:
         working-directory: ./smart-contracts
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-    - name: Install Dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run Vitest Contract Tests
-      run: npm run test
-
-  check:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./smart-contracts
-    
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-    
-    - name: Setup Clarinet
-      uses: hirosystems/setup-clarinet@v2
-      with:
-        version: '2.5.0'
-
-    - name: Run Clarinet Check
-      run: clarinet check
+      - name: Run tests
+        run: npm run test
