@@ -69,46 +69,45 @@ const Profile = () => {
         one: Number(cvToValue(oneData).value) / 1000000
       });
     } catch (e) {
-      console.error("Gagal memuat saldo token:", e);
+      console.error("Failed to load token balance:", e);
     }
   };
 
   const fetchBadges = async (userAddress) => {
     try {
-      // Menggunakan Hiro API untuk menarik semua NFT yang dimiliki wallet
+      // Using Hiro API to fetch all NFTs owned by the wallet
       const response = await fetch(`https://api.mainnet.hiro.so/extended/v1/tokens/nft/holdings?principal=${userAddress}`);
       const data = await response.json();
       
       if (data && data.results) {
-        // Filter khusus untuk kontrak genesis-badges
+        // Specific filter for genesis-badges contract
         const badgeHoldings = data.results.filter(
           item => item.asset_identifier.includes(`${CONTRACT_ADDRESS}.genesis-badges`)
         );
 
-        // Mapping data NFT dari API ke format UI
+        // Mapping API NFT data to UI format
         const formattedBadges = badgeHoldings.map((item) => {
-          const tokenId = item.value.repr.replace('u', ''); // Menghapus 'u' dari uint
+          const tokenId = item.value.repr.replace('u', ''); // Remove 'u' from uint
           return {
             id: tokenId,
             name: `Genesis Badge #${tokenId}`,
-            description: "Pencapaian On-Chain di Ekosistem StacksOne.",
-            imageUrl: `https://api.dicebear.com/7.x/shapes/svg?seed=${tokenId}&backgroundColor=0f172a,1e293b&shape1Color=6366f1` // Placeholder generik keren
+            description: "On-Chain Achievement in the StacksOne Ecosystem.",
+            imageUrl: `https://api.dicebear.com/7.x/shapes/svg?seed=${tokenId}&backgroundColor=0f172a,1e293b&shape1Color=6366f1` 
           };
         });
 
-        // Mock Fallback jika user belum punya badge (Untuk preview UI)
+        // Mock Fallback if user doesn't have a badge yet (For UI preview)
         if (formattedBadges.length === 0) {
           setBadges([
-            { id: '1', name: 'Pioneer Staker', description: 'Melakukan staking pertama di Refinery.', earned: true },
-            { id: '2', name: 'Lucky Burner', description: 'Memenangkan hadiah dari Utility Gacha.', earned: true }
+            { id: '1', name: 'Pioneer Staker', description: 'Made the first stake in the Refinery.', earned: true },
+            { id: '2', name: 'Lucky Burner', description: 'Won a prize from the Utility Gacha.', earned: true }
           ]);
         } else {
           setBadges(formattedBadges);
         }
       }
     } catch (e) {
-      console.error("Gagal memuat data badges:", e);
-      // Fallback jika API gagal
+      console.error("Failed to load badges data:", e);
       setBadges([]);
     }
   };
@@ -131,8 +130,8 @@ const Profile = () => {
       <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-6">
         <div className="text-center bg-[#1E293B] p-10 rounded-3xl border border-slate-700 max-w-md w-full">
           <Wallet size={48} className="text-slate-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Wallet Terputus</h2>
-          <p className="text-slate-400 mb-6 text-sm">Silakan hubungkan wallet Stacks Anda untuk melihat profil, aset, dan badge pencapaian.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Wallet Disconnected</h2>
+          <p className="text-slate-400 mb-6 text-sm">Please connect your Stacks wallet to view your profile, assets, and achievement badges.</p>
         </div>
       </div>
     );
@@ -175,7 +174,7 @@ const Profile = () => {
                 rel="noreferrer"
                 className="flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-400 transition-colors"
               >
-                Lihat di Explorer <ExternalLink size={12} />
+                View on Explorer <ExternalLink size={12} />
               </a>
             </div>
           </div>
@@ -186,30 +185,30 @@ const Profile = () => {
             className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 text-sm font-medium transition-all"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-            Segarkan
+            Refresh
           </button>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto p-6 md:p-10 space-y-10">
         
-        {/* SECTION 1: ASET WALLET */}
+        {/* SECTION 1: WALLET ASSETS */}
         <section>
           <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-            <Wallet className="text-indigo-400" /> Aset Tersedia
+            <Wallet className="text-indigo-400" /> Available Assets
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Kartu POIN */}
+            {/* POIN Card */}
             <div className="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-slate-700 rounded-3xl p-6 relative overflow-hidden group hover:border-amber-500/50 transition-colors">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
               <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400">
                   <Zap size={28} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Token Staking</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Staking Token</span>
               </div>
               <div className="relative z-10">
-                <p className="text-slate-400 text-sm font-medium mb-1">Saldo $POIN</p>
+                <p className="text-slate-400 text-sm font-medium mb-1">$POIN Balance</p>
                 {loading ? (
                   <div className="h-10 w-32 bg-slate-700/50 rounded animate-pulse"></div>
                 ) : (
@@ -218,17 +217,17 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Kartu ONE */}
+            {/* ONE Card */}
             <div className="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-slate-700 rounded-3xl p-6 relative overflow-hidden group hover:border-indigo-500/50 transition-colors">
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
               <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400">
                   <Box size={28} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Token Utama</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Main Token</span>
               </div>
               <div className="relative z-10">
-                <p className="text-slate-400 text-sm font-medium mb-1">Saldo $ONE</p>
+                <p className="text-slate-400 text-sm font-medium mb-1">$ONE Balance</p>
                 {loading ? (
                   <div className="h-10 w-32 bg-slate-700/50 rounded animate-pulse"></div>
                 ) : (
@@ -259,8 +258,8 @@ const Profile = () => {
           ) : badges.length === 0 ? (
             <div className="bg-[#0F172A] border border-dashed border-slate-700 rounded-3xl p-10 text-center">
               <Hexagon size={48} className="text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">Belum Ada Badge</h3>
-              <p className="text-slate-400 text-sm max-w-sm mx-auto">Selesaikan misi di halaman Tasks atau lakukan transaksi di Vault untuk mulai mencetak (minting) identitas Web3 Anda.</p>
+              <h3 className="text-lg font-bold text-white mb-2">No Badges Yet</h3>
+              <p className="text-slate-400 text-sm max-w-sm mx-auto">Complete missions on the Tasks page or perform transactions in the Vault to start minting your Web3 identity.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
