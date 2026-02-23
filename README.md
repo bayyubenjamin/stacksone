@@ -1,179 +1,226 @@
 # 🌌 StacksOne Vault Ecosystem
 
+![CI](https://github.com/bayyubenjamin/stacksone/actions/workflows/clarinet.yaml/badge.svg)
 ![Stacks](https://img.shields.io/badge/Network-Stacks_Mainnet-5546FF?style=for-the-badge&logo=stacks)
 ![Clarity](https://img.shields.io/badge/Smart_Contracts-Clarity_2.0-black?style=for-the-badge)
 ![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?style=for-the-badge&logo=react)
 
-StacksOne Vault is a gamified Web3 identity and progression protocol built on the **Stacks** blockchain. It allows users to complete on-chain missions, earn Experience Points (XP), level up, and mint exclusive SIP-009 standard NFT badges as proof of their contribution and status within the ecosystem.
+**StacksOne Vault** is a gamified Web3 identity and progression protocol built on the **Stacks** blockchain.
+
+It enables users to complete on-chain missions, earn Experience Points (XP), level up, and mint exclusive SIP-009 NFT badges — fully verifiable on-chain.
+
+> 🔒 Production-grade Clarity contracts  
+> ✅ Automated test suite (Vitest + Clarinet Simnet)  
+> 🚀 GitHub Actions CI enabled  
 
 ---
 
-## 🏗️ System Architecture (v10 Ecosystem)
+# 🏗️ Architecture Overview (v10 Ecosystem)
 
-The protocol utilizes a highly scalable and upgradable tri-contract architecture:
+StacksOne Vault utilizes a scalable tri-contract architecture designed for modularity and upgrade safety.
 
-### 1. `genesis-core-v10.clar` (The Brain)
-- Manages the global state of user profiles (XP and Levels).
-- Acts as the central router for claiming badges and completing missions.
-- Calculates level progression dynamically using the formula:
+## 1️⃣ genesis-core-v10.clar — The Brain
+- Manages user XP & Level state  
+- Routes mission completion  
+- Handles badge claims  
+- Computes dynamic level progression:
 
-```
+
 level = (XP / 500) + 1
-```
 
-### 2. `genesis-missions-v10.clar` (The Tracker)
-- Handles daily check-ins with a 144 block-height cooldown.
-- Records completed tasks to prevent duplicate claims.
-- Only accepts write operations from the authorized Core contract.
 
-### 3. `genesis-badges-v10.clar` (The Vault)
-- Fully compliant SIP-009 NFT contract.
-- Stores on-chain metadata pointers (IPFS URIs).
-- Minting is strictly restricted to the authorized Core contract when XP/Level requirements are met.
+## 2️⃣ genesis-missions-v10.clar — The Tracker
+- Enforces 144 block-height cooldown for daily check-in  
+- Prevents duplicate mission claims  
+- Accepts write calls only from authorized Core contract  
 
----
-
-## 🔐 Dual-Authorization Security Model
-
-To prevent lock-outs and ensure future upgradability, supporting contracts (Missions and Badges) implement a Dual-Authorization model:
-
-- **`admin (Principal)`**
-  - The wallet that deployed the contract.
-  - Retains permanent rights to re-route the system to a new Core contract in the future.
-  - Functions: `transfer-admin`, `set-game-core`.
-
-- **`game-core-address (Principal)`**
-  - The operational Core contract currently authorized to mint NFTs and add XP.
-
-This structure allows seamless upgrades without breaking the ecosystem.
+## 3️⃣ genesis-badges-v10.clar — The Vault
+- Fully SIP-009 compliant NFT contract  
+- On-chain metadata URI (IPFS)  
+- Minting restricted to authorized Core contract only  
 
 ---
 
-## ✨ Key Features
+# 🔐 Dual-Authorization Security Model
 
-- **Daily On-Chain Check-in**  
-  Users interact with the blockchain daily to earn base XP.
+Supporting contracts implement a dual-authorization upgrade-safe structure.
 
-- **Mission Board**  
-  Dynamic task system for protocol-specific actions with higher XP rewards.
+### admin (Principal)
+- Deployer wallet  
+- Permanent authority  
+- Can re-route ecosystem to new Core contract  
+- Functions:
+  - transfer-admin  
+  - set-game-core  
 
-- **Level Progression System**  
-  XP automatically converts to Levels, gating access to higher-tier rewards.
+### game-core-address (Principal)
+- Current operational Core contract  
+- Authorized to mint NFTs and modify XP  
 
-- **NFT Badge Claiming**
-  - **Genesis Pioneer** → Level 1
-  - **Node Operator** → Level 2 (500 XP) + Genesis badge required
-  - **Protocol Guardian** → Level 5 (2000 XP) + Node badge required
-
----
-
-## 💻 Tech Stack
-
-- **Smart Contracts**: Clarity (v2.0, Epoch 2.5), Clarinet
-- **Frontend**: React (Vite), TailwindCSS, Framer Motion
-- **Web3 Integration**:
-  - `@stacks/connect`
-  - `@stacks/network`
-  - `@stacks/transactions`
-- **Off-Chain Database**: Supabase (for caching user sessions and improving UI speed)
+This ensures:
+- No contract lockout  
+- Safe upgradability  
+- Long-term protocol resilience  
 
 ---
 
-## 🚀 Deployment & Wiring Guide
+# 🪙 Token Layer — SIP-010 (token-one.clar)
 
-Follow this exact sequence to ensure contracts communicate correctly without `u401` or `u102` errors.
+StacksOne includes a SIP-010 fungible token implementation.
 
-### 1️⃣ Deploy Contracts
+Features:
+- Owner-controlled minting  
+- Approved minter system  
+- Transfer validation (tx-sender enforcement)  
+- Strict zero-amount validation  
 
-```bash
+Fully tested via automated test suite.
+
+---
+
+# 🧪 Automated Testing & CI
+
+This repository includes a complete smart contract testing suite.
+
+### ✔ Vitest + Clarinet Simnet
+- Metadata validation  
+- Mint authorization tests  
+- Transfer logic tests  
+- Security edge case coverage  
+
+### ✔ GitHub Actions CI
+- Automated test execution on every push  
+- Node 18 runner  
+- Clean install per job  
+
+Run tests locally:
+
+
+cd smart-contracts
+npm install
+npm run test
+
+
+---
+
+# ✨ Key Features
+
+### 📅 Daily On-Chain Check-In
+Earn base XP with enforced cooldown.
+
+### 🎯 Mission Board
+Dynamic tasks for protocol interaction.
+
+### 📈 Level Progression
+XP auto-converts to Levels.
+
+### 🏅 NFT Badge Gating
+
+| Badge | Requirement |
+|--------|--------------|
+| Genesis Pioneer | Level 1 |
+| Node Operator | Level 2 (500 XP) + Genesis |
+| Protocol Guardian | Level 5 (2000 XP) + Node |
+
+---
+
+# 🚀 Deployment Guide (Mainnet)
+
+## 1️⃣ Generate Deployment Plan
+
+
 clarinet deployment generate --mainnet --low-cost
 clarinet deployment apply --mainnet
-```
 
-### 2️⃣ Contract Authorization (The "Wiring")
 
-After deployment, call the following functions from the `admin` wallet (via Stacks Explorer Sandbox or similar):
+## 2️⃣ Contract Wiring (Critical)
 
-1. In `genesis-badges-v10`
-   - Call: `set-game-core`
-   - Input:
-   ```
-   '<YOUR_WALLET>.genesis-core-v10
-   ```
+From admin wallet:
 
-2. In `genesis-missions-v10`
-   - Call: `set-game-core`
-   - Input:
-   ```
-   '<YOUR_WALLET>.genesis-core-v10
-   ```
+### In genesis-badges-v10
+Call:
 
-### 3️⃣ Initialize Badge Registry
+set-game-core
+'<YOUR_WALLET>.genesis-core-v10
 
-Call `create-badge` in `genesis-core-v10` sequentially:
 
-**Genesis Badge**
-```
+### In genesis-missions-v10
+Call:
+
+set-game-core
+'<YOUR_WALLET>.genesis-core-v10
+
+
+## 3️⃣ Initialize Badge Registry
+
+Call create-badge in genesis-core-v10.
+
+### Genesis Badge
+
 name: "genesis"
 uri: "ipfs://..."
 xp-req: u0
 level-req: u1
 prereq-badge: none
-```
 
-**Node Badge**
-```
+
+### Node Badge
+
 name: "node"
 uri: "ipfs://..."
 xp-req: u500
 level-req: u2
 prereq-badge: (some "genesis")
-```
 
-**Guardian Badge**
-```
+
+### Guardian Badge
+
 name: "guardian"
 uri: "ipfs://..."
 xp-req: u2000
 level-req: u5
 prereq-badge: (some "node")
-```
+
 
 ---
 
-## 🛠️ Frontend Setup
+# 🖥️ Frontend Stack
 
-### 1️⃣ Clone Repository
+- React (Vite)  
+- TailwindCSS  
+- Framer Motion  
+- @stacks/connect  
+- @stacks/transactions  
+- Supabase (off-chain caching layer)  
 
-```bash
-git clone https://github.com/bayyubenjamin/stacksone-vault.git
-cd stacksone-vault/frontend
-```
+---
 
-### 2️⃣ Install Dependencies
+# 🛠️ Frontend Setup
 
-```bash
+
+git clone https://github.com/bayyubenjamin/stacksone.git
+
+cd stacksone
 npm install
-```
-
-### 3️⃣ Environment Variables
-
-Create a `.env` file in the frontend root and add:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### 4️⃣ Run Development Server
-
-```bash
 npm run dev
-```
+
 
 ---
 
-## 📜 License & Author
+# 📊 Engineering Maturity Signals
 
-Developed with passion by **Bayu Benjamin**  
-GitHub: https://github.com/bayyubenjamin
+- Modular contract design  
+- Upgrade-safe architecture  
+- SIP-009 + SIP-010 compliance  
+- Automated testing suite  
+- CI/CD enabled  
+- Security-first authorization model  
+
+---
+
+# 👨‍💻 Author
+
+Developed by **Bayu Benjamin**
+
+GitHub: https://github.com/bayyubenjamin  
+Ecosystem: Stacks / Web3 Builder
