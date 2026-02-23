@@ -7,9 +7,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./smart-contracts
 
     steps:
       - name: Checkout repository
@@ -20,8 +17,17 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      # Install root dependencies (untuk tailwind/postcss)
+      - name: Install root dependencies
         run: npm install
 
+      # Install smart-contract dependencies
+      - name: Install smart-contract dependencies
+        run: |
+          cd smart-contracts
+          npm install
+
       - name: Run tests
-        run: npm run test
+        run: |
+          cd smart-contracts
+          npm run test
