@@ -9,24 +9,38 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: genesis-badges-v10
+            contract-name: mission-mini-001
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 16570
-            path: contracts/genesis-badges-v10.clar
+            cost: 553315
+            path: contracts/mission-mini-001.clar
             anchor-block-only: true
             clarity-version: 2
         - contract-publish:
-            contract-name: genesis-missions-v10
+            contract-name: mission-mini-002
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 16690
-            path: contracts/genesis-missions-v10.clar
+            cost: 553315
+            path: contracts/mission-mini-002.clar
             anchor-block-only: true
             clarity-version: 2
         - contract-publish:
-            contract-name: genesis-core-v10
+            contract-name: mission-mini-003
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 31410
-            path: contracts/genesis-core-v10.clar
+            cost: 761757
+            path: contracts/mission-mini-003.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: mission-mini-004
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 761757
+            path: contracts/mission-mini-004.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: mission-mini-005
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 761757
+            path: contracts/mission-mini-005.clar
             anchor-block-only: true
             clarity-version: 2
       epoch: "2.5"

@@ -12,23 +12,27 @@ requirements = [
 [project.cache_location]
 path = ".requirements"
 
-[contracts.genesis-badges-v10]
-path = "contracts/genesis-badges-v10.clar"
+[contracts.mission-mini-001]
+path = "contracts/mission-mini-001.clar"
 clarity_version = 2
 epoch = 2.5
 
-[contracts.genesis-missions-v10]
-path = "contracts/genesis-missions-v10.clar"
+[contracts.mission-mini-002]
+path = "contracts/mission-mini-002.clar"
 clarity_version = 2
 epoch = 2.5
 
-[contracts.genesis-core-v10]
-path = "contracts/genesis-core-v10.clar"
+[contracts.mission-mini-003]
+path = "contracts/mission-mini-003.clar"
 clarity_version = 2
 epoch = 2.5
-depends_on = ["genesis-badges-v10", "genesis-missions-v10"]
 
-[contracts.token-one]
-path = "contracts/token-one.clar"
+[contracts.mission-mini-004]
+path = "contracts/mission-mini-004.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.mission-mini-005]
+path = "contracts/mission-mini-005.clar"
 clarity_version = 2
 epoch = 2.5
