@@ -12,27 +12,5 @@ requirements = [
 [project.cache_location]
 path = ".requirements"
 
-[contracts.mission-mini-001]
-path = "contracts/mission-mini-001.clar"
-clarity_version = 2
-epoch = 2.5
-
-[contracts.mission-mini-002]
-path = "contracts/mission-mini-002.clar"
-clarity_version = 2
-epoch = 2.5
-
-[contracts.mission-mini-003]
-path = "contracts/mission-mini-003.clar"
-clarity_version = 2
-epoch = 2.5
-
-[contracts.mission-mini-004]
-path = "contracts/mission-mini-004.clar"
-clarity_version = 2
-epoch = 2.5
-
-[contracts.mission-mini-005]
-path = "contracts/mission-mini-005.clar"
-clarity_version = 2
-epoch = 2.5
+[contracts.reputation-engine]
+path = "contracts/reputation-engine.clar"

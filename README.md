@@ -204,6 +204,18 @@ cd stacksone
 npm install
 npm run dev
 
+## Mainnet Deployment
+
+Reputation Engine live on Stacks mainnet.
+
+Contract:
+SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3.reputation-engine
+
+Features:
+- On-chain scoring
+- Multiplier logic
+- Admin control
+- Anti farming decay
 
 ---
 

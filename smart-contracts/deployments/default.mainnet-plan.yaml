@@ -9,38 +9,10 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: mission-mini-001
+            contract-name: reputation-engine
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 553315
-            path: contracts/mission-mini-001.clar
+            cost: 24030
+            path: contracts/reputation-engine.clar
             anchor-block-only: true
-            clarity-version: 2
-        - contract-publish:
-            contract-name: mission-mini-002
-            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 553315
-            path: contracts/mission-mini-002.clar
-            anchor-block-only: true
-            clarity-version: 2
-        - contract-publish:
-            contract-name: mission-mini-003
-            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 761757
-            path: contracts/mission-mini-003.clar
-            anchor-block-only: true
-            clarity-version: 2
-        - contract-publish:
-            contract-name: mission-mini-004
-            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 761757
-            path: contracts/mission-mini-004.clar
-            anchor-block-only: true
-            clarity-version: 2
-        - contract-publish:
-            contract-name: mission-mini-005
-            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 761757
-            path: contracts/mission-mini-005.clar
-            anchor-block-only: true
-            clarity-version: 2
-      epoch: "2.5"
+            clarity-version: 1
+      epoch: "2.05"

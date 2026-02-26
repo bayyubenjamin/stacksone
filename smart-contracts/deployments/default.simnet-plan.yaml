@@ -63,28 +63,8 @@ plan:
     - id: 1
       transactions:
         - emulated-contract-publish:
-            contract-name: mission-mini-001
+            contract-name: reputation-engine
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/mission-mini-001.clar
-            clarity-version: 2
-        - emulated-contract-publish:
-            contract-name: mission-mini-002
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/mission-mini-002.clar
-            clarity-version: 2
-        - emulated-contract-publish:
-            contract-name: mission-mini-003
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/mission-mini-003.clar
-            clarity-version: 2
-        - emulated-contract-publish:
-            contract-name: mission-mini-004
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/mission-mini-004.clar
-            clarity-version: 2
-        - emulated-contract-publish:
-            contract-name: mission-mini-005
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/mission-mini-005.clar
-            clarity-version: 2
-      epoch: "2.5"
+            path: contracts/reputation-engine.clar
+            clarity-version: 1
+      epoch: "2.05"
