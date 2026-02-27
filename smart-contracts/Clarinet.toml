@@ -12,5 +12,5 @@ requirements = [
 [project.cache_location]
 path = ".requirements"
 
-[contracts.reputation-engine]
-path = "contracts/reputation-engine.clar"
+[contracts.genesis-boost-v1]
+path = "contracts/genesis-boost-v1.clar"

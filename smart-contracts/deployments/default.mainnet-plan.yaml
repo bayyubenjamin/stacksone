@@ -9,10 +9,10 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: reputation-engine
+            contract-name: genesis-boost-v1
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 24030
-            path: contracts/reputation-engine.clar
+            cost: 8210
+            path: contracts/genesis-boost-v1.clar
             anchor-block-only: true
             clarity-version: 1
       epoch: "2.05"

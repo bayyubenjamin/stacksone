@@ -63,8 +63,8 @@ plan:
     - id: 1
       transactions:
         - emulated-contract-publish:
-            contract-name: reputation-engine
+            contract-name: genesis-boost-v1
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/reputation-engine.clar
+            path: contracts/genesis-boost-v1.clar
             clarity-version: 1
       epoch: "2.05"
