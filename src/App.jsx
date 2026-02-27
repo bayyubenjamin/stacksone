@@ -8,10 +8,15 @@ import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 import Vault from './pages/Vault';
+import Games from './pages/Games';
 
-// --- KONFIGURASI SMART CONTRACT V10 ---
+
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
-const CONTRACT_NAME = 'genesis-core-v10'; // Diperbarui ke v10
+const CONTRACT_NAME = 'genesis-core-v10';
+
+const GAME_LUCKY = 'genesis-lucky-v1';
+const GAME_DUEL = 'genesis-duel-v1';
+const GAME_PREDICT = 'genesis-predict-v1';
 
 const MISSION_LIST = [
   { id: 1, name: "Credential Analysis", desc: "Verify protocol eligibility tier.", reward: 50, icon: "🛡️", completed: false },
@@ -56,11 +61,9 @@ function App() {
     } catch (error) { console.error("Error profile:", error); }
   };
 
-  // --- LOGIKA MINT BADGE (CORE V10) ---
   const handleMintBadge = async (badgeType) => {
     if (!userData) return alert("Connect wallet first!");
 
-    // Nama ini harus sama dengan yang didaftarkan via 'create-badge' di Core v10
     const badgeNameMap = {
       'genesis': 'genesis',
       'node': 'node',
@@ -68,17 +71,15 @@ function App() {
     };
 
     const rawBadgeName = badgeNameMap[badgeType] || badgeType;
-    console.log(`Attempting to claim from Core v10: ${rawBadgeName}`);
     
     await openContractCall({
       network: new StacksMainnet(), 
       contractAddress: CONTRACT_ADDRESS,
-      contractName: CONTRACT_NAME, // genesis-core-v10
+      contractName: CONTRACT_NAME,
       functionName: 'claim-badge',
       functionArgs: [stringAsciiCV(rawBadgeName)], 
       postConditionMode: PostConditionMode.Allow,
-      onFinish: (data) => {
-        console.log(`Minting ${badgeType} via Core v10 sent:`, data);
+      onFinish: () => {
         setBadgesStatus(prev => ({ ...prev, [badgeType]: true }));
       },
     });
@@ -92,12 +93,11 @@ function App() {
       openContractCall({
         network: new StacksMainnet(), 
         contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME, // genesis-core-v10
+        contractName: CONTRACT_NAME,
         functionName: 'complete-mission',
         functionArgs: [uintCV(Number(taskId)), uintCV(Number(task.reward))], 
         postConditionMode: PostConditionMode.Allow,
-        onFinish: (data) => {
-          console.log("Mission tx sent to Core v10:", data);
+        onFinish: () => {
           setUserXP(prev => prev + task.reward);
           resolve(true);
         },
@@ -111,15 +111,50 @@ function App() {
     await openContractCall({
       network: new StacksMainnet(), 
       contractAddress: CONTRACT_ADDRESS,
-      contractName: CONTRACT_NAME, // genesis-core-v10
+      contractName: CONTRACT_NAME,
       functionName: 'daily-check-in',
       functionArgs: [],
       postConditionMode: PostConditionMode.Allow,
-      onFinish: (data) => {
-        console.log("Check-in via Core v10 success");
+      onFinish: () => {
         setHasCheckedIn(true);
         setUserXP(prev => prev + 20);
       },
+    });
+  };
+
+  const handleRoll = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network: new StacksMainnet(),
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: GAME_LUCKY,
+      functionName: 'roll',
+      functionArgs: [],
+      postConditionMode: PostConditionMode.Allow,
+    });
+  };
+
+  const handleFight = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network: new StacksMainnet(),
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: GAME_DUEL,
+      functionName: 'fight',
+      functionArgs: [],
+      postConditionMode: PostConditionMode.Allow,
+    });
+  };
+
+  const handlePredict = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network: new StacksMainnet(),
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: GAME_PREDICT,
+      functionName: 'predict',
+      functionArgs: [uintCV(7)],
+      postConditionMode: PostConditionMode.Allow,
     });
   };
 
@@ -174,6 +209,16 @@ function App() {
           disconnectWallet={() => { userSession.signUserOut(); setUserData(null); }} 
         />
       )}
+
+      {/* ==== GAME PAGE BARU ==== */}
+      {activeTab === 'games' && (
+        <Games 
+          handleRoll={handleRoll}
+          handleFight={handleFight}
+          handlePredict={handlePredict}
+        />
+      )}
+
     </Layout>
   );
 }

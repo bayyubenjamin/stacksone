@@ -63,8 +63,18 @@ plan:
     - id: 1
       transactions:
         - emulated-contract-publish:
-            contract-name: genesis-boost-v1
+            contract-name: genesis-duel-v1
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/genesis-boost-v1.clar
+            path: contracts/genesis-duel-v1.clar
+            clarity-version: 1
+        - emulated-contract-publish:
+            contract-name: genesis-lucky-v1
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/genesis-lucky-v1.clar
+            clarity-version: 1
+        - emulated-contract-publish:
+            contract-name: genesis-predict-v1
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/genesis-predict-v1.clar
             clarity-version: 1
       epoch: "2.05"

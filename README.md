@@ -23,11 +23,13 @@ StacksOne Vault utilizes a scalable tri-contract architecture designed for modul
 - Manages user XP & Level state  
 - Routes mission completion  
 - Handles badge claims  
-- Computes dynamic level progression:
+- Computes dynamic level progression  
 
+```
 
 level = (XP / 500) + 1
 
+```
 
 ## 2️⃣ genesis-missions-v10.clar — The Tracker
 - Enforces 144 block-height cooldown for daily check-in  
@@ -78,6 +80,93 @@ Fully tested via automated test suite.
 
 ---
 
+# 🎮 Game Layer Expansion (Modular Add-ons)
+
+StacksOne now includes lightweight engagement modules deployed independently from the core logic.
+
+## 🎲 genesis-lucky-v1.clar — Lucky Draw
+- On-chain roll counter  
+- Ultra-low gas interaction  
+- Engagement loop module  
+
+Functions:
+- `roll()`  
+- `get-rolls(principal)`  
+
+---
+
+## ⚔️ genesis-duel-v1.clar — Duel Arena
+- Combat score counter  
+- Stateless increment logic  
+
+Functions:
+- `fight()`  
+- `get-score(principal)`  
+
+---
+
+## 🔢 genesis-predict-v1.clar — Prediction Room
+- On-chain number submission  
+- Minimal write storage  
+
+Functions:
+- `predict(uint)`  
+- `get-prediction(principal)`  
+
+---
+
+# 🔥 Boost Module
+
+## genesis-boost-v1.clar — XP Lock & Multiplier Layer
+
+Modular progression enhancement contract.
+
+Features:
+- Lock XP simulation  
+- Boost multiplier storage  
+- Unlock reset logic  
+- Gas-efficient state updates  
+
+Functions:
+- `lock-xp(uint)`  
+- `unlock-xp()`  
+- `get-locked(principal)`  
+- `get-boost(principal)`  
+
+---
+
+# 🧩 Modular Ecosystem Overview
+
+StacksOne operates as a multi-layer ecosystem:
+
+Core Layer:
+- XP & Level engine  
+- Mission routing  
+- Badge gating  
+
+Token Layer:
+- SIP-010 fungible token  
+
+Identity Layer:
+- SIP-009 NFT badge vault  
+
+Engagement Layer:
+- Lucky Draw  
+- Duel Arena  
+- Prediction Room  
+
+Boost Layer:
+- XP Lock Multiplier  
+
+Design Principles:
+- Non-destructive upgrades  
+- Modular expansion  
+- Isolated contract logic  
+- Upgrade-safe routing  
+- Reduced protocol risk  
+
+---
+
 # 🧪 Automated Testing & CI
 
 This repository includes a complete smart contract testing suite.
@@ -95,11 +184,13 @@ This repository includes a complete smart contract testing suite.
 
 Run tests locally:
 
+```
 
 cd smart-contracts
 npm install
 npm run test
 
+```
 
 ---
 
@@ -128,10 +219,12 @@ XP auto-converts to Levels.
 
 ## 1️⃣ Generate Deployment Plan
 
+```
 
-clarinet deployment generate --mainnet --low-cost
-clarinet deployment apply --mainnet
+clarinet deployments generate --mainnet --low-cost
+clarinet deployments apply --mainnet
 
+```
 
 ## 2️⃣ Contract Wiring (Critical)
 
@@ -140,47 +233,77 @@ From admin wallet:
 ### In genesis-badges-v10
 Call:
 
+```
+
 set-game-core
 '<YOUR_WALLET>.genesis-core-v10
 
+```
 
 ### In genesis-missions-v10
 Call:
 
+```
+
 set-game-core
 '<YOUR_WALLET>.genesis-core-v10
 
+```
 
 ## 3️⃣ Initialize Badge Registry
 
-Call create-badge in genesis-core-v10.
+Call `create-badge` in genesis-core-v10.
 
 ### Genesis Badge
-
-name: "genesis"
-uri: "ipfs://..."
-xp-req: u0
-level-req: u1
-prereq-badge: none
-
+- name: "genesis"
+- uri: "ipfs://..."
+- xp-req: u0
+- level-req: u1
+- prereq-badge: none
 
 ### Node Badge
-
-name: "node"
-uri: "ipfs://..."
-xp-req: u500
-level-req: u2
-prereq-badge: (some "genesis")
-
+- name: "node"
+- uri: "ipfs://..."
+- xp-req: u500
+- level-req: u2
+- prereq-badge: genesis
 
 ### Guardian Badge
+- name: "guardian"
+- uri: "ipfs://..."
+- xp-req: u2000
+- level-req: u5
+- prereq-badge: node
 
-name: "guardian"
-uri: "ipfs://..."
-xp-req: u2000
-level-req: u5
-prereq-badge: (some "node")
+---
 
+# 🌐 Live Mainnet Contracts
+
+Deployer:
+SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+
+Core:
+- genesis-core-v10  
+
+Missions:
+- genesis-missions-v10  
+
+Badges:
+- genesis-badges-v10  
+
+Token:
+- token-one  
+
+Reputation:
+- reputation-engine  
+
+Boost:
+- genesis-boost-v1  
+
+Games:
+- genesis-lucky-v1  
+- genesis-duel-v1  
+- genesis-predict-v1  
 
 ---
 
@@ -197,25 +320,14 @@ prereq-badge: (some "node")
 
 # 🛠️ Frontend Setup
 
+```
 
-git clone https://github.com/bayyubenjamin/stacksone.git
-
+git clone [https://github.com/bayyubenjamin/stacksone.git](https://github.com/bayyubenjamin/stacksone.git)
 cd stacksone
 npm install
 npm run dev
 
-## Mainnet Deployment
-
-Reputation Engine live on Stacks mainnet.
-
-Contract:
-SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3.reputation-engine
-
-Features:
-- On-chain scoring
-- Multiplier logic
-- Admin control
-- Anti farming decay
+```
 
 ---
 
@@ -227,6 +339,8 @@ Features:
 - Automated testing suite  
 - CI/CD enabled  
 - Security-first authorization model  
+- Multi-contract mainnet deployment  
+- Continuous ecosystem iteration  
 
 ---
 
@@ -236,3 +350,4 @@ Developed by **Bayu Benjamin**
 
 GitHub: https://github.com/bayyubenjamin  
 Ecosystem: Stacks / Web3 Builder
+```

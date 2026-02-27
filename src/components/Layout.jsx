@@ -6,6 +6,7 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
     { id: 'tasks', label: 'Protocol', icon: '💠' },
     { id: 'vault', label: 'Vault', icon: '🏦' }, // <--- MENU BARU
     { id: 'profile', label: 'Identity', icon: '🆔' },
+    { id: 'games', label: 'Games', icon: '🎮' }
   ];
 
   return (
