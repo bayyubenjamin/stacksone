@@ -5,84 +5,97 @@
 ![Clarity](https://img.shields.io/badge/Smart_Contracts-Clarity_2.0-black?style=for-the-badge)
 ![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?style=for-the-badge&logo=react)
 
-**StacksOne Vault** is a gamified Web3 identity and progression protocol built on the **Stacks** blockchain.
+**StacksOne Vault** is a modular gamified Web3 identity and progression protocol built on the **Stacks** blockchain.
 
-It enables users to complete on-chain missions, earn Experience Points (XP), level up, and mint exclusive SIP-009 NFT badges — fully verifiable on-chain.
+It enables users to:
+
+- Complete on-chain missions  
+- Earn Experience Points (XP)  
+- Level up  
+- Mint exclusive SIP-009 NFT badges  
+- Accumulate competitive leaderboard score  
+- Engage in modular game extensions  
+
+Fully verifiable on-chain.
 
 > 🔒 Production-grade Clarity contracts  
+> 🧠 Modular multi-layer architecture  
 > ✅ Automated test suite (Vitest + Clarinet Simnet)  
 > 🚀 GitHub Actions CI enabled  
 
 ---
 
-# 🏗️ Architecture Overview (v10 Ecosystem)
+# 🏗️ Architecture Overview (v10 + Modular Expansion)
 
-StacksOne Vault utilizes a scalable tri-contract architecture designed for modularity and upgrade safety.
+StacksOne Vault utilizes a scalable multi-contract architecture designed for modularity, upgrade safety, and progressive ecosystem growth.
 
-## 1️⃣ genesis-core-v10.clar — The Brain
+---
+
+## 🧠 Core Layer
+
+### 1️⃣ genesis-core-v10.clar — The Brain
 - Manages user XP & Level state  
 - Routes mission completion  
 - Handles badge claims  
 - Computes dynamic level progression  
 
 ```
-
 level = (XP / 500) + 1
-
 ```
 
-## 2️⃣ genesis-missions-v10.clar — The Tracker
+---
+
+### 2️⃣ genesis-missions-v10.clar — The Tracker
 - Enforces 144 block-height cooldown for daily check-in  
 - Prevents duplicate mission claims  
 - Accepts write calls only from authorized Core contract  
 
-## 3️⃣ genesis-badges-v10.clar — The Vault
+---
+
+### 3️⃣ genesis-badges-v10.clar — The Vault
 - Fully SIP-009 compliant NFT contract  
 - On-chain metadata URI (IPFS)  
 - Minting restricted to authorized Core contract only  
 
 ---
 
-# 🔐 Dual-Authorization Security Model
+# 🏆 Aggregation Layer — Leaderboard Engine (NEW)
 
-Supporting contracts implement a dual-authorization upgrade-safe structure.
+## genesis-leaderboard-v1.clar — On-Chain Ranking Module
 
-### admin (Principal)
-- Deployer wallet  
-- Permanent authority  
-- Can re-route ecosystem to new Core contract  
-- Functions:
-  - transfer-admin  
-  - set-game-core  
-
-### game-core-address (Principal)
-- Current operational Core contract  
-- Authorized to mint NFTs and modify XP  
-
-This ensures:
-- No contract lockout  
-- Safe upgradability  
-- Long-term protocol resilience  
-
----
-
-# 🪙 Token Layer — SIP-010 (token-one.clar)
-
-StacksOne includes a SIP-010 fungible token implementation.
+Lightweight aggregation contract designed to track engagement across modules.
 
 Features:
-- Owner-controlled minting  
-- Approved minter system  
-- Transfer validation (tx-sender enforcement)  
-- Strict zero-amount validation  
+- Gas-efficient score accumulation  
+- Rank tier calculation  
+- Stateless read logic  
+- Event logging for interaction tracking  
 
-Fully tested via automated test suite.
+Functions:
+
+- `add-score(uint)`
+- `get-score(principal)`
+- `get-rank-tier(principal)`
+- `reset-season()`
+
+Rank Tiers:
+
+| Tier | Score Requirement |
+|------|-------------------|
+| 0 | < 100 |
+| 1 | ≥ 100 |
+| 2 | ≥ 500 |
+| 3 | ≥ 1000 |
+
+This module integrates with game interactions to create a persistent competitive layer.
 
 ---
 
-# 🎮 Game Layer Expansion (Modular Add-ons)
+# 🎮 Engagement Layer (Modular Add-ons)
 
-StacksOne now includes lightweight engagement modules deployed independently from the core logic.
+StacksOne includes lightweight independent engagement contracts.
+
+---
 
 ## 🎲 genesis-lucky-v1.clar — Lucky Draw
 - On-chain roll counter  
@@ -115,11 +128,11 @@ Functions:
 
 ---
 
-# 🔥 Boost Module
+# 🔥 Boost Layer
 
-## genesis-boost-v1.clar — XP Lock & Multiplier Layer
+## genesis-boost-v1.clar — XP Lock & Multiplier
 
-Modular progression enhancement contract.
+Progression enhancement contract.
 
 Features:
 - Lock XP simulation  
@@ -135,61 +148,96 @@ Functions:
 
 ---
 
+# 🪙 Token Layer — SIP-010
+
+## token-one.clar
+
+StacksOne includes a SIP-010 fungible token implementation.
+
+Features:
+- Owner-controlled minting  
+- Approved minter system  
+- Transfer validation  
+- Strict zero-amount validation  
+
+Fully tested via automated suite.
+
+---
+
+# 🔐 Dual-Authorization Security Model
+
+Supporting contracts implement a dual-authorization upgrade-safe structure.
+
+### admin (Principal)
+- Deployer wallet  
+- Permanent authority  
+- Can re-route ecosystem to new Core contract  
+
+Functions:
+- `transfer-admin`
+- `set-game-core`
+
+### game-core-address (Principal)
+- Current operational Core contract  
+- Authorized to mint NFTs and modify XP  
+
+Ensures:
+- No contract lockout  
+- Safe upgradability  
+- Long-term protocol resilience  
+
+---
+
 # 🧩 Modular Ecosystem Overview
 
-StacksOne operates as a multi-layer ecosystem:
+StacksOne operates as a layered ecosystem:
 
-Core Layer:
+### Core Layer
 - XP & Level engine  
 - Mission routing  
 - Badge gating  
 
-Token Layer:
-- SIP-010 fungible token  
-
-Identity Layer:
+### Identity Layer
 - SIP-009 NFT badge vault  
 
-Engagement Layer:
+### Token Layer
+- SIP-010 fungible token  
+
+### Engagement Layer
 - Lucky Draw  
 - Duel Arena  
 - Prediction Room  
 
-Boost Layer:
-- XP Lock Multiplier  
+### Boost Layer
+- XP Multiplier  
 
-Design Principles:
-- Non-destructive upgrades  
-- Modular expansion  
-- Isolated contract logic  
-- Upgrade-safe routing  
-- Reduced protocol risk  
+### Aggregation Layer
+- On-chain Leaderboard  
+- Rank Tier System  
 
 ---
 
 # 🧪 Automated Testing & CI
 
-This repository includes a complete smart contract testing suite.
+Complete smart contract testing suite included.
 
 ### ✔ Vitest + Clarinet Simnet
 - Metadata validation  
 - Mint authorization tests  
 - Transfer logic tests  
-- Security edge case coverage  
+- Security edge cases  
 
 ### ✔ GitHub Actions CI
 - Automated test execution on every push  
 - Node 18 runner  
 - Clean install per job  
 
-Run tests locally:
+Run locally:
 
 ```
-
 cd smart-contracts
 npm install
 npm run test
-
 ```
 
 ---
@@ -213,20 +261,21 @@ XP auto-converts to Levels.
 | Node Operator | Level 2 (500 XP) + Genesis |
 | Protocol Guardian | Level 5 (2000 XP) + Node |
 
+### 🏆 On-Chain Leaderboard
+Competitive scoring across all engagement modules.
+
 ---
 
 # 🚀 Deployment Guide (Mainnet)
 
-## 1️⃣ Generate Deployment Plan
+## Generate Deployment Plan
 
 ```
-
 clarinet deployments generate --mainnet --low-cost
 clarinet deployments apply --mainnet
-
 ```
 
-## 2️⃣ Contract Wiring (Critical)
+## Contract Wiring (Critical)
 
 From admin wallet:
 
@@ -234,46 +283,17 @@ From admin wallet:
 Call:
 
 ```
-
 set-game-core
 '<YOUR_WALLET>.genesis-core-v10
-
 ```
 
 ### In genesis-missions-v10
 Call:
 
 ```
-
 set-game-core
 '<YOUR_WALLET>.genesis-core-v10
-
 ```
-
-## 3️⃣ Initialize Badge Registry
-
-Call `create-badge` in genesis-core-v10.
-
-### Genesis Badge
-- name: "genesis"
-- uri: "ipfs://..."
-- xp-req: u0
-- level-req: u1
-- prereq-badge: none
-
-### Node Badge
-- name: "node"
-- uri: "ipfs://..."
-- xp-req: u500
-- level-req: u2
-- prereq-badge: genesis
-
-### Guardian Badge
-- name: "guardian"
-- uri: "ipfs://..."
-- xp-req: u2000
-- level-req: u5
-- prereq-badge: node
 
 ---
 
@@ -300,6 +320,9 @@ Reputation:
 Boost:
 - genesis-boost-v1  
 
+Leaderboard:
+- genesis-leaderboard-v1  
+
 Games:
 - genesis-lucky-v1  
 - genesis-duel-v1  
@@ -318,40 +341,14 @@ Games:
 
 ---
 
-# 🛠️ Frontend Setup
-
-```
-
-git clone [https://github.com/bayyubenjamin/stacksone.git](https://github.com/bayyubenjamin/stacksone.git)
-cd stacksone
-npm install
-npm run dev
-
-```
-
-## Ecosystem Structure
-
-Genesis Protocol consists of modular smart contracts:
-
-- Core Engine (state management)
-- Game Modules (interaction layer)
-- Aggregation & Ranking (planned extension)
-
-Designed for:
-- Gas efficiency
-- Modular composability
-- Progressive scoring model
-
----
-
 # 📊 Engineering Maturity Signals
 
 - Modular contract design  
 - Upgrade-safe architecture  
 - SIP-009 + SIP-010 compliance  
+- Aggregation & ranking layer  
 - Automated testing suite  
 - CI/CD enabled  
-- Security-first authorization model  
 - Multi-contract mainnet deployment  
 - Continuous ecosystem iteration  
 
@@ -363,4 +360,3 @@ Developed by **Bayu Benjamin**
 
 GitHub: https://github.com/bayyubenjamin  
 Ecosystem: Stacks / Web3 Builder
-```
