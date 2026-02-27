@@ -329,6 +329,19 @@ npm run dev
 
 ```
 
+## Ecosystem Structure
+
+Genesis Protocol consists of modular smart contracts:
+
+- Core Engine (state management)
+- Game Modules (interaction layer)
+- Aggregation & Ranking (planned extension)
+
+Designed for:
+- Gas efficiency
+- Modular composability
+- Progressive scoring model
+
 ---
 
 # 📊 Engineering Maturity Signals
