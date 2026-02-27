@@ -41,7 +41,7 @@
     (if (or (is-eq last-block u0) (> (- current-block last-block) BLOCKS-PER-DAY)) true false)))
 
 (define-read-only (is-task-done (user principal) (task-id uint))
-  (default-to false (map-get? completed-tasks { user: user, task-id: task-id })))
+  (default-to { score: u0 } (map-get? leaderboard tx-sender))
 
 ;; ==========================================
 ;; PUBLIC FUNCTIONS (HANYA DIPANGGIL OLEH CORE V6)
