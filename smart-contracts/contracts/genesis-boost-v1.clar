@@ -20,6 +20,7 @@
 (define-read-only (get-boost (user principal))
   (default-to u0 (map-get? boost-level user))
 )
+(print { event: "score-update", user: tx-sender })
 
 ;; Lock XP (simulated)
 (define-public (lock-xp (amount uint))
