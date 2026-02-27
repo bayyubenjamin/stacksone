@@ -9,6 +9,9 @@
 (define-constant err-req-level (err u602))
 (define-constant err-req-prereq (err u603))
 (define-constant err-already-owned (err u604))
+(define-constant err-not-authorized (err u100))
+(define-constant err-invalid-input (err u101))
+(define-constant err-insufficient-score (err u102))
 
 (define-data-var admin principal tx-sender)
 
