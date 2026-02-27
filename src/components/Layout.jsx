@@ -4,7 +4,7 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
   const menuItems = [
     { id: 'home', label: 'Overview', icon: '📊' },
     { id: 'tasks', label: 'Protocol', icon: '💠' },
-    { id: 'vault', label: 'Vault', icon: '🏦' }, // <--- MENU BARU
+    { id: 'vault', label: 'Vault', icon: '🏦' }, 
     { id: 'profile', label: 'Identity', icon: '🆔' },
     { id: 'games', label: 'Games', icon: '🎮' }
   ];
@@ -16,7 +16,9 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
       <aside className="w-64 hidden md:flex flex-col border-r border-slate-800 bg-[#0F172A]/95 backdrop-blur-xl z-20">
         <div className="p-6 flex items-center gap-3">
           <div className="w-8 h-8 bg-stx-accent rounded flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">G</div>
-          <span className="font-bold tracking-tight text-lg text-white">GENESIS <span className="text-stx-accent">ONE</span></span>
+          <span className="font-bold tracking-tight text-lg text-white">
+            GENESIS <span className="text-stx-accent">ONE</span>
+          </span>
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-8">
@@ -32,13 +34,22 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
             >
               <span className="text-lg opacity-80">{item.icon}</span>
               {item.label}
+
+              {/* NEW: Leaderboard Active Indicator */}
+              {item.id === 'games' && (
+                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold tracking-wide">
+                  LIVE
+                </span>
+              )}
             </button>
           ))}
         </nav>
 
         <div className="p-6 border-t border-slate-800">
           <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-800">
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">System Status</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+              System Status
+            </p>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -46,6 +57,17 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
               </span>
               <p className="text-xs font-bold text-slate-300">Operational</p>
             </div>
+
+            {/* NEW: On-Chain Layer Status */}
+            <div className="mt-3 pt-3 border-t border-slate-800">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                On-Chain Layer
+              </p>
+              <p className="text-xs text-blue-400 font-semibold">
+                Leaderboard Active
+              </p>
+            </div>
+
           </div>
         </div>
       </aside>
@@ -56,10 +78,21 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center gap-1 ${activeTab === item.id ? 'text-stx-accent' : 'text-slate-600'}`}
+              className={`flex flex-col items-center gap-1 ${
+                activeTab === item.id ? 'text-stx-accent' : 'text-slate-600'
+              }`}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span className="text-[10px] uppercase font-semibold tracking-wide">{item.label}</span>
+              <span className="text-xl relative">
+                {item.icon}
+                {item.id === 'games' && (
+                  <span className="absolute -top-1 -right-2 text-[8px] bg-blue-500 text-white px-1 rounded">
+                    NEW
+                  </span>
+                )}
+              </span>
+              <span className="text-[10px] uppercase font-semibold tracking-wide">
+                {item.label}
+              </span>
             </button>
           ))}
       </div>
@@ -67,10 +100,14 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col relative overflow-y-auto h-screen">
         <header className="sticky top-0 z-10 bg-[#0B1120]/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-lg font-bold md:hidden text-white tracking-tight">GENESIS</h2>
+          <h2 className="text-lg font-bold md:hidden text-white tracking-tight">
+            GENESIS
+          </h2>
+
           <div className="hidden md:block text-slate-500 text-xs uppercase tracking-widest font-semibold">
-            Secure Environment
+            Secure Environment • Modular On-Chain Engine
           </div>
+
           <div>{walletButton}</div>
         </header>
 
@@ -83,4 +120,3 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 };
 
 export default Layout;
-

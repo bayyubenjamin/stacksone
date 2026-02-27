@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { showConnect, openContractCall } from '@stacks/connect'; 
 import { StacksMainnet } from '@stacks/network';
-import { uintCV, stringAsciiCV, PostConditionMode } from '@stacks/transactions';
+import { uintCV, stringAsciiCV, PostConditionMode, callReadOnlyFunction, standardPrincipalCV } from '@stacks/transactions';
 import { supabase, userSession } from './supabaseClient'; 
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -18,6 +18,14 @@ const GAME_LUCKY = 'genesis-lucky-v1';
 const GAME_DUEL = 'genesis-duel-v1';
 const GAME_PREDICT = 'genesis-predict-v1';
 
+/* ========================= */
+/* NEW: LEADERBOARD CONTRACT */
+/* ========================= */
+
+const LEADERBOARD_CONTRACT = 'genesis-leaderboard-v1';
+
+const network = new StacksMainnet();
+
 const MISSION_LIST = [
   { id: 1, name: "Credential Analysis", desc: "Verify protocol eligibility tier.", reward: 50, icon: "🛡️", completed: false },
   { id: 2, name: "Identity Verification", desc: "Authenticate on-chain DID.", reward: 100, icon: "🆔", completed: false },
@@ -32,16 +40,25 @@ function App() {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [badgesStatus, setBadgesStatus] = useState({ genesis: false, node: false, guardian: false });
 
+  /* ========================= */
+  /* NEW: LEADERBOARD STATE    */
+  /* ========================= */
+
+  const [leaderboardScore, setLeaderboardScore] = useState(0);
+  const [leaderboardTier, setLeaderboardTier] = useState(0);
+
   useEffect(() => {
     const checkSession = async () => {
       if (userSession.isUserSignedIn()) {
         const user = userSession.loadUserData(); 
         setUserData(user);
         fetchUserProfile(user.profile.stxAddress.mainnet);
+        fetchLeaderboard(user.profile.stxAddress.mainnet);
       } else if (userSession.isSignInPending()) {
         const user = await userSession.handlePendingSignIn();
         setUserData(user);
         fetchUserProfile(user.profile.stxAddress.mainnet);
+        fetchLeaderboard(user.profile.stxAddress.mainnet);
       }
     };
     checkSession();
@@ -61,6 +78,60 @@ function App() {
     } catch (error) { console.error("Error profile:", error); }
   };
 
+  /* ========================= */
+  /* NEW: FETCH LEADERBOARD    */
+  /* ========================= */
+
+  const fetchLeaderboard = async (walletAddress) => {
+    try {
+      const scoreResult = await callReadOnlyFunction({
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: LEADERBOARD_CONTRACT,
+        functionName: 'get-score',
+        functionArgs: [standardPrincipalCV(walletAddress)],
+        network,
+        senderAddress: walletAddress
+      });
+
+      const tierResult = await callReadOnlyFunction({
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: LEADERBOARD_CONTRACT,
+        functionName: 'get-rank-tier',
+        functionArgs: [standardPrincipalCV(walletAddress)],
+        network,
+        senderAddress: walletAddress
+      });
+
+      // @ts-ignore
+      setLeaderboardScore(Number(scoreResult.value.data.score.value));
+      // @ts-ignore
+      setLeaderboardTier(Number(tierResult.value));
+
+    } catch (err) {
+      console.log("Leaderboard fetch error:", err);
+    }
+  };
+
+  /* ========================= */
+  /* NEW: ADD SCORE TX         */
+  /* ========================= */
+
+  const handleAddLeaderboardScore = async () => {
+    if (!userData) return alert("Connect wallet first!");
+
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: LEADERBOARD_CONTRACT,
+      functionName: 'add-score',
+      functionArgs: [uintCV(10)],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => {
+        fetchLeaderboard(userData.profile.stxAddress.mainnet);
+      }
+    });
+  };
+
   const handleMintBadge = async (badgeType) => {
     if (!userData) return alert("Connect wallet first!");
 
@@ -73,7 +144,7 @@ function App() {
     const rawBadgeName = badgeNameMap[badgeType] || badgeType;
     
     await openContractCall({
-      network: new StacksMainnet(), 
+      network,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'claim-badge',
@@ -91,7 +162,7 @@ function App() {
     
     return new Promise((resolve) => {
       openContractCall({
-        network: new StacksMainnet(), 
+        network,
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'complete-mission',
@@ -109,7 +180,7 @@ function App() {
   const handleCheckIn = async () => {
     if (!userData) return alert("Connect wallet first!");
     await openContractCall({
-      network: new StacksMainnet(), 
+      network,
       contractAddress: CONTRACT_ADDRESS,
       contractName: CONTRACT_NAME,
       functionName: 'daily-check-in',
@@ -125,36 +196,39 @@ function App() {
   const handleRoll = async () => {
     if (!userData) return alert("Connect wallet first!");
     await openContractCall({
-      network: new StacksMainnet(),
+      network,
       contractAddress: CONTRACT_ADDRESS,
       contractName: GAME_LUCKY,
       functionName: 'roll',
       functionArgs: [],
       postConditionMode: PostConditionMode.Allow,
+      onFinish: () => handleAddLeaderboardScore()
     });
   };
 
   const handleFight = async () => {
     if (!userData) return alert("Connect wallet first!");
     await openContractCall({
-      network: new StacksMainnet(),
+      network,
       contractAddress: CONTRACT_ADDRESS,
       contractName: GAME_DUEL,
       functionName: 'fight',
       functionArgs: [],
       postConditionMode: PostConditionMode.Allow,
+      onFinish: () => handleAddLeaderboardScore()
     });
   };
 
   const handlePredict = async () => {
     if (!userData) return alert("Connect wallet first!");
     await openContractCall({
-      network: new StacksMainnet(),
+      network,
       contractAddress: CONTRACT_ADDRESS,
       contractName: GAME_PREDICT,
       functionName: 'predict',
       functionArgs: [uintCV(7)],
       postConditionMode: PostConditionMode.Allow,
+      onFinish: () => handleAddLeaderboardScore()
     });
   };
 
@@ -179,6 +253,7 @@ function App() {
         </button>
       }
     >
+
       {activeTab === 'home' && (
         <Home 
           userData={userData} 
@@ -210,13 +285,23 @@ function App() {
         />
       )}
 
-      {/* ==== GAME PAGE BARU ==== */}
       {activeTab === 'games' && (
-        <Games 
-          handleRoll={handleRoll}
-          handleFight={handleFight}
-          handlePredict={handlePredict}
-        />
+        <div>
+          <Games 
+            handleRoll={handleRoll}
+            handleFight={handleFight}
+            handlePredict={handlePredict}
+          />
+
+          <div style={{marginTop: 30, padding: 20, border: '1px solid #333'}}>
+            <h3>🏆 Genesis Leaderboard</h3>
+            <p>Score: {leaderboardScore}</p>
+            <p>Rank Tier: {leaderboardTier}</p>
+            <button onClick={handleAddLeaderboardScore}>
+              Add +10 Score
+            </button>
+          </div>
+        </div>
       )}
 
     </Layout>
