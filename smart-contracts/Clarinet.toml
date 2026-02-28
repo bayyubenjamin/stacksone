@@ -12,5 +12,17 @@ requirements = [
 [project.cache_location]
 path = ".requirements"
 
-[contracts.genesis-leaderboard-v1]
-path = "contracts/modules/genesis-leaderboard-v1.clar"
+[contracts.genesis-counter-v1]
+path = "contracts/modules/genesis-counter-v1.clar"
+
+[contracts.genesis-flag-v1]
+path = "contracts/modules/genesis-flag-v1.clar"
+
+[contracts.genesis-points-v1]
+path = "contracts/modules/genesis-points-v1.clar"
+
+[contracts.genesis-badge-lite-v1]
+path = "contracts/modules/genesis-badge-lite-v1.clar"
+
+[contracts.genesis-score-lite-v1]
+path = "contracts/modules/genesis-score-lite-v1.clar"

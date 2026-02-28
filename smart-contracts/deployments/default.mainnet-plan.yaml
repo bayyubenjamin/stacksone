@@ -9,10 +9,38 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: genesis-leaderboard-v1
+            contract-name: genesis-badge-lite-v1
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 16470
-            path: contracts/modules/genesis-leaderboard-v1.clar
+            cost: 2520
+            path: contracts/modules/genesis-badge-lite-v1.clar
+            anchor-block-only: true
+            clarity-version: 1
+        - contract-publish:
+            contract-name: genesis-counter-v1
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 4190
+            path: contracts/modules/genesis-counter-v1.clar
+            anchor-block-only: true
+            clarity-version: 1
+        - contract-publish:
+            contract-name: genesis-flag-v1
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 4100
+            path: contracts/modules/genesis-flag-v1.clar
+            anchor-block-only: true
+            clarity-version: 1
+        - contract-publish:
+            contract-name: genesis-points-v1
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 4230
+            path: contracts/modules/genesis-points-v1.clar
+            anchor-block-only: true
+            clarity-version: 1
+        - contract-publish:
+            contract-name: genesis-score-lite-v1
+            expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
+            cost: 4320
+            path: contracts/modules/genesis-score-lite-v1.clar
             anchor-block-only: true
             clarity-version: 1
       epoch: "2.05"
