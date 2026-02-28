@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { openContractCall, callReadOnlyFunction } from '@stacks/connect';
+import { openContractCall } from '@stacks/connect';
 import { StacksMainnet } from '@stacks/network';
-import { uintCV, standardPrincipalCV, PostConditionMode } from '@stacks/transactions';
+import { uintCV, standardPrincipalCV, PostConditionMode, callReadOnlyFunction } from '@stacks/transactions';
 
 const network = new StacksMainnet();
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3';
