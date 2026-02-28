@@ -1,123 +1,313 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { showConnect, openContractCall } from '@stacks/connect'; 
+import { StacksMainnet } from '@stacks/network';
+import { uintCV, stringAsciiCV, PostConditionMode, callReadOnlyFunction, standardPrincipalCV } from '@stacks/transactions';
+import { supabase, userSession } from './supabaseClient'; 
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import Tasks from './pages/Tasks';
+import Profile from './pages/Profile';
+import Vault from './pages/Vault';
+import Games from './pages/Games';
+import Modules from './pages/Modules';
 
-const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
-  const menuItems = [
-    { id: 'home', label: 'Overview', icon: '📊' },
-    { id: 'tasks', label: 'Protocol', icon: '💠' },
-    { id: 'vault', label: 'Vault', icon: '🏦' }, 
-    { id: 'profile', label: 'Identity', icon: '🆔' },
-    { id: 'games', label: 'Games', icon: '🎮' }
-    { id: 'modules', label: 'Modules', icon: '🧪' }
-  ];
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
+const CONTRACT_NAME = 'genesis-core-v10';
+
+const GAME_LUCKY = 'genesis-lucky-v1';
+const GAME_DUEL = 'genesis-duel-v1';
+const GAME_PREDICT = 'genesis-predict-v1';
+
+/* ========================= */
+/* NEW: LEADERBOARD CONTRACT */
+/* ========================= */
+
+const LEADERBOARD_CONTRACT = 'genesis-leaderboard-v1';
+
+const network = new StacksMainnet();
+
+const MISSION_LIST = [
+  { id: 1, name: "Credential Analysis", desc: "Verify protocol eligibility tier.", reward: 50, icon: "🛡️", completed: false },
+  { id: 2, name: "Identity Verification", desc: "Authenticate on-chain DID.", reward: 100, icon: "🆔", completed: false },
+  { id: 3, name: "Protocol Activation", desc: "Activate initial node state.", reward: 200, icon: "⚡", completed: false }
+];
+
+function App() {
+  const [userData, setUserData] = useState(null);
+  const [activeTab, setActiveTab] = useState('home');
+  const [userXP, setUserXP] = useState(0);
+  const [userLevel, setUserLevel] = useState(1);
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
+  const [badgesStatus, setBadgesStatus] = useState({ genesis: false, node: false, guardian: false });
+
+  /* ========================= */
+  /* NEW: LEADERBOARD STATE    */
+  /* ========================= */
+
+  const [leaderboardScore, setLeaderboardScore] = useState(0);
+  const [leaderboardTier, setLeaderboardTier] = useState(0);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (userSession.isUserSignedIn()) {
+        const user = userSession.loadUserData(); 
+        setUserData(user);
+        fetchUserProfile(user.profile.stxAddress.mainnet);
+        fetchLeaderboard(user.profile.stxAddress.mainnet);
+      } else if (userSession.isSignInPending()) {
+        const user = await userSession.handlePendingSignIn();
+        setUserData(user);
+        fetchUserProfile(user.profile.stxAddress.mainnet);
+        fetchLeaderboard(user.profile.stxAddress.mainnet);
+      }
+    };
+    checkSession();
+  }, []);
+
+  const fetchUserProfile = async (walletAddress) => {
+    try {
+      let { data: user } = await supabase.from('users').select('*').eq('wallet_address', walletAddress).single();
+      if (user) {
+        setUserXP(user.xp || 0);
+        setUserLevel(user.level || 1);
+        if (user.last_checkin) {
+          const lastCheck = new Date(user.last_checkin).toDateString();
+          setHasCheckedIn(lastCheck === new Date().toDateString());
+        }
+      }
+    } catch (error) { console.error("Error profile:", error); }
+  };
+
+  /* ========================= */
+  /* NEW: FETCH LEADERBOARD    */
+  /* ========================= */
+
+  const fetchLeaderboard = async (walletAddress) => {
+    try {
+      const scoreResult = await callReadOnlyFunction({
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: LEADERBOARD_CONTRACT,
+        functionName: 'get-score',
+        functionArgs: [standardPrincipalCV(walletAddress)],
+        network,
+        senderAddress: walletAddress
+      });
+
+      const tierResult = await callReadOnlyFunction({
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: LEADERBOARD_CONTRACT,
+        functionName: 'get-rank-tier',
+        functionArgs: [standardPrincipalCV(walletAddress)],
+        network,
+        senderAddress: walletAddress
+      });
+
+      // @ts-ignore
+      setLeaderboardScore(Number(scoreResult.value.data.score.value));
+      // @ts-ignore
+      setLeaderboardTier(Number(tierResult.value));
+
+    } catch (err) {
+      console.log("Leaderboard fetch error:", err);
+    }
+  };
+
+  /* ========================= */
+  /* NEW: ADD SCORE TX         */
+  /* ========================= */
+
+  const handleAddLeaderboardScore = async () => {
+    if (!userData) return alert("Connect wallet first!");
+
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: LEADERBOARD_CONTRACT,
+      functionName: 'add-score',
+      functionArgs: [uintCV(10)],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => {
+        fetchLeaderboard(userData.profile.stxAddress.mainnet);
+      }
+    });
+  };
+
+  const handleMintBadge = async (badgeType) => {
+    if (!userData) return alert("Connect wallet first!");
+
+    const badgeNameMap = {
+      'genesis': 'genesis',
+      'node': 'node',
+      'guardian': 'guardian'
+    };
+
+    const rawBadgeName = badgeNameMap[badgeType] || badgeType;
+    
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_NAME,
+      functionName: 'claim-badge',
+      functionArgs: [stringAsciiCV(rawBadgeName)], 
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => {
+        setBadgesStatus(prev => ({ ...prev, [badgeType]: true }));
+      },
+    });
+  };
+
+  const handleCompleteMission = async (taskId) => {
+    if (!userData) { alert("Connect wallet first!"); return false; }
+    const task = MISSION_LIST.find(t => t.id === taskId);
+    
+    return new Promise((resolve) => {
+      openContractCall({
+        network,
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACT_NAME,
+        functionName: 'complete-mission',
+        functionArgs: [uintCV(Number(taskId)), uintCV(Number(task.reward))], 
+        postConditionMode: PostConditionMode.Allow,
+        onFinish: () => {
+          setUserXP(prev => prev + task.reward);
+          resolve(true);
+        },
+        onCancel: () => resolve(false)
+      });
+    });
+  };
+
+  const handleCheckIn = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_NAME,
+      functionName: 'daily-check-in',
+      functionArgs: [],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => {
+        setHasCheckedIn(true);
+        setUserXP(prev => prev + 20);
+      },
+    });
+  };
+
+  const handleRoll = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: GAME_LUCKY,
+      functionName: 'roll',
+      functionArgs: [],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => handleAddLeaderboardScore()
+    });
+  };
+
+  const handleFight = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: GAME_DUEL,
+      functionName: 'fight',
+      functionArgs: [],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => handleAddLeaderboardScore()
+    });
+  };
+
+  const handlePredict = async () => {
+    if (!userData) return alert("Connect wallet first!");
+    await openContractCall({
+      network,
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: GAME_PREDICT,
+      functionName: 'predict',
+      functionArgs: [uintCV(7)],
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: () => handleAddLeaderboardScore()
+    });
+  };
+
+  const connectWallet = () => {
+    showConnect({ 
+      userSession, 
+      appDetails: {name: 'Genesis Platform', icon: window.location.origin + '/vite.svg'} 
+    });
+  };
 
   return (
-    <div className="min-h-screen flex bg-[#0B1120] text-slate-200 font-sans overflow-hidden">
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      walletButton={
+        !userData ? 
+        <button onClick={connectWallet} className="bg-orange-500 px-4 py-2 rounded-lg font-bold text-xs transition-all">
+          CONNECT WALLET
+        </button> :
+        <button onClick={() => { userSession.signUserOut(); setUserData(null); }} className="bg-slate-800 px-4 py-2 rounded-lg font-mono text-xs hover:bg-slate-700 transition-colors">
+          {userData.profile.stxAddress.mainnet.slice(0,5)}...{userData.profile.stxAddress.mainnet.slice(-5)}
+        </button>
+      }
+    >
+
+      {activeTab === 'home' && (
+        <Home 
+          userData={userData} 
+          userXP={userXP} 
+          userLevel={userLevel} 
+          badgesStatus={badgesStatus} 
+          handleMint={handleMintBadge} 
+          connectWallet={connectWallet}
+        />
+      )}
       
-      {/* Sidebar Desktop */}
-      <aside className="w-64 hidden md:flex flex-col border-r border-slate-800 bg-[#0F172A]/95 backdrop-blur-xl z-20">
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-stx-accent rounded flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">G</div>
-          <span className="font-bold tracking-tight text-lg text-white">
-            GENESIS <span className="text-stx-accent">ONE</span>
-          </span>
-        </div>
+      {activeTab === 'tasks' && (
+        <Tasks 
+          initialTasks={MISSION_LIST} 
+          handleTask={handleCompleteMission} 
+        />
+      )}
 
-        <nav className="flex-1 px-4 space-y-2 mt-8">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium ${
-                activeTab === item.id
-                  ? 'bg-slate-800 text-white border-l-2 border-stx-accent'
-                  : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300'
-              }`}
-            >
-              <span className="text-lg opacity-80">{item.icon}</span>
-              {item.label}
+      {activeTab === 'vault' && <Vault userData={userData} />}
+      
+      {activeTab === 'profile' && (
+        <Profile 
+          userData={userData} 
+          userXP={userXP} 
+          userLevel={userLevel} 
+          hasCheckedIn={hasCheckedIn} 
+          handleCheckIn={handleCheckIn} 
+          disconnectWallet={() => { userSession.signUserOut(); setUserData(null); }} 
+        />
+      )}
+      {activeTab === 'modules' && (
+  <Modules userData={userData} />
+)}
+      {activeTab === 'games' && (
+        <div>
+          <Games 
+            handleRoll={handleRoll}
+            handleFight={handleFight}
+            handlePredict={handlePredict}
+          />
 
-              {/* NEW: Leaderboard Active Indicator */}
-              {item.id === 'games' && (
-                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold tracking-wide">
-                  LIVE
-                </span>
-              )}
+          <div style={{marginTop: 30, padding: 20, border: '1px solid #333'}}>
+            <h3>🏆 Genesis Leaderboard</h3>
+            <p>Score: {leaderboardScore}</p>
+            <p>Rank Tier: {leaderboardTier}</p>
+            <button onClick={handleAddLeaderboardScore}>
+              Add +10 Score
             </button>
-          ))}
-        </nav>
-
-        <div className="p-6 border-t border-slate-800">
-          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-800">
-            <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-              System Status
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <p className="text-xs font-bold text-slate-300">Operational</p>
-            </div>
-
-            {/* NEW: On-Chain Layer Status */}
-            <div className="mt-3 pt-3 border-t border-slate-800">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
-                On-Chain Layer
-              </p>
-              <p className="text-xs text-blue-400 font-semibold">
-                Leaderboard Active
-              </p>
-            </div>
-
           </div>
         </div>
-      </aside>
+      )}
 
-      {/* Mobile Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A] border-t border-slate-800 flex justify-around p-4 z-50">
-         {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center gap-1 ${
-                activeTab === item.id ? 'text-stx-accent' : 'text-slate-600'
-              }`}
-            >
-              <span className="text-xl relative">
-                {item.icon}
-                {item.id === 'games' && (
-                  <span className="absolute -top-1 -right-2 text-[8px] bg-blue-500 text-white px-1 rounded">
-                    NEW
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wide">
-                {item.label}
-              </span>
-            </button>
-          ))}
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col relative overflow-y-auto h-screen">
-        <header className="sticky top-0 z-10 bg-[#0B1120]/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-lg font-bold md:hidden text-white tracking-tight">
-            GENESIS
-          </h2>
-
-          <div className="hidden md:block text-slate-500 text-xs uppercase tracking-widest font-semibold">
-            Secure Environment • Modular On-Chain Engine
-          </div>
-
-          <div>{walletButton}</div>
-        </header>
-
-        <div className="p-6 md:p-10 max-w-6xl mx-auto w-full pb-24 md:pb-10">
-          {children}
-        </div>
-      </main>
-    </div>
+    </Layout>
   );
-};
+}
 
-export default Layout;
+export default App;
