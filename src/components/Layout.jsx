@@ -7,6 +7,7 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
     { id: 'vault', label: 'Vault', icon: '🏦' }, 
     { id: 'profile', label: 'Identity', icon: '🆔' },
     { id: 'games', label: 'Games', icon: '🎮' }
+    { id: 'modules', label: 'Modules', icon: '🧪' }
   ];
 
   return (

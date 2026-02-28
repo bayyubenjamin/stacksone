@@ -9,7 +9,7 @@ import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 import Vault from './pages/Vault';
 import Games from './pages/Games';
-
+import Modules from './pages/Modules';
 
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
 const CONTRACT_NAME = 'genesis-core-v10';
@@ -284,7 +284,9 @@ function App() {
           disconnectWallet={() => { userSession.signUserOut(); setUserData(null); }} 
         />
       )}
-
+      {activeTab === 'modules' && (
+  <Modules userData={userData} />
+)}
       {activeTab === 'games' && (
         <div>
           <Games 
