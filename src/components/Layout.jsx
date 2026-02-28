@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { showConnect, openContractCall } from '@stacks/connect'; 
 import { StacksMainnet } from '@stacks/network';
 import { uintCV, stringAsciiCV, PostConditionMode, callReadOnlyFunction, standardPrincipalCV } from '@stacks/transactions';
-import { supabase, userSession } from './supabaseClient'; 
+import { supabase, userSession } from '../supabaseClient'; 
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
