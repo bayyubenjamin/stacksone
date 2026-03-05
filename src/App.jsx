@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { showConnect, openContractCall } from '@stacks/connect';
 import { StacksMainnet } from '@stacks/network';
-import { uintCV, PostConditionMode, callReadOnlyFunction, standardPrincipalCV } from '@stacks/transactions';
+import {
+  uintCV,
+  PostConditionMode,
+  callReadOnlyFunction,
+  standardPrincipalCV,
+  tupleCV,
+  cvToHex,
+  hexToCV,
+  cvToValue
+} from '@stacks/transactions';
+
 import { supabase, userSession } from './supabaseClient';
 
 import Layout from './components/Layout';
@@ -26,7 +36,10 @@ function App() {
   const [leaderboardScore, setLeaderboardScore] = useState(0);
   const [leaderboardTier, setLeaderboardTier] = useState(0);
 
-  const [tasks, setTasks] = useState([
+  const [userXP, setUserXP] = useState(0);
+  const [userLevel, setUserLevel] = useState(1);
+
+  const [tasks] = useState([
     {
       id: 1,
       name: "Connect Wallet",
@@ -54,39 +67,84 @@ function App() {
       desc: "Launch a Genesis on-chain game",
       reward: 25,
       icon: "🎮"
-    }
+    },
     {
-  id: 5,
-  name: "Execute Smart Contract",
-  desc: "Submit a transaction to interact with the Genesis protocol",
-  reward: 30,
-  icon: "⚙️"
-},
-{
-  id: 6,
-  name: "Earn XP Milestone",
-  desc: "Reach a new XP milestone within the Genesis ecosystem",
-  reward: 40,
-  icon: "🚀"
-},
-{
-  id: 7,
-  name: "Claim Genesis Badge",
-  desc: "Unlock and mint your first Genesis badge on-chain",
-  reward: 50,
-  icon: "🏅"
-}
+      id: 5,
+      name: "Execute Smart Contract",
+      desc: "Submit a transaction to interact with the Genesis protocol",
+      reward: 30,
+      icon: "⚙️"
+    },
+    {
+      id: 6,
+      name: "Earn XP Milestone",
+      desc: "Reach a new XP milestone within the Genesis ecosystem",
+      reward: 40,
+      icon: "🚀"
+    },
+    {
+      id: 7,
+      name: "Claim Genesis Badge",
+      desc: "Unlock and mint your first Genesis badge on-chain",
+      reward: 50,
+      icon: "🏅"
+    }
   ]);
 
   useEffect(() => {
 
     if (userSession.isUserSignedIn()) {
+
       const user = userSession.loadUserData();
+      const wallet = user.profile.stxAddress.mainnet;
+
       setUserData(user);
-      fetchLeaderboard(user.profile.stxAddress.mainnet);
+
+      fetchLeaderboard(wallet);
+      fetchUserProfile(wallet);
+
     }
 
   }, []);
+
+  const fetchUserProfile = async (wallet) => {
+
+    try {
+
+      const key = standardPrincipalCV(wallet);
+
+      const response = await fetch(
+        `${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/user-profile`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cvToHex(key))
+        }
+      );
+
+      if (!response.ok) {
+        setUserXP(0);
+        setUserLevel(1);
+        return;
+      }
+
+      const data = await response.json();
+      const resultCV = hexToCV(data.data);
+      const val = cvToValue(resultCV);
+
+      const xp = val?.xp ?? 0;
+      const level = val?.level ?? 1;
+
+      setUserXP(Number(xp));
+      setUserLevel(Number(level));
+
+    } catch (err) {
+
+      console.log("Profile fetch error:", err);
+
+    }
+
+  };
 
   const fetchLeaderboard = async (wallet) => {
 
@@ -135,7 +193,10 @@ function App() {
       functionName: 'add-score',
       functionArgs: [uintCV(10)],
       postConditionMode: PostConditionMode.Allow,
-      onFinish: () => fetchLeaderboard(userData.profile.stxAddress.mainnet)
+      onFinish: () => {
+        fetchLeaderboard(userData.profile.stxAddress.mainnet);
+        fetchUserProfile(userData.profile.stxAddress.mainnet);
+      }
     });
 
   };
@@ -147,15 +208,20 @@ function App() {
       return false;
     }
 
+    const reward = tasks.find(t => t.id === taskId)?.reward ?? 0;
+
     try {
 
       await openContractCall({
         network,
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
-        functionName: 'complete-task',
-        functionArgs: [uintCV(taskId)],
-        postConditionMode: PostConditionMode.Allow
+        functionName: 'complete-mission',
+        functionArgs: [uintCV(taskId), uintCV(reward)],
+        postConditionMode: PostConditionMode.Allow,
+        onFinish: () => {
+          fetchUserProfile(userData.profile.stxAddress.mainnet);
+        }
       });
 
       return true;
@@ -167,6 +233,10 @@ function App() {
 
     }
 
+  };
+
+  const handleMint = async () => {
+    return true;
   };
 
   const connectWallet = () => {
@@ -210,7 +280,14 @@ function App() {
       }
     >
 
-      {activeTab === 'home' && <Home userData={userData} />}
+      {activeTab === 'home' && (
+        <Home
+          userData={userData}
+          userXP={userXP}
+          userLevel={userLevel}
+          handleMint={handleMint}
+        />
+      )}
 
       {activeTab === 'tasks' && (
         <Tasks
