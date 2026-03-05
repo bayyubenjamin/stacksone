@@ -55,6 +55,27 @@ function App() {
       reward: 25,
       icon: "🎮"
     }
+    {
+  id: 5,
+  name: "Execute Smart Contract",
+  desc: "Submit a transaction to interact with the Genesis protocol",
+  reward: 30,
+  icon: "⚙️"
+},
+{
+  id: 6,
+  name: "Earn XP Milestone",
+  desc: "Reach a new XP milestone within the Genesis ecosystem",
+  reward: 40,
+  icon: "🚀"
+},
+{
+  id: 7,
+  name: "Claim Genesis Badge",
+  desc: "Unlock and mint your first Genesis badge on-chain",
+  reward: 50,
+  icon: "🏅"
+}
   ]);
 
   useEffect(() => {
