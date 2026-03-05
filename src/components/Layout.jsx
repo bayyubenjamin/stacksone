@@ -1,6 +1,7 @@
 import React from 'react';
 
 const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
+
   const menuItems = [
     { id: 'home', label: 'Overview', icon: '📊' },
     { id: 'tasks', label: 'Protocol', icon: '💠' },
@@ -12,10 +13,15 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 
   return (
     <div className="min-h-screen flex bg-[#0B1120] text-slate-200 font-sans overflow-hidden">
-      
+
+      {/* DESKTOP SIDEBAR */}
       <aside className="w-64 hidden md:flex flex-col border-r border-slate-800 bg-[#0F172A]/95 backdrop-blur-xl z-20">
+
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-stx-accent rounded flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">G</div>
+          <div className="w-8 h-8 bg-stx-accent rounded flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">
+            G
+          </div>
+
           <span className="font-bold tracking-tight text-lg text-white">
             GENESIS <span className="text-stx-accent">ONE</span>
           </span>
@@ -37,20 +43,58 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
             </button>
           ))}
         </nav>
+
       </aside>
 
+
+      {/* MAIN AREA */}
       <main className="flex-1 flex flex-col relative overflow-y-auto h-screen">
+
+        {/* HEADER */}
         <header className="sticky top-0 z-10 bg-[#0B1120]/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+
           <div className="hidden md:block text-slate-500 text-xs uppercase tracking-widest font-semibold">
             Secure Environment • Modular On-Chain Engine
           </div>
-          <div>{walletButton}</div>
+
+          <div>
+            {walletButton}
+          </div>
+
         </header>
 
+
+        {/* PAGE CONTENT */}
         <div className="p-6 md:p-10 max-w-6xl mx-auto w-full pb-24 md:pb-10">
           {children}
         </div>
+
       </main>
+
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-xl border-t border-slate-800 flex justify-around py-2 z-30">
+
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`flex flex-col items-center text-xs font-medium ${
+              activeTab === item.id
+                ? 'text-stx-accent'
+                : 'text-slate-500'
+            }`}
+          >
+
+            <span className="text-lg">{item.icon}</span>
+
+            {item.label}
+
+          </button>
+        ))}
+
+      </div>
+
     </div>
   );
 };
