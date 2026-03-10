@@ -107,9 +107,10 @@ const Vault = () => {
 
     try {
       const claimKeyCV = standardPrincipalCV(userAddress);
+      // PERBAIKAN 1: Hapus JSON.stringify untuk cvToHex
       const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor/last-claim-height`, {
         method: 'POST',
-        body: JSON.stringify(cvToHex(claimKeyCV)),
+        body: cvToHex(claimKeyCV),
         headers: { 'Content-Type': 'application/json' }
       });
       if (res.ok) {
@@ -147,9 +148,10 @@ const Vault = () => {
     for (let i = 0; i < maxId; i++) {
       try {
         const keyCV = tupleCV({ staker: standardPrincipalCV(userAddress), id: uintCV(i) });
+        // PERBAIKAN 1: Hapus JSON.stringify untuk cvToHex
         const response = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery/stakes`, {
           method: 'POST',
-          body: JSON.stringify(cvToHex(keyCV)),
+          body: cvToHex(keyCV),
           headers: { 'Content-Type': 'application/json' }
         });
 
@@ -207,6 +209,24 @@ const Vault = () => {
       onFinish: (data) => {
         setStatus({ type: 'success', msg: `Transaction Broadcasted! ID: ${data.txId.slice(0, 8)}...` });
         setActionLoading(false);
+        
+        // PERBAIKAN 2: Optimistic UI Updates (Kunci instan tanpa perlu tunggu blockchain lama)
+        if (actionType === 'claim') {
+          // Buat seolah-olah block claim terakhir adalah block saat ini (otomatis nge-block cooldown)
+          setLastClaimHeight(currentBlockHeight);
+        } else if (actionType === 'harvest' && payload) {
+          // Langsung hilangkan history stake dari list karena sudah di-harvest
+          setActiveStakes(prev => prev.filter(stake => stake.id !== payload.id));
+        } else if (actionType === 'stake') {
+          // Kurangi saldo secara kasat mata
+          const amountStaked = parseFloat(stakeAmount);
+          if (!isNaN(amountStaked)) {
+            setBalances(prev => ({ ...prev, poin: prev.poin - amountStaked }));
+          }
+          setStakeAmount('');
+        }
+        
+        // Tetap sync ke blockchain 10 detik setelahnya
         setTimeout(fetchData, 10000); 
       },
       onCancel: () => {
@@ -372,7 +392,7 @@ const Vault = () => {
                 </div>
               </div>
 
-              {/* PERUBAHAN BUTTON FAUCET */}
+              {/* BUTTON FAUCET */}
               <button 
                 onClick={() => handleAction('claim')}
                 disabled={actionLoading || !isClaimable} 
@@ -478,7 +498,7 @@ const Vault = () => {
                           <p className="text-xl font-bold text-white">{stake.amount.toLocaleString()} <span className="text-sm text-amber-400 font-medium">POIN</span></p>
                         </div>
                         
-                        {/* PERUBAHAN BUTTON HARVEST */}
+                        {/* BUTTON HARVEST */}
                         <button 
                           onClick={() => handleAction('harvest', stake)}
                           disabled={actionLoading || !isReady}
