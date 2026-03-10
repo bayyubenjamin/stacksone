@@ -372,13 +372,18 @@ const Vault = () => {
                 </div>
               </div>
 
+              {/* PERUBAHAN BUTTON FAUCET */}
               <button 
                 onClick={() => handleAction('claim')}
                 disabled={actionLoading || !isClaimable} 
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-700 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2"
+                className={`w-full py-4 font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 ${
+                  isClaimable 
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white' 
+                    : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                }`}
               >
-                {actionLoading ? <RefreshCw className="animate-spin" size={18} /> : <Zap size={18} />}
-                Claim 100 POIN
+                {actionLoading ? <RefreshCw className="animate-spin" size={18} /> : (isClaimable ? <Zap size={18} /> : <Clock size={18} />)}
+                {isClaimable ? 'Claim 100 POIN' : `Cooldown (${estimatedTime})`}
               </button>
             </div>
           </div>
@@ -467,28 +472,28 @@ const Vault = () => {
 
                   return (
                     <div key={idx} className="bg-[#0F172A] border border-slate-700/80 p-5 rounded-2xl hover:border-purple-500/50 transition-colors">
-                      <div className="flex justify-between items-start mb-4">
+                      <div className="flex justify-between items-center mb-4">
                         <div>
                           <p className="text-slate-500 text-[10px] font-bold tracking-widest uppercase mb-1">Receipt #{stake.id}</p>
                           <p className="text-xl font-bold text-white">{stake.amount.toLocaleString()} <span className="text-sm text-amber-400 font-medium">POIN</span></p>
                         </div>
                         
-                        {isReady ? (
-                          <button 
-                            onClick={() => handleAction('harvest', stake)}
-                            disabled={actionLoading}
-                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-all flex items-center gap-2 active:scale-95"
-                          >
-                            <Unlock size={16} /> Harvest
-                          </button>
-                        ) : (
-                          <div className="text-right">
-                            <p className="text-slate-500 text-[10px] uppercase font-bold mb-1 tracking-wider">Lock Status</p>
-                            <p className="text-sm font-bold text-amber-400 flex items-center gap-1 justify-end">
-                              <Clock size={14} /> {blocksLeft} Blocks Left
-                            </p>
-                          </div>
-                        )}
+                        {/* PERUBAHAN BUTTON HARVEST */}
+                        <button 
+                          onClick={() => handleAction('harvest', stake)}
+                          disabled={actionLoading || !isReady}
+                          className={`px-5 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2 ${
+                            isReady 
+                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 active:scale-95' 
+                              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                          }`}
+                        >
+                          {isReady ? (
+                            <><Unlock size={16} /> Harvest</>
+                          ) : (
+                            <><Lock size={14} /> Locked ({blocksLeft} Blocks)</>
+                          )}
+                        </button>
                       </div>
 
                       <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
