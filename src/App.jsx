@@ -9,7 +9,8 @@ import {
   tupleCV,
   cvToHex,
   hexToCV,
-  cvToValue
+  cvToValue,
+  stringAsciiCV // Tambahan import untuk claim-badge
 } from '@stacks/transactions';
 
 import { supabase, userSession } from './supabaseClient';
@@ -132,8 +133,17 @@ function App() {
       const resultCV = hexToCV(data.data);
       const val = cvToValue(resultCV);
 
-      const xp = val?.xp ?? 0;
-      const level = val?.level ?? 1;
+      let xp = 0;
+      let level = 1;
+
+      // Perbaikan Ekstraksi Data: Handle Optional Stacks format
+      if (val && val.value) {
+        xp = val.value.xp?.value !== undefined ? val.value.xp.value : (val.value.xp ?? 0);
+        level = val.value.level?.value !== undefined ? val.value.level.value : (val.value.level ?? 1);
+      } else if (val) {
+        xp = val.xp?.value !== undefined ? val.xp.value : (val.xp ?? 0);
+        level = val.level?.value !== undefined ? val.level.value : (val.level ?? 1);
+      }
 
       setUserXP(Number(xp));
       setUserLevel(Number(level));
@@ -210,9 +220,8 @@ function App() {
 
     const reward = tasks.find(t => t.id === taskId)?.reward ?? 0;
 
-    try {
-
-      await openContractCall({
+    return new Promise((resolve) => {
+      openContractCall({
         network,
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
@@ -220,23 +229,50 @@ function App() {
         functionArgs: [uintCV(taskId), uintCV(reward)],
         postConditionMode: PostConditionMode.Allow,
         onFinish: () => {
-          fetchUserProfile(userData.profile.stxAddress.mainnet);
+          // Optimistic UI Update agar State terasa Realtime
+          const newXP = userXP + reward;
+          setUserXP(newXP);
+          // Rumus level dari contract: (+ (/ xp u500) u1)
+          setUserLevel(Math.floor(newXP / 500) + 1);
+          
+          // Sinkronisasi background (opsional)
+          setTimeout(() => fetchUserProfile(userData.profile.stxAddress.mainnet), 10000);
+          
+          resolve(true);
+        },
+        onCancel: () => {
+          resolve(false);
         }
       });
-
-      return true;
-
-    } catch (err) {
-
-      console.log("Task tx error:", err);
-      return false;
-
-    }
+    });
 
   };
 
-  const handleMint = async () => {
-    return true;
+  // Perbaikan: Integrasikan fungsi mint dengan Smart Contract claim-badge
+  const handleMint = async (badgeId) => {
+    
+    if (!userData) {
+      alert("Connect wallet first");
+      return false;
+    }
+
+    return new Promise((resolve) => {
+      openContractCall({
+        network,
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACT_NAME,
+        functionName: 'claim-badge', // Sesuai dengan smart contract
+        functionArgs: [stringAsciiCV(badgeId)],
+        postConditionMode: PostConditionMode.Allow,
+        onFinish: () => {
+          resolve(true);
+        },
+        onCancel: () => {
+          resolve(false);
+        }
+      });
+    });
+
   };
 
   const connectWallet = () => {
