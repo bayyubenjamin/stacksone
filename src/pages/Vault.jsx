@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { openContractCall } from '@stacks/connect';
 import { StacksMainnet } from '@stacks/network'; 
 import { 
@@ -35,7 +35,19 @@ const Vault = () => {
   const [loading, setLoading] = useState(true); 
   const [actionLoading, setActionLoading] = useState(false); 
 
+  // State: Realtime Ticker
+  const [now, setNow] = useState(Date.now());
   const network = new StacksMainnet();
+
+  // Tick every second for realtime countdown UI
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Reset base timer every time block updates
+  const baseBlockTime = useMemo(() => Date.now(), [currentBlockHeight]);
+  const elapsedSinceBlock = Math.floor((now - baseBlockTime) / 1000);
 
   const fetchData = useCallback(async () => {
     if (!userSession.isUserSignedIn()) {
@@ -60,7 +72,7 @@ const Vault = () => {
     try {
       const response = await fetch(`${network.coreApiUrl}/v2/info`);
       const data = await response.json();
-      setCurrentBlockHeight(data.stacks_tip_height);
+      if (data.stacks_tip_height) setCurrentBlockHeight(data.stacks_tip_height);
     } catch (e) {
       console.error("Failed to load block height", e);
     }
@@ -73,31 +85,14 @@ const Vault = () => {
     
     try {
       const [poinData, oneData] = await Promise.all([
-        callReadOnlyFunction({
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: 'token-poin',
-          functionName: 'get-balance',
-          functionArgs: [standardPrincipalCV(userAddress)],
-          network,
-          senderAddress: userAddress
-        }),
-        callReadOnlyFunction({
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: 'token-one',
-          functionName: 'get-balance',
-          functionArgs: [standardPrincipalCV(userAddress)],
-          network,
-          senderAddress: userAddress
-        })
+        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-poin', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress }),
+        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-one', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress })
       ]);
-
       setBalances({
         poin: Number(cvToValue(poinData).value) / 1000000,
         one: Number(cvToValue(oneData).value) / 1000000
       });
-    } catch (e) { 
-      console.error("Failed to load balances", e); 
-    }
+    } catch (e) { console.error("Failed to load balances", e); }
   };
 
   const fetchFaucetData = async () => {
@@ -107,10 +102,10 @@ const Vault = () => {
 
     try {
       const claimKeyCV = standardPrincipalCV(userAddress);
-      // PERBAIKAN 1: Hapus JSON.stringify untuk cvToHex
+      // WAJIB JSON.stringify agar API Hiro mau membaca Body
       const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor/last-claim-height`, {
         method: 'POST',
-        body: cvToHex(claimKeyCV),
+        body: JSON.stringify(cvToHex(claimKeyCV)),
         headers: { 'Content-Type': 'application/json' }
       });
       if (res.ok) {
@@ -118,12 +113,12 @@ const Vault = () => {
         if (data.data) {
           const valCV = hexToCV(data.data);
           const val = cvToValue(valCV);
-          setLastClaimHeight(Number(val?.value !== undefined ? val.value : (val || 0)));
+          // Tangani format tipe value yang bervariasi dari API
+          const valNum = typeof val === 'bigint' || typeof val === 'number' ? Number(val) : Number(val?.value ?? 0);
+          setLastClaimHeight(valNum);
         }
       }
-    } catch (e) {
-      console.error("Failed to fetch faucet data", e);
-    }
+    } catch (e) { console.error("Failed to fetch faucet data", e); }
   };
 
   const fetchStakingHistory = async () => {
@@ -139,54 +134,42 @@ const Vault = () => {
       const nonceRes = await fetch(`${network.coreApiUrl}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery/stake-nonce`);
       if (nonceRes.ok) {
         const nonceData = await nonceRes.json();
-        maxId = Number(cvToValue(hexToCV(nonceData.data)));
+        const nonceVal = cvToValue(hexToCV(nonceData.data));
+        maxId = Number(nonceVal?.value ?? nonceVal ?? 10);
       }
-    } catch (e) {
-      console.warn("Could not fetch stake nonce, defaulting to 10 limit.");
-    }
+    } catch (e) { console.warn("Failed to fetch nonce"); }
 
     for (let i = 0; i < maxId; i++) {
       try {
         const keyCV = tupleCV({ staker: standardPrincipalCV(userAddress), id: uintCV(i) });
-        // PERBAIKAN 1: Hapus JSON.stringify untuk cvToHex
-        const response = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery/stakes`, {
+        const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery/stakes`, {
           method: 'POST',
-          body: cvToHex(keyCV),
+          body: JSON.stringify(cvToHex(keyCV)),
           headers: { 'Content-Type': 'application/json' }
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data) { 
-            const valCV = hexToCV(result.data);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data) { 
+            const valCV = hexToCV(data.data);
             const val = cvToValue(valCV);
+            const stakeData = val?.value ?? val; // Ekstraksi data map
             
-            if (val && val.value) {
-              const stakeData = val.value;
-              const isClaimed = stakeData.claimed?.value !== undefined ? stakeData.claimed.value : stakeData.claimed;
-              
+            if (stakeData && stakeData['amount-poin'] !== undefined) {
+              const isClaimed = stakeData.claimed?.value ?? stakeData.claimed ?? false;
               if (!isClaimed) {
                 const amountVal = Number(stakeData['amount-poin']?.value ?? stakeData['amount-poin']);
                 const startVal = Number(stakeData['start-height']?.value ?? stakeData['start-height']);
                 const endVal = Number(stakeData['end-height']?.value ?? stakeData['end-height']);
 
-                fetchedStakes.push({
-                  id: i,
-                  amount: amountVal / 1000000, 
-                  startBlock: startVal, 
-                  endBlock: endVal,
-                  claimed: false
-                });
+                fetchedStakes.push({ id: i, amount: amountVal / 1000000, startBlock: startVal, endBlock: endVal, claimed: false });
                 accumulatedTotal += (amountVal / 1000000);
               }
             }
           }
         }
-      } catch (error) { 
-        console.error(`Error fetching stake ${i}`, error);
-      }
+      } catch (error) { console.error(`Error stake ${i}`, error); }
     }
-
     setActiveStakes(fetchedStakes);
     setTotalStaked(accumulatedTotal);
   };
@@ -197,7 +180,6 @@ const Vault = () => {
       setStatus({ type: 'error', msg: 'Please connect your wallet first.' });
       return;
     }
-
     setStatus({ type: 'info', msg: 'Awaiting wallet confirmation...' });
     setActionLoading(true);
     
@@ -210,23 +192,14 @@ const Vault = () => {
         setStatus({ type: 'success', msg: `Transaction Broadcasted! ID: ${data.txId.slice(0, 8)}...` });
         setActionLoading(false);
         
-        // PERBAIKAN 2: Optimistic UI Updates (Kunci instan tanpa perlu tunggu blockchain lama)
-        if (actionType === 'claim') {
-          // Buat seolah-olah block claim terakhir adalah block saat ini (otomatis nge-block cooldown)
-          setLastClaimHeight(currentBlockHeight);
-        } else if (actionType === 'harvest' && payload) {
-          // Langsung hilangkan history stake dari list karena sudah di-harvest
-          setActiveStakes(prev => prev.filter(stake => stake.id !== payload.id));
-        } else if (actionType === 'stake') {
-          // Kurangi saldo secara kasat mata
+        // Optimistic UI updates
+        if (actionType === 'claim') setLastClaimHeight(currentBlockHeight);
+        else if (actionType === 'harvest' && payload) setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
+        else if (actionType === 'stake') {
           const amountStaked = parseFloat(stakeAmount);
-          if (!isNaN(amountStaked)) {
-            setBalances(prev => ({ ...prev, poin: prev.poin - amountStaked }));
-          }
+          if (!isNaN(amountStaked)) setBalances(prev => ({ ...prev, poin: prev.poin - amountStaked }));
           setStakeAmount('');
         }
-        
-        // Tetap sync ke blockchain 10 detik setelahnya
         setTimeout(fetchData, 10000); 
       },
       onCancel: () => {
@@ -236,36 +209,10 @@ const Vault = () => {
     };
 
     try {
-      if (actionType === 'stake') {
-        const amount = parseFloat(stakeAmount) * 1000000;
-        await openContractCall({
-          ...options,
-          contractName: 'staking-refinery',
-          functionName: 'stake-tokens',
-          functionArgs: [uintCV(amount)],
-        });
-      } else if (actionType === 'harvest') {
-        await openContractCall({
-          ...options,
-          contractName: 'staking-refinery',
-          functionName: 'harvest',
-          functionArgs: [uintCV(payload.id)], 
-        });
-      } else if (actionType === 'claim') {
-        await openContractCall({
-          ...options,
-          contractName: 'faucet-distributor',
-          functionName: 'claim-daily',
-          functionArgs: [],
-        });
-      } else if (actionType === 'gacha') {
-        await openContractCall({
-          ...options,
-          contractName: 'utility-gacha',
-          functionName: 'spin-gacha',
-          functionArgs: [],
-        });
-      }
+      if (actionType === 'stake') await openContractCall({ ...options, contractName: 'staking-refinery', functionName: 'stake-tokens', functionArgs: [uintCV(parseFloat(stakeAmount) * 1000000)] });
+      else if (actionType === 'harvest') await openContractCall({ ...options, contractName: 'staking-refinery', functionName: 'harvest', functionArgs: [uintCV(payload.id)] });
+      else if (actionType === 'claim') await openContractCall({ ...options, contractName: 'faucet-distributor', functionName: 'claim-daily', functionArgs: [] });
+      else if (actionType === 'gacha') await openContractCall({ ...options, contractName: 'utility-gacha', functionName: 'spin-gacha', functionArgs: [] });
     } catch (error) {
       console.error("Contract call failed:", error);
       setStatus({ type: 'error', msg: 'Failed to process transaction.' });
@@ -273,10 +220,22 @@ const Vault = () => {
     }
   };
 
-  // Calculations for Claim
+  // --- FORMAT TIMER ---
+  const formatTime = (totalSeconds) => {
+    if (totalSeconds <= 0) return 'Ready';
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  // --- CALCULATIONS FOR REALTIME UI ---
   const blocksToClaim = (lastClaimHeight + BLOCKS_PER_DAY) - currentBlockHeight;
-  const isClaimable = lastClaimHeight === 0 || blocksToClaim <= 0; 
-  const estimatedTime = blocksToClaim > 0 ? `~${Math.ceil((blocksToClaim * 10) / 60)} hours` : 'Now';
+  let faucetSecondsLeft = (blocksToClaim * 600) - elapsedSinceBlock; // 10 menit per block
+  if (faucetSecondsLeft < 0) faucetSecondsLeft = 0;
+  
+  const isClaimable = lastClaimHeight === 0 || faucetSecondsLeft <= 0; 
+  const nextTargetBlock = currentBlockHeight + (isClaimable ? 0 : blocksToClaim);
 
   // --- COMPONENTS ---
   const StatCard = ({ title, value, unit, icon: Icon, color, isLoading }) => (
@@ -302,7 +261,6 @@ const Vault = () => {
 
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-200 pb-20 font-sans">
-      {/* HEADER SECTION */}
       <div className="bg-gradient-to-r from-indigo-950 to-[#0B1120] border-b border-slate-800 p-6 md:p-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -315,11 +273,7 @@ const Vault = () => {
                 Mainnet Live • Block #{currentBlockHeight || '...'}
               </p>
             </div>
-            <button 
-              onClick={fetchData}
-              disabled={loading || actionLoading}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 text-sm font-medium transition-all disabled:opacity-50"
-            >
+            <button onClick={fetchData} disabled={loading || actionLoading} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 text-sm font-medium transition-all disabled:opacity-50">
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               Refresh Data
             </button>
@@ -334,110 +288,75 @@ const Vault = () => {
         </div>
       </div>
 
-      {/* MAIN CONTENT - UNIFIED DASHBOARD */}
       <div className="max-w-6xl mx-auto p-6 md:p-10">
-        
-        {/* STATUS NOTIFICATION */}
         {status && (
-          <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 relative z-10 ${
-            status.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' :
-            status.type === 'error' ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' :
-            'bg-blue-500/10 border border-blue-500/20 text-blue-400'
-          }`}>
+          <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 relative z-10 ${status.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : status.type === 'error' ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'}`}>
             {status.type === 'success' ? <CheckCircle size={20} /> : status.type === 'error' ? <AlertCircle size={20} /> : <RefreshCw size={20} className="animate-spin" />}
             <p className="text-sm font-medium">{status.msg}</p>
             <button onClick={() => setStatus(null)} className="ml-auto text-slate-500 hover:text-white">×</button>
           </div>
         )}
 
-        {/* TOP DASHBOARD: FAUCET & STAKING FORM */}
+        {/* TOP DASHBOARD */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-          
-          {/* DAILY FAUCET SECTION */}
+          {/* DAILY FAUCET */}
           <div className="lg:col-span-5 bg-[#1E293B] border border-slate-700 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-            
             <div className="mb-8">
-              <div className="inline-flex p-3 bg-indigo-500/20 rounded-xl mb-4">
-                <Clock size={28} className="text-indigo-400" />
-              </div>
+              <div className="inline-flex p-3 bg-indigo-500/20 rounded-xl mb-4"><Clock size={28} className="text-indigo-400" /></div>
               <h2 className="text-2xl font-bold text-white mb-2">Daily Faucet</h2>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                The protocol distributes free <span className="text-amber-400 font-bold">100 POIN</span> every 144 blocks (approx 24 hours). Claim daily to maintain your protocol streak!
-              </p>
+              <p className="text-slate-400 text-sm leading-relaxed">The protocol distributes free <span className="text-amber-400 font-bold">100 POIN</span> every 144 blocks (approx 24 hours). Claim daily to maintain your protocol streak!</p>
             </div>
 
             <div>
               <div className="bg-[#0F172A] border border-slate-700 rounded-2xl p-5 mb-6">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-slate-400 text-sm">Faucet Status</span>
+                  <span className="text-slate-400 text-sm">Status</span>
                   <span className={`text-sm font-bold px-2 py-1 rounded-md ${isClaimable ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                     {isClaimable ? 'Ready to Claim' : 'Cooling Down'}
                   </span>
                 </div>
-                
-                {/* Progress Bar for Cooldown */}
                 {!isClaimable && (
                   <div className="w-full bg-slate-800 h-2 rounded-full mb-3 overflow-hidden">
-                    <div 
-                      className="bg-amber-400 h-full rounded-full transition-all duration-1000" 
-                      style={{ width: `${Math.max(0, 100 - (blocksToClaim / BLOCKS_PER_DAY * 100))}%` }}
-                    ></div>
+                    <div className="bg-amber-400 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(0, 100 - (blocksToClaim / BLOCKS_PER_DAY * 100))}%` }}></div>
                   </div>
                 )}
-                
                 <div className="flex justify-between items-center text-xs font-mono text-slate-500">
-                  <span>Wait: {estimatedTime}</span>
-                  <span>Target Block #{currentBlockHeight + (isClaimable ? 0 : blocksToClaim)}</span>
+                  <span>Wait: {isClaimable ? 'Now' : formatTime(faucetSecondsLeft)}</span>
+                  <span>Target Block #{nextTargetBlock}</span>
                 </div>
               </div>
 
-              {/* BUTTON FAUCET */}
+              {/* TOMBOL FAUCET - TERBLOKIR KETAT JIKA COOLDOWN */}
               <button 
                 onClick={() => handleAction('claim')}
-                disabled={actionLoading || !isClaimable} 
+                disabled={loading || actionLoading || !isClaimable} 
+                style={{ opacity: isClaimable ? 1 : 0.5, cursor: isClaimable ? 'pointer' : 'not-allowed' }}
                 className={`w-full py-4 font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 ${
-                  isClaimable 
-                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white' 
-                    : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                  isClaimable ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-800 text-slate-500 border-2 border-slate-700'
                 }`}
               >
                 {actionLoading ? <RefreshCw className="animate-spin" size={18} /> : (isClaimable ? <Zap size={18} /> : <Clock size={18} />)}
-                {isClaimable ? 'Claim 100 POIN' : `Cooldown (${estimatedTime})`}
+                {isClaimable ? 'Claim 100 POIN' : `Cooldown (${formatTime(faucetSecondsLeft)})`}
               </button>
             </div>
           </div>
 
-          {/* STAKING REFINERY SECTION */}
+          {/* STAKING REFINERY */}
           <div className="lg:col-span-7 bg-[#1E293B] border border-slate-700 rounded-3xl p-8 relative overflow-hidden">
              <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mb-10 pointer-events-none"></div>
-
              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-purple-500/20 rounded-xl">
-                  <Lock size={24} className="text-purple-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Refinery Staking</h2>
-                  <p className="text-slate-400 text-sm">Lock $POIN to mint $ONE tokens.</p>
-                </div>
+                <div className="p-3 bg-purple-500/20 rounded-xl"><Lock size={24} className="text-purple-400" /></div>
+                <div><h2 className="text-xl font-bold text-white">Refinery Staking</h2><p className="text-slate-400 text-sm">Lock $POIN to mint $ONE tokens.</p></div>
              </div>
 
             <div className="bg-[#0F172A] rounded-2xl p-5 border border-slate-700 mb-6 focus-within:border-purple-500 transition-colors">
               <div className="flex justify-between mb-3">
                 <label className="text-xs font-semibold text-slate-400 uppercase">Amount to Stake</label>
-                <span className="text-xs text-purple-400 cursor-pointer hover:text-purple-300 font-medium transition" onClick={() => setStakeAmount(balances.poin.toString())}>
-                  Max: {balances.poin.toLocaleString()}
-                </span>
+                <span className="text-xs text-purple-400 cursor-pointer hover:text-purple-300 font-medium transition" onClick={() => setStakeAmount(balances.poin.toString())}>Max: {balances.poin.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-4">
-                <input 
-                  type="number" 
-                  value={stakeAmount}
-                  onChange={(e) => setStakeAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="bg-transparent text-4xl font-bold text-white w-full focus:outline-none placeholder-slate-800"
-                  disabled={actionLoading}
-                />
+                <input type="number" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} placeholder="0.00" className="bg-transparent text-4xl font-bold text-white w-full focus:outline-none placeholder-slate-800" disabled={actionLoading} />
                 <div className="bg-slate-800 px-4 py-2 rounded-lg text-sm font-bold text-slate-300 border border-slate-700">POIN</div>
               </div>
             </div>
@@ -453,29 +372,20 @@ const Vault = () => {
               </div>
             </div>
 
-            <button 
-              onClick={() => handleAction('stake')}
-              disabled={actionLoading || !stakeAmount || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > balances.poin}
-              className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-700 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] flex justify-center items-center gap-2"
-            >
+            <button onClick={() => handleAction('stake')} disabled={loading || actionLoading || !stakeAmount || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > balances.poin} className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-700 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2">
               {actionLoading ? <RefreshCw className="animate-spin" size={18} /> : <Lock size={18} />}
               {parseFloat(stakeAmount) > balances.poin ? 'Insufficient POIN Balance' : 'Confirm Staking'}
             </button>
           </div>
         </div>
 
-        {/* BOTTOM DASHBOARD: ACTIVE STAKES & GACHA */}
+        {/* BOTTOM DASHBOARD */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* ACTIVE POSITIONS (HARVEST) */}
+          {/* HARVEST POSITIONS */}
           <div className="lg:col-span-7 bg-[#1E293B]/60 border border-slate-700 rounded-3xl p-6 flex flex-col h-[400px]">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Clock size={18} className="text-slate-400" /> Active Positions
-              </h2>
-              <span className="bg-slate-800 text-slate-300 text-xs px-3 py-1 rounded-full border border-slate-700 font-medium">
-                {activeStakes.length} Positions
-              </span>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2"><Clock size={18} className="text-slate-400" /> Active Positions</h2>
+              <span className="bg-slate-800 text-slate-300 text-xs px-3 py-1 rounded-full border border-slate-700 font-medium">{activeStakes.length} Positions</span>
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
@@ -487,7 +397,10 @@ const Vault = () => {
               ) : (
                 activeStakes.map((stake, idx) => {
                   const blocksLeft = Math.max(0, stake.endBlock - currentBlockHeight);
-                  const isReady = blocksLeft === 0;
+                  let stakeSecondsLeft = (blocksLeft * 600) - elapsedSinceBlock;
+                  if (stakeSecondsLeft < 0) stakeSecondsLeft = 0;
+                  
+                  const isReady = stakeSecondsLeft <= 0;
                   const progress = Math.min(100, ((currentBlockHeight - stake.startBlock) / LOCK_PERIOD_BLOCKS) * 100);
 
                   return (
@@ -498,29 +411,21 @@ const Vault = () => {
                           <p className="text-xl font-bold text-white">{stake.amount.toLocaleString()} <span className="text-sm text-amber-400 font-medium">POIN</span></p>
                         </div>
                         
-                        {/* BUTTON HARVEST */}
+                        {/* TOMBOL HARVEST - TERBLOKIR KETAT JIKA COOLDOWN */}
                         <button 
                           onClick={() => handleAction('harvest', stake)}
-                          disabled={actionLoading || !isReady}
+                          disabled={loading || actionLoading || !isReady}
+                          style={{ opacity: isReady ? 1 : 0.5, cursor: isReady ? 'pointer' : 'not-allowed' }}
                           className={`px-5 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2 ${
-                            isReady 
-                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 active:scale-95' 
-                              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                            isReady ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 active:scale-95' : 'bg-slate-800 text-slate-500 border-2 border-slate-700'
                           }`}
                         >
-                          {isReady ? (
-                            <><Unlock size={16} /> Harvest</>
-                          ) : (
-                            <><Lock size={14} /> Locked ({blocksLeft} Blocks)</>
-                          )}
+                          {isReady ? <><Unlock size={16} /> Harvest</> : <><Lock size={14} /> Locked ({formatTime(stakeSecondsLeft)})</>}
                         </button>
                       </div>
 
                       <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-2">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-1000 ${isReady ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-purple-500 relative overflow-hidden'}`} 
-                          style={{ width: `${progress}%` }}
-                        >
+                        <div className={`h-full rounded-full transition-all duration-1000 ${isReady ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-purple-500 relative overflow-hidden'}`} style={{ width: `${progress}%` }}>
                            {!isReady && <div className="absolute top-0 left-0 right-0 bottom-0 bg-white/20 animate-pulse"></div>}
                         </div>
                       </div>
@@ -537,35 +442,20 @@ const Vault = () => {
 
           {/* GACHA MODULE */}
           <div className="lg:col-span-5 bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-slate-700 rounded-3xl p-6 flex flex-col justify-center text-center">
-            <div className="bg-purple-500/10 w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 border border-purple-500/20">
-              <Zap size={28} className="text-purple-400" />
-            </div>
-            
+            <div className="bg-purple-500/10 w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 border border-purple-500/20"><Zap size={28} className="text-purple-400" /></div>
             <h2 className="text-xl font-bold text-white mb-2">Lucky Burn Module</h2>
-            <p className="text-slate-400 text-sm mb-6 max-w-xs mx-auto">
-              Burn your surplus POIN for a 33% random chance to mint valuable $ONE tokens.
-            </p>
-
+            <p className="text-slate-400 text-sm mb-6 max-w-xs mx-auto">Burn your surplus POIN for a 33% random chance to mint valuable $ONE tokens.</p>
             <div className="bg-[#0B1120] border border-slate-700 p-5 rounded-2xl mb-6">
               <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Cost per Spin</p>
               <p className="text-3xl font-bold text-white">50 <span className="text-sm text-amber-400">POIN</span></p>
             </div>
-            
-            <button 
-              onClick={() => handleAction('gacha')}
-              disabled={actionLoading || balances.poin < 50}
-              className="w-full py-4 bg-[#0F172A] hover:bg-slate-800 border border-purple-500/50 disabled:border-slate-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all flex justify-center items-center gap-2"
-            >
+            <button onClick={() => handleAction('gacha')} disabled={loading || actionLoading || balances.poin < 50} className="w-full py-4 bg-[#0F172A] hover:bg-slate-800 border border-purple-500/50 disabled:border-slate-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all flex justify-center items-center gap-2">
               {actionLoading ? <RefreshCw className="animate-spin" size={18} /> : '🎲'}
               {balances.poin < 50 ? 'Insufficient Balance' : 'SPIN GACHA'}
             </button>
-            <p className="text-[10px] text-slate-500 mt-4 flex items-center justify-center gap-1 uppercase tracking-widest font-bold">
-              <CheckCircle size={10} className="text-emerald-500" /> On-Chain RNG
-            </p>
+            <p className="text-[10px] text-slate-500 mt-4 flex items-center justify-center gap-1 uppercase tracking-widest font-bold"><CheckCircle size={10} className="text-emerald-500" /> On-Chain RNG</p>
           </div>
-
         </div>
-
       </div>
     </div>
   );
