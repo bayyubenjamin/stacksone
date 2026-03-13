@@ -15,7 +15,7 @@ import { userSession } from '../supabaseClient';
 import { CheckCircle, Clock, Zap, Box, Lock, TrendingUp, RefreshCw, AlertCircle, Unlock } from 'lucide-react';
 
 // --- CONFIGURATION V6 ---
-const CONTRACT_ADDRESS = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'; // Pastikan ganti ke Address Deployer Anda
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; // Pastikan ganti ke Address Deployer Anda
 const BLOCKS_PER_DAY = 144;
 const LOCK_PERIOD_BLOCKS = 1008; // ~7 Days
 
