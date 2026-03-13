@@ -14,23 +14,28 @@ import {
 import { userSession } from '../supabaseClient'; 
 import { CheckCircle, Clock, Zap, Box, Lock, TrendingUp, RefreshCw, AlertCircle, Unlock } from 'lucide-react';
 
+// --- CONFIGURATION ---
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
 const BLOCKS_PER_DAY = 144;
-const LOCK_PERIOD_BLOCKS = 1008;
+const LOCK_PERIOD_BLOCKS = 1008; // ~7 Days
 
 const Vault = () => {
-
+  // State: Assets
   const [balances, setBalances] = useState({ poin: 0, one: 0 });
+  
+  // State: Network & Staking Logic
   const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
   const [lastClaimHeight, setLastClaimHeight] = useState(0); 
   const [activeStakes, setActiveStakes] = useState([]);
   const [totalStaked, setTotalStaked] = useState(0);
   
+  // State: UI & Actions
   const [stakeAmount, setStakeAmount] = useState('');
   const [status, setStatus] = useState(null); 
   const [loading, setLoading] = useState(true); 
   const [actionLoading, setActionLoading] = useState(false); 
 
+  // State: Realtime Ticker
   const [now, setNow] = useState(Date.now());
   const network = new StacksMainnet();
 
@@ -50,13 +55,8 @@ const Vault = () => {
     
     setLoading(true);
     await fetchNetworkStatus();
-    await Promise.all([
-      fetchBalances(),
-      fetchFaucetData(),
-      fetchStakingHistory()
-    ]);
+    await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
     setLoading(false);
-
   }, [currentBlockHeight]);
 
   useEffect(() => {
@@ -76,14 +76,11 @@ const Vault = () => {
   };
 
   const fetchBalances = async () => {
-
     const userData = userSession.loadUserData();
     if (!userData?.profile?.stxAddress) return;
-
     const userAddress = userData.profile.stxAddress.mainnet;
-
+    
     try {
-
       const [poinData, oneData] = await Promise.all([
         callReadOnlyFunction({
           contractAddress: CONTRACT_ADDRESS,
@@ -93,7 +90,6 @@ const Vault = () => {
           network,
           senderAddress: userAddress
         }),
-
         callReadOnlyFunction({
           contractAddress: CONTRACT_ADDRESS,
           contractName: 'token-one-v4',
@@ -102,7 +98,6 @@ const Vault = () => {
           network,
           senderAddress: userAddress
         })
-
       ]);
 
       setBalances({
@@ -110,20 +105,17 @@ const Vault = () => {
         one: Number(cvToValue(oneData).value) / 1000000
       });
 
-    } catch (e) {
-      console.error("Failed to load balances", e);
+    } catch (e) { 
+      console.error("Failed to load balances", e); 
     }
   };
 
   const fetchFaucetData = async () => {
-
     const userData = userSession.loadUserData();
     if (!userData?.profile?.stxAddress) return;
-
     const userAddress = userData.profile.stxAddress.mainnet;
 
     try {
-
       const claimKeyCV = standardPrincipalCV(userAddress);
 
       const res = await fetch(
@@ -136,66 +128,48 @@ const Vault = () => {
       );
 
       if (res.ok) {
-
         const data = await res.json();
-
         if (data.data) {
-
           const valCV = hexToCV(data.data);
           const val = cvToValue(valCV);
-
-          const valNum =
-            typeof val === 'bigint' || typeof val === 'number'
-              ? Number(val)
-              : Number(val?.value ?? 0);
+          const valNum = typeof val === 'bigint' || typeof val === 'number'
+            ? Number(val)
+            : Number(val?.value ?? 0);
 
           setLastClaimHeight(valNum);
-
         }
       }
-
-    } catch (e) {
-      console.error("Failed to fetch faucet data", e);
+    } catch (e) { 
+      console.error("Failed to fetch faucet data", e); 
     }
   };
 
   const fetchStakingHistory = async () => {
-
     const userData = userSession.loadUserData();
     if (!userData?.profile?.stxAddress) return;
-
     const userAddress = userData.profile.stxAddress.mainnet;
     
     let fetchedStakes = [];
     let accumulatedTotal = 0;
-    let maxId = 10;
+    let maxId = 10; 
 
     try {
-
       const nonceRes = await fetch(
         `${network.coreApiUrl}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery-v4/stake-nonce`
       );
 
       if (nonceRes.ok) {
-
         const nonceData = await nonceRes.json();
         const nonceVal = cvToValue(hexToCV(nonceData.data));
         maxId = Number(nonceVal?.value ?? nonceVal ?? 10);
-
       }
-
-    } catch (e) {
-      console.warn("Failed to fetch nonce");
+    } catch (e) { 
+      console.warn("Failed to fetch nonce"); 
     }
 
     for (let i = 0; i < maxId; i++) {
-
       try {
-
-        const keyCV = tupleCV({
-          staker: standardPrincipalCV(userAddress),
-          id: uintCV(i)
-        });
+        const keyCV = tupleCV({ staker: standardPrincipalCV(userAddress), id: uintCV(i) });
 
         const res = await fetch(
           `${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery-v4/stakes`,
@@ -207,38 +181,22 @@ const Vault = () => {
         );
 
         if (res.ok) {
-
           const data = await res.json();
 
           if (data.data) {
-
             const valCV = hexToCV(data.data);
             const val = cvToValue(valCV);
             const stakeData = val?.value ?? val;
-
+            
             if (stakeData && stakeData['amount-poin'] !== undefined) {
 
-              const isClaimed =
-                stakeData.claimed?.value ??
-                stakeData.claimed ??
-                false;
+              const isClaimed = stakeData.claimed?.value ?? stakeData.claimed ?? false;
 
               if (!isClaimed) {
 
-                const amountVal = Number(
-                  stakeData['amount-poin']?.value ??
-                  stakeData['amount-poin']
-                );
-
-                const startVal = Number(
-                  stakeData['start-height']?.value ??
-                  stakeData['start-height']
-                );
-
-                const endVal = Number(
-                  stakeData['end-height']?.value ??
-                  stakeData['end-height']
-                );
+                const amountVal = Number(stakeData['amount-poin']?.value ?? stakeData['amount-poin']);
+                const startVal = Number(stakeData['start-height']?.value ?? stakeData['start-height']);
+                const endVal = Number(stakeData['end-height']?.value ?? stakeData['end-height']);
 
                 fetchedStakes.push({
                   id: i,
@@ -249,14 +207,12 @@ const Vault = () => {
                 });
 
                 accumulatedTotal += (amountVal / 1000000);
-
               }
             }
           }
         }
-
-      } catch (error) {
-        console.error(`Error stake ${i}`, error);
+      } catch (error) { 
+        console.error(`Error stake ${i}`, error); 
       }
     }
 
@@ -265,7 +221,6 @@ const Vault = () => {
   };
 
   const handleAction = async (actionType, payload = null) => {
-
     if (!userSession.isUserSignedIn()) {
       setStatus({ type: 'error', msg: 'Please connect your wallet first.' });
       return;
@@ -279,45 +234,25 @@ const Vault = () => {
       anchorMode: 1,
       contractAddress: CONTRACT_ADDRESS,
       postConditionMode: PostConditionMode.Allow,
-
       onFinish: (data) => {
-
-        setStatus({
-          type: 'success',
-          msg: `Transaction Broadcasted! ID: ${data.txId.slice(0, 8)}...`
-        });
-
+        setStatus({ type: 'success', msg: `Transaction Broadcasted! ID: ${data.txId.slice(0, 8)}...` });
         setActionLoading(false);
         
-        if (actionType === 'claim')
-          setLastClaimHeight(currentBlockHeight);
-
-        else if (actionType === 'harvest' && payload)
-          setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
-
+        if (actionType === 'claim') setLastClaimHeight(currentBlockHeight);
+        else if (actionType === 'harvest' && payload) setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
         else if (actionType === 'stake') {
-
           const amountStaked = parseFloat(stakeAmount);
-
-          if (!isNaN(amountStaked))
-            setBalances(prev => ({
-              ...prev,
-              poin: prev.poin - amountStaked
-            }));
-
+          if (!isNaN(amountStaked)) setBalances(prev => ({ ...prev, poin: prev.poin - amountStaked }));
           setStakeAmount('');
-
         }
 
-        setTimeout(fetchData, 10000);
-
+        setTimeout(fetchData, 10000); 
       },
 
       onCancel: () => {
         setStatus({ type: 'error', msg: 'Transaction cancelled by user.' });
         setActionLoading(false);
       },
-
     };
 
     try {
@@ -355,45 +290,32 @@ const Vault = () => {
         });
 
     } catch (error) {
-
       console.error("Contract call failed:", error);
       setStatus({ type: 'error', msg: 'Failed to process transaction.' });
       setActionLoading(false);
-
     }
   };
 
   const formatTime = (totalSeconds) => {
-
     if (totalSeconds <= 0) return 'Ready';
-
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = totalSeconds % 60;
-
     return `${h}h ${m}m ${s}s`;
-
   };
 
   const blocksToClaim = (lastClaimHeight + BLOCKS_PER_DAY) - currentBlockHeight;
   let faucetSecondsLeft = (blocksToClaim * 600) - elapsedSinceBlock;
-
-  if (faucetSecondsLeft < 0)
-    faucetSecondsLeft = 0;
+  if (faucetSecondsLeft < 0) faucetSecondsLeft = 0;
   
-  const isClaimable =
-    lastClaimHeight === 0 ||
-    faucetSecondsLeft <= 0;
-
-  const nextTargetBlock =
-    currentBlockHeight + (isClaimable ? 0 : blocksToClaim);
+  const isClaimable = lastClaimHeight === 0 || faucetSecondsLeft <= 0; 
+  const nextTargetBlock = currentBlockHeight + (isClaimable ? 0 : blocksToClaim);
 
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-200 pb-20 font-sans">
-      {/* UI kamu tetap sama */}
+      {/* seluruh JSX desain kamu tetap di sini */}
     </div>
   );
-
 };
 
 export default Vault;
