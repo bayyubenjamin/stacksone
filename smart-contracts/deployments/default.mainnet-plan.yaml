@@ -9,31 +9,31 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: token-poin-v4
+            contract-name: token-poin-v6
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 10230
-            path: contracts/token-poin-v4.clar
+            cost: 10450
+            path: contracts/token-poin-v6.clar
             anchor-block-only: true
-            clarity-version: 1
+            clarity-version: 2
         - contract-publish:
-            contract-name: faucet-distributor-v4
+            contract-name: faucet-distributor-v6
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 14930
-            path: contracts/faucet-distributor-v4.clar
+            cost: 16640
+            path: contracts/faucet-distributor-v6.clar
             anchor-block-only: true
-            clarity-version: 1
+            clarity-version: 2
         - contract-publish:
-            contract-name: token-one-v4
+            contract-name: token-one-v6
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 10180
-            path: contracts/token-one-v4.clar
+            cost: 10390
+            path: contracts/token-one-v6.clar
             anchor-block-only: true
-            clarity-version: 1
+            clarity-version: 2
         - contract-publish:
-            contract-name: staking-refinery-v4
+            contract-name: staking-refinery-v6
             expected-sender: SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3
-            cost: 21390
-            path: contracts/staking-refinery-v4.clar
+            cost: 26220
+            path: contracts/staking-refinery-v6.clar
             anchor-block-only: true
-            clarity-version: 1
-      epoch: "2.05"
+            clarity-version: 2
+      epoch: "2.5"
