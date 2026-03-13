@@ -102,8 +102,8 @@ const Vault = () => {
 
     try {
       const claimKeyCV = standardPrincipalCV(userAddress);
-      // WAJIB JSON.stringify agar API Hiro mau membaca Body
-      const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor/last-claim-height`, {
+      // WAJIB JSON.stringify agar API Hiro mau membaca Body. PERBAIKAN: endpoint diubah ke faucet-distributor-v4
+      const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor-v4/last-claim-height`, {
         method: 'POST',
         body: JSON.stringify(cvToHex(claimKeyCV)),
         headers: { 'Content-Type': 'application/json' }
@@ -211,7 +211,8 @@ const Vault = () => {
     try {
       if (actionType === 'stake') await openContractCall({ ...options, contractName: 'staking-refinery', functionName: 'stake-tokens', functionArgs: [uintCV(parseFloat(stakeAmount) * 1000000)] });
       else if (actionType === 'harvest') await openContractCall({ ...options, contractName: 'staking-refinery', functionName: 'harvest', functionArgs: [uintCV(payload.id)] });
-      else if (actionType === 'claim') await openContractCall({ ...options, contractName: 'faucet-distributor-v4', functionName: 'claim-daily', functionArgs: [] });
+      // PERBAIKAN: functionName diubah dari 'claim-daily' menjadi 'claim'
+      else if (actionType === 'claim') await openContractCall({ ...options, contractName: 'faucet-distributor-v4', functionName: 'claim', functionArgs: [] });
       else if (actionType === 'gacha') await openContractCall({ ...options, contractName: 'utility-gacha', functionName: 'spin-gacha', functionArgs: [] });
     } catch (error) {
       console.error("Contract call failed:", error);
