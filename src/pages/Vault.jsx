@@ -6,325 +6,209 @@ import {
   standardPrincipalCV, 
   uintCV,
   cvToValue,
+  cvToHex,
+  hexToCV,
+  tupleCV,
   PostConditionMode
 } from '@stacks/transactions';
 import { userSession } from '../supabaseClient'; 
 import { CheckCircle, Clock, Zap, Box, Lock, TrendingUp, RefreshCw, AlertCircle, Unlock } from 'lucide-react';
 
-const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3';
-
-const CONTRACTS = {
-  POIN: 'token-poin-v4',
-  ONE: 'token-one-v4',
-  FAUCET: 'faucet-distributor-v4',
-  STAKING: 'staking-refinery-v4'
-};
-
-const BLOCK_TIME_SECONDS = 600;
+// --- CONFIGURATION ---
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
+const BLOCKS_PER_DAY = 144;
+const LOCK_PERIOD_BLOCKS = 1008; // ~7 Days
 
 const Vault = () => {
-
   const [balances, setBalances] = useState({ poin: 0, one: 0 });
-
   const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
-  const [faucetStatus, setFaucetStatus] = useState(null);
-
+  const [lastClaimHeight, setLastClaimHeight] = useState(0); 
   const [activeStakes, setActiveStakes] = useState([]);
-
+  const [totalStaked, setTotalStaked] = useState(0);
+  
   const [stakeAmount, setStakeAmount] = useState('');
-  const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(null); 
+  const [loading, setLoading] = useState(true); 
+  const [actionLoading, setActionLoading] = useState(false); 
 
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-
+  const [now, setNow] = useState(Date.now());
   const network = new StacksMainnet();
 
-  const fetchNetworkStatus = async () => {
-    try {
-      const res = await fetch(`${network.coreApiUrl}/v2/info`);
-      const data = await res.json();
-      setCurrentBlockHeight(data.stacks_tip_height);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const fetchBalances = async () => {
-
-    const userData = userSession.loadUserData();
-    if (!userData?.profile?.stxAddress) return;
-
-    const userAddress = userData.profile.stxAddress.mainnet;
-
-    try {
-
-      const [poin, one] = await Promise.all([
-        callReadOnlyFunction({
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACTS.POIN,
-          functionName: 'get-balance',
-          functionArgs: [standardPrincipalCV(userAddress)],
-          network,
-          senderAddress: userAddress
-        }),
-        callReadOnlyFunction({
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACTS.ONE,
-          functionName: 'get-balance',
-          functionArgs: [standardPrincipalCV(userAddress)],
-          network,
-          senderAddress: userAddress
-        })
-      ]);
-
-      setBalances({
-        poin: Number(cvToValue(poin).value) / 1000000,
-        one: Number(cvToValue(one).value) / 1000000
-      });
-
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const fetchFaucetStatus = async () => {
-
-    const userData = userSession.loadUserData();
-    if (!userData?.profile?.stxAddress) return;
-
-    const userAddress = userData.profile.stxAddress.mainnet;
-
-    try {
-
-      const res = await callReadOnlyFunction({
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACTS.FAUCET,
-        functionName: 'get-user-status',
-        functionArgs: [standardPrincipalCV(userAddress)],
-        network,
-        senderAddress: userAddress
-      });
-
-      const data = cvToValue(res);
-
-      setFaucetStatus(data);
-
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const fetchStakes = async () => {
-
-    const userData = userSession.loadUserData();
-    if (!userData?.profile?.stxAddress) return;
-
-    const userAddress = userData.profile.stxAddress.mainnet;
-
-    let stakes = [];
-
-    for (let i = 0; i < 20; i++) {
-
-      try {
-
-        const res = await callReadOnlyFunction({
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACTS.STAKING,
-          functionName: 'get-stake-status',
-          functionArgs: [
-            standardPrincipalCV(userAddress),
-            uintCV(i)
-          ],
-          network,
-          senderAddress: userAddress
-        });
-
-        const val = cvToValue(res);
-
-        if (val.start !== 0 && !val.claimed) {
-
-          stakes.push({
-            id: i,
-            startBlock: Number(val.start),
-            endBlock: Number(val.end),
-            blocksLeft: Number(val['blocks-left'])
-          });
-
-        }
-
-      } catch {}
-
-    }
-
-    setActiveStakes(stakes);
-
-  };
+  const baseBlockTime = useMemo(() => Date.now(), [currentBlockHeight]);
+  const elapsedSinceBlock = Math.floor((now - baseBlockTime) / 1000);
 
   const fetchData = useCallback(async () => {
-
     if (!userSession.isUserSignedIn()) {
       setLoading(false);
       return;
     }
-
+    
     setLoading(true);
-
     await fetchNetworkStatus();
-
-    await Promise.all([
-      fetchBalances(),
-      fetchFaucetStatus(),
-      fetchStakes()
-    ]);
-
+    await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
     setLoading(false);
-
-  }, []);
+  }, [currentBlockHeight]);
 
   useEffect(() => {
-
     fetchData();
-
-    const interval = setInterval(fetchNetworkStatus, 60000);
-
+    const interval = setInterval(fetchNetworkStatus, 60000); 
     return () => clearInterval(interval);
-
   }, []);
 
-  const handleAction = async (action, payload = null) => {
+  const fetchNetworkStatus = async () => {
+    try {
+      const response = await fetch(`${network.coreApiUrl}/v2/info`);
+      const data = await response.json();
+      if (data.stacks_tip_height) setCurrentBlockHeight(data.stacks_tip_height);
+    } catch (e) {
+      console.error("Failed to load block height", e);
+    }
+  };
 
+  const fetchBalances = async () => {
     const userData = userSession.loadUserData();
+    if (!userData?.profile?.stxAddress) return;
+    const userAddress = userData.profile.stxAddress.mainnet;
+    
+    try {
+      const [poinData, oneData] = await Promise.all([
+        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-poin-v4', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress }),
+        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-one-v4', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress })
+      ]);
+      setBalances({
+        poin: Number(cvToValue(poinData).value) / 1000000,
+        one: Number(cvToValue(oneData).value) / 1000000
+      });
+    } catch (e) { console.error("Failed to load balances", e); }
+  };
+
+  const fetchFaucetData = async () => {
+    const userData = userSession.loadUserData();
+    if (!userData?.profile?.stxAddress) return;
     const userAddress = userData.profile.stxAddress.mainnet;
 
-    setActionLoading(true);
+    try {
+      const claimKeyCV = standardPrincipalCV(userAddress);
+
+      const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor-v4/last-claim-height`, {
+        method: 'POST',
+        body: JSON.stringify(cvToHex(claimKeyCV)),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data) {
+          const valCV = hexToCV(data.data);
+          const val = cvToValue(valCV);
+          const valNum = typeof val === 'bigint' || typeof val === 'number' ? Number(val) : Number(val?.value ?? 0);
+          setLastClaimHeight(valNum);
+        }
+      }
+    } catch (e) { console.error("Failed to fetch faucet data", e); }
+  };
+
+  const fetchStakingHistory = async () => {
+    const userData = userSession.loadUserData();
+    if (!userData?.profile?.stxAddress) return;
+    const userAddress = userData.profile.stxAddress.mainnet;
+    
+    let fetchedStakes = [];
+    let accumulatedTotal = 0;
+    let maxId = 10; 
 
     try {
+      const nonceRes = await fetch(`${network.coreApiUrl}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery-v4/stake-nonce`);
+      if (nonceRes.ok) {
+        const nonceData = await nonceRes.json();
+        const nonceVal = cvToValue(hexToCV(nonceData.data));
+        maxId = Number(nonceVal?.value ?? nonceVal ?? 10);
+      }
+    } catch (e) { console.warn("Failed to fetch nonce"); }
 
-      if (action === 'claim') {
-
-        await openContractCall({
-          network,
-          anchorMode: 1,
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACTS.FAUCET,
-          functionName: 'claim',
-          functionArgs: [],
-          postConditionMode: PostConditionMode.Allow
+    for (let i = 0; i < maxId; i++) {
+      try {
+        const keyCV = tupleCV({ staker: standardPrincipalCV(userAddress), id: uintCV(i) });
+        const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery-v4/stakes`, {
+          method: 'POST',
+          body: JSON.stringify(cvToHex(keyCV)),
+          headers: { 'Content-Type': 'application/json' }
         });
 
-      }
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data) { 
+            const valCV = hexToCV(data.data);
+            const val = cvToValue(valCV);
+            const stakeData = val?.value ?? val; 
+            
+            if (stakeData && stakeData['amount-poin'] !== undefined) {
+              const isClaimed = stakeData.claimed?.value ?? stakeData.claimed ?? false;
+              if (!isClaimed) {
+                const amountVal = Number(stakeData['amount-poin']?.value ?? stakeData['amount-poin']);
+                const startVal = Number(stakeData['start-height']?.value ?? stakeData['start-height']);
+                const endVal = Number(stakeData['end-height']?.value ?? stakeData['end-height']);
 
-      if (action === 'stake') {
-
-        await openContractCall({
-          network,
-          anchorMode: 1,
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACTS.STAKING,
-          functionName: 'stake',
-          functionArgs: [uintCV(parseFloat(stakeAmount) * 1000000)],
-          postConditionMode: PostConditionMode.Allow
-        });
-
-      }
-
-      if (action === 'harvest') {
-
-        await openContractCall({
-          network,
-          anchorMode: 1,
-          contractAddress: CONTRACT_ADDRESS,
-          contractName: CONTRACTS.STAKING,
-          functionName: 'harvest',
-          functionArgs: [uintCV(payload.id)],
-          postConditionMode: PostConditionMode.Allow
-        });
-
-      }
-
-      setTimeout(fetchData, 8000);
-
-    } catch (e) {
-      console.error(e);
+                fetchedStakes.push({ id: i, amount: amountVal / 1000000, startBlock: startVal, endBlock: endVal, claimed: false });
+                accumulatedTotal += (amountVal / 1000000);
+              }
+            }
+          }
+        }
+      } catch (error) { console.error(`Error stake ${i}`, error); }
     }
 
-    setActionLoading(false);
-
+    setActiveStakes(fetchedStakes);
+    setTotalStaked(accumulatedTotal);
   };
 
-  const formatTime = (blocks) => {
+  const handleAction = async (actionType, payload = null) => {
+    if (!userSession.isUserSignedIn()) {
+      setStatus({ type: 'error', msg: 'Please connect your wallet first.' });
+      return;
+    }
 
-    const seconds = blocks * BLOCK_TIME_SECONDS;
+    setStatus({ type: 'info', msg: 'Awaiting wallet confirmation...' });
+    setActionLoading(true);
+    
+    const options = {
+      network,
+      anchorMode: 1,
+      contractAddress: CONTRACT_ADDRESS,
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: (data) => {
+        setStatus({ type: 'success', msg: `Transaction Broadcasted! ID: ${data.txId.slice(0, 8)}...` });
+        setActionLoading(false);
+        
+        if (actionType === 'claim') setLastClaimHeight(currentBlockHeight);
+        else if (actionType === 'harvest' && payload) setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
+        else if (actionType === 'stake') {
+          const amountStaked = parseFloat(stakeAmount);
+          if (!isNaN(amountStaked)) setBalances(prev => ({ ...prev, poin: prev.poin - amountStaked }));
+          setStakeAmount('');
+        }
 
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
+        setTimeout(fetchData, 10000); 
+      },
+      onCancel: () => {
+        setStatus({ type: 'error', msg: 'Transaction cancelled by user.' });
+        setActionLoading(false);
+      },
+    };
 
-    return `${h}h ${m}m`;
-
+    try {
+      if (actionType === 'stake') await openContractCall({ ...options, contractName: 'staking-refinery-v4', functionName: 'stake', functionArgs: [uintCV(parseFloat(stakeAmount) * 1000000)] });
+      else if (actionType === 'harvest') await openContractCall({ ...options, contractName: 'staking-refinery-v4', functionName: 'harvest', functionArgs: [uintCV(payload.id)] });
+      else if (actionType === 'claim') await openContractCall({ ...options, contractName: 'faucet-distributor-v4', functionName: 'claim', functionArgs: [] });
+      else if (actionType === 'gacha') await openContractCall({ ...options, contractName: 'utility-gacha', functionName: 'spin-gacha', functionArgs: [] });
+    } catch (error) {
+      console.error("Contract call failed:", error);
+      setStatus({ type: 'error', msg: 'Failed to process transaction.' });
+      setActionLoading(false);
+    }
   };
-
-  if (loading) {
-    return <div className="p-10 text-center text-white">Loading Vault...</div>
-  }
-
-  const faucetReady = faucetStatus?.['can-claim'];
-
-  return (
-    <div className="p-10 text-white">
-
-      <h1 className="text-3xl mb-6">Genesis Vault V4</h1>
-
-      <div className="mb-6">
-        <div>POIN: {balances.poin}</div>
-        <div>ONE: {balances.one}</div>
-      </div>
-
-      <button
-        onClick={() => handleAction('claim')}
-        disabled={!faucetReady || actionLoading}
-      >
-        {faucetReady ? 'Claim Faucet' : 'Cooldown'}
-      </button>
-
-      <div className="mt-8">
-
-        <input
-          value={stakeAmount}
-          onChange={(e)=>setStakeAmount(e.target.value)}
-          placeholder="POIN amount"
-        />
-
-        <button
-          onClick={()=>handleAction('stake')}
-          disabled={actionLoading}
-        >
-          Stake
-        </button>
-
-      </div>
-
-      <div className="mt-10">
-
-        {activeStakes.map(s=>(
-          <div key={s.id}>
-
-            <div>Stake #{s.id}</div>
-            <div>Unlock in {formatTime(s.blocksLeft)}</div>
-
-            <button
-              disabled={s.blocksLeft > 0}
-              onClick={()=>handleAction('harvest', s)}
-            >
-              Harvest
-            </button>
-
-          </div>
-        ))}
-
-      </div>
-
-    </div>
-  );
-};
-
-export default Vault;
