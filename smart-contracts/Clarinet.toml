@@ -1,28 +1,18 @@
 [project]
-name = "stacksone-vault"
-description = "StacksOne Vault Ecosystem"
+name = "stacksone-vault-v4"
+description = "StacksOne Vault V4"
 authors = []
 telemetry = true
 cache_dir = "./.cache"
-requirements = [
-    { contract_id = "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard" },
-    { contract_id = "SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait" }
-]
 
-[project.cache_location]
-path = ".requirements"
+[contracts.token-poin-v4]
+path = "contracts/token-poin-v4.clar"
 
-[contracts.genesis-counter-v1]
-path = "contracts/modules/genesis-counter-v1.clar"
+[contracts.token-one-v4]
+path = "contracts/token-one-v4.clar"
 
-[contracts.genesis-flag-v1]
-path = "contracts/modules/genesis-flag-v1.clar"
+[contracts.faucet-distributor-v4]
+path = "contracts/faucet-distributor-v4.clar"
 
-[contracts.genesis-points-v1]
-path = "contracts/modules/genesis-points-v1.clar"
-
-[contracts.genesis-badge-lite-v1]
-path = "contracts/modules/genesis-badge-lite-v1.clar"
-
-[contracts.genesis-score-lite-v1]
-path = "contracts/modules/genesis-score-lite-v1.clar"
+[contracts.staking-refinery-v4]
+path = "contracts/staking-refinery-v4.clar"
