@@ -1,3 +1,5 @@
+export default App;
+
 import React from 'react';
 
 const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
