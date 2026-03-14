@@ -1,28 +1,28 @@
 [project]
-name = "stacksone-vault-v6"
-description = "StacksOne Vault V6"
+name = "stacksone-vault-v7"
+description = "StacksOne Vault V7"
 authors = []
 telemetry = true
 cache_dir = "./.cache"
 
-[contracts.token-poin-v6]
-path = 'contracts/token-poin-v6.clar'
+[contracts.token-poin-v7]
+path = 'contracts/token-poin-v7.clar'
 clarity_version = 2
 epoch = 2.5
 
-[contracts.token-one-v6]
-path = 'contracts/token-one-v6.clar'
+[contracts.token-one-v7]
+path = 'contracts/token-one-v7.clar'
 clarity_version = 2
 epoch = 2.5
 
-[contracts.faucet-distributor-v6]
-path = 'contracts/faucet-distributor-v6.clar'
+[contracts.faucet-distributor-v7]
+path = 'contracts/faucet-distributor-v7.clar'
 clarity_version = 2
 epoch = 2.5
-depends_on = ["token-poin-v6"]
+depends_on = ["token-poin-v7"]
 
-[contracts.staking-refinery-v6]
-path = 'contracts/staking-refinery-v6.clar'
+[contracts.staking-refinery-v7]
+path = 'contracts/staking-refinery-v7.clar'
 clarity_version = 2
 epoch = 2.5
-depends_on = ["token-poin-v6", "token-one-v6"] # <- Pastikan token-one-v6 ada di sini
+depends_on = ["token-poin-v7", "token-one-v7"]

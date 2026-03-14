@@ -14,7 +14,7 @@ import {
 import { userSession } from '../supabaseClient'; 
 import { CheckCircle, Clock, Zap, Box, Lock, TrendingUp, RefreshCw, AlertCircle, Unlock } from 'lucide-react';
 
-// --- CONFIGURATION V6 ---
+// --- CONFIGURATION V7 ---
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; // Pastikan ganti ke Address Deployer Anda
 const BLOCKS_PER_DAY = 144;
 const LOCK_PERIOD_BLOCKS = 1008; // ~7 Days
@@ -85,8 +85,8 @@ const Vault = () => {
     
     try {
       const [poinData, oneData] = await Promise.all([
-        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-poin-v6', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress }),
-        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-one-v6', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress })
+        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-poin-v7', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress }),
+        callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-one-v7', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress })
       ]);
       setBalances({
         poin: Number(cvToValue(poinData).value) / 1000000,
@@ -102,7 +102,7 @@ const Vault = () => {
 
     try {
       const claimKeyCV = standardPrincipalCV(userAddress);
-      const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor-v6/last-claim`, {
+      const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor-v7/last-claim`, {
         method: 'POST',
         body: JSON.stringify(cvToHex(claimKeyCV)),
         headers: { 'Content-Type': 'application/json' }
@@ -128,7 +128,7 @@ const Vault = () => {
     let maxId = 0; 
 
     try {
-      const nonceRes = await fetch(`${network.coreApiUrl}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery-v6/nonce`);
+      const nonceRes = await fetch(`${network.coreApiUrl}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery-v7/nonce`);
       if (nonceRes.ok) {
         const nonceData = await nonceRes.json();
         maxId = Number(cvToValue(hexToCV(nonceData.data)));
@@ -138,7 +138,7 @@ const Vault = () => {
     for (let i = 0; i < maxId; i++) {
       try {
         const keyCV = tupleCV({ user: standardPrincipalCV(userAddress), id: uintCV(i) });
-        const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery-v6/stakes`, {
+        const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery-v7/stakes`, {
           method: 'POST',
           body: JSON.stringify(cvToHex(keyCV)),
           headers: { 'Content-Type': 'application/json' }
@@ -203,9 +203,9 @@ const Vault = () => {
     };
 
     try {
-      if (actionType === 'stake') await openContractCall({ ...options, contractName: 'staking-refinery-v6', functionName: 'stake', functionArgs: [uintCV(parseFloat(stakeAmount) * 1000000)] });
-      else if (actionType === 'harvest') await openContractCall({ ...options, contractName: 'staking-refinery-v6', functionName: 'harvest', functionArgs: [uintCV(payload.id)] });
-      else if (actionType === 'claim') await openContractCall({ ...options, contractName: 'faucet-distributor-v6', functionName: 'claim', functionArgs: [] });
+      if (actionType === 'stake') await openContractCall({ ...options, contractName: 'staking-refinery-v7', functionName: 'stake', functionArgs: [uintCV(parseFloat(stakeAmount) * 1000000)] });
+      else if (actionType === 'harvest') await openContractCall({ ...options, contractName: 'staking-refinery-v7', functionName: 'harvest', functionArgs: [uintCV(payload.id)] });
+      else if (actionType === 'claim') await openContractCall({ ...options, contractName: 'faucet-distributor-v7', functionName: 'claim', functionArgs: [] });
       else if (actionType === 'gacha') await openContractCall({ ...options, contractName: 'utility-gacha', functionName: 'spin-gacha', functionArgs: [] });
     } catch (error) {
       console.error("Contract call failed:", error);
@@ -260,7 +260,7 @@ const Vault = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
-                <Lock className="text-indigo-400" /> Genesis Vault V6
+                <Lock className="text-indigo-400" /> Genesis Vault V7
               </h1>
               <p className="text-slate-400 mt-2 flex items-center gap-2 text-sm">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
