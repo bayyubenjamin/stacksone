@@ -1,5 +1,3 @@
-export default App;
-
 import React from 'react';
 
 const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
@@ -46,7 +44,6 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 
       </aside>
 
-
       {/* MAIN AREA */}
       <main className="flex-1 flex flex-col relative overflow-y-auto h-screen">
 
@@ -63,14 +60,12 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 
         </header>
 
-
         {/* PAGE CONTENT */}
         <div className="p-6 md:p-10 max-w-6xl mx-auto w-full pb-24 md:pb-10">
           {children}
         </div>
 
       </main>
-
 
       {/* MOBILE BOTTOM NAVIGATION */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-xl border-t border-slate-800 flex justify-around py-2 z-30">
