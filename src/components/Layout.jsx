@@ -1,12 +1,16 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
+const Layout = ({ children, walletButton }) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
 
+  // Ikon sudah diperbaiki menggunakan emoji standar yang aman dan rapi
   const menuItems = [
-    { id: 'home', label: 'Overview', icon: '📊' },
-    { id: 'tasks', label: 'Protocol', icon: '💠' },
-    { id: 'vault', label: 'Vault', icon: '🏦' }, 
-    { id: 'profile', label: 'Identity', icon: '🆔' }
+    { id: 'home', label: 'Overview', icon: '📊', path: '/home' },
+    { id: 'tasks', label: 'Protocol', icon: '⚡', path: '/tasks' },
+    { id: 'vault', label: 'Vault', icon: '🏦', path: '/vault' }, 
+    { id: 'profile', label: 'Identity', icon: '👤', path: '/profile' }
   ];
 
   return (
@@ -27,18 +31,18 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 
         <nav className="flex-1 px-4 space-y-2 mt-8">
           {menuItems.map((item) => (
-            <button
+            <Link
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              to={item.path}
               className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium ${
-                activeTab === item.id
+                currentPath.includes(item.path)
                   ? 'bg-slate-800 text-white border-l-2 border-stx-accent'
                   : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300'
               }`}
             >
               <span className="text-lg opacity-80">{item.icon}</span>
               {item.label}
-            </button>
+            </Link>
           ))}
         </nav>
 
@@ -71,11 +75,11 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A]/95 backdrop-blur-xl border-t border-slate-800 flex justify-around py-2 z-30">
 
         {menuItems.map((item) => (
-          <button
+          <Link
             key={item.id}
-            onClick={() => setActiveTab(item.id)}
+            to={item.path}
             className={`flex flex-col items-center text-xs font-medium ${
-              activeTab === item.id
+              currentPath.includes(item.path)
                 ? 'text-stx-accent'
                 : 'text-slate-500'
             }`}
@@ -85,7 +89,7 @@ const Layout = ({ children, activeTab, setActiveTab, walletButton }) => {
 
             {item.label}
 
-          </button>
+          </Link>
         ))}
 
       </div>

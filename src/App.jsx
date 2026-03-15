@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom'; // Tambahkan import dari react-router-dom
 import { showConnect, openContractCall } from '@stacks/connect';
 import { StacksMainnet } from '@stacks/network';
 import {
@@ -10,7 +11,7 @@ import {
   cvToHex,
   hexToCV,
   cvToValue,
-  stringAsciiCV // Tambahan import untuk claim-badge
+  stringAsciiCV
 } from '@stacks/transactions';
 
 import { supabase, userSession } from './supabaseClient';
@@ -30,7 +31,6 @@ const network = new StacksMainnet();
 function App() {
 
   const [userData, setUserData] = useState(null);
-  const [activeTab, setActiveTab] = useState('home');
 
   const [leaderboardScore, setLeaderboardScore] = useState(0);
   const [leaderboardTier, setLeaderboardTier] = useState(0);
@@ -88,7 +88,6 @@ function App() {
       reward: 50,
       icon: "🏅"
     },
-    // 3 Task Baru di bawah ini
     {
       id: 8,
       name: "Stake Tokens",
@@ -156,7 +155,6 @@ function App() {
       let xp = 0;
       let level = 1;
 
-      // Perbaikan Ekstraksi Data: Handle Optional Stacks format
       if (val && val.value) {
         xp = val.value.xp?.value !== undefined ? val.value.xp.value : (val.value.xp ?? 0);
         level = val.value.level?.value !== undefined ? val.value.level.value : (val.value.level ?? 1);
@@ -169,9 +167,7 @@ function App() {
       setUserLevel(Number(level));
 
     } catch (err) {
-
       console.log("Profile fetch error:", err);
-
     }
 
   };
@@ -205,9 +201,7 @@ function App() {
       setLeaderboardTier(Number(tierValue));
 
     } catch (err) {
-
       console.log("Leaderboard error:", err);
-
     }
 
   };
@@ -249,15 +243,10 @@ function App() {
         functionArgs: [uintCV(taskId), uintCV(reward)],
         postConditionMode: PostConditionMode.Allow,
         onFinish: () => {
-          // Optimistic UI Update agar State terasa Realtime
           const newXP = userXP + reward;
           setUserXP(newXP);
-          // Rumus level dari contract: (+ (/ xp u500) u1)
           setUserLevel(Math.floor(newXP / 500) + 1);
-          
-          // Sinkronisasi background (opsional)
           setTimeout(() => fetchUserProfile(userData.profile.stxAddress.mainnet), 10000);
-          
           resolve(true);
         },
         onCancel: () => {
@@ -268,7 +257,6 @@ function App() {
 
   };
 
-  // Perbaikan: Integrasikan fungsi mint dengan Smart Contract claim-badge
   const handleMint = async (badgeId) => {
     
     if (!userData) {
@@ -281,7 +269,7 @@ function App() {
         network,
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
-        functionName: 'claim-badge', // Sesuai dengan smart contract
+        functionName: 'claim-badge',
         functionArgs: [stringAsciiCV(badgeId)],
         postConditionMode: PostConditionMode.Allow,
         onFinish: () => {
@@ -308,10 +296,7 @@ function App() {
   };
 
   return (
-
     <Layout
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
       walletButton={
         !userData ?
 
@@ -335,31 +320,32 @@ function App() {
           </button>
       }
     >
-
-      {activeTab === 'home' && (
-        <Home
-          userData={userData}
-          userXP={userXP}
-          userLevel={userLevel}
-          handleMint={handleMint}
-        />
-      )}
-
-      {activeTab === 'tasks' && (
-        <Tasks
-          initialTasks={tasks}
-          handleTask={handleTask}
-        />
-      )}
-
-      {activeTab === 'vault' && <Vault userData={userData} />}
-
-      {activeTab === 'profile' && <Profile userData={userData} />}
-
+      <Routes>
+        {/* Redirect root (/) ke /home */}
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        
+        <Route path="/home" element={
+          <Home
+            userData={userData}
+            userXP={userXP}
+            userLevel={userLevel}
+            handleMint={handleMint}
+          />
+        } />
+        
+        <Route path="/tasks" element={
+          <Tasks
+            initialTasks={tasks}
+            handleTask={handleTask}
+          />
+        } />
+        
+        <Route path="/vault" element={<Vault userData={userData} />} />
+        
+        <Route path="/profile" element={<Profile userData={userData} />} />
+      </Routes>
     </Layout>
-
   );
-
 }
 
 export default App;
