@@ -39,6 +39,7 @@ function App() {
   const [userLevel, setUserLevel] = useState(1);
 
   const [tasks] = useState([
+  [
     {
       id: 1,
       name: "Connect Wallet",
@@ -87,6 +88,28 @@ function App() {
       desc: "Unlock and mint your first Genesis badge on-chain",
       reward: 50,
       icon: "🏅"
+    },
+    // 3 Task Baru di bawah ini
+    {
+      id: 8,
+      name: "Stake Tokens",
+      desc: "Stake your assets in the Genesis liquidity pool",
+      reward: 35,
+      icon: "🏦"
+    },
+    {
+      id: 9,
+      name: "Join Discord",
+      desc: "Join our community and verify your Stacks wallet",
+      reward: 15,
+      icon: "💬"
+    },
+    {
+      id: 10,
+      name: "Refer a Friend",
+      desc: "Invite a friend to complete their first Genesis transaction",
+      reward: 45,
+      icon: "🤝"
     }
   ]);
 
