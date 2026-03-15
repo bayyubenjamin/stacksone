@@ -112,7 +112,10 @@ const Vault = () => {
         if (data.data && data.data !== "0x09") { // 0x09 = none in Clarity
           const valCV = hexToCV(data.data);
           const val = cvToValue(valCV);
-          setLastClaimHeight(Number(val));
+          
+          // Fix: Extract .value if it exists
+          const blockHeight = val.value !== undefined ? val.value : val;
+          setLastClaimHeight(Number(blockHeight));
         }
       }
     } catch (e) { console.error("Failed to fetch faucet data", e); }
