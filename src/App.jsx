@@ -39,7 +39,6 @@ function App() {
   const [userLevel, setUserLevel] = useState(1);
 
   const [tasks] = useState([
-  [
     {
       id: 1,
       name: "Connect Wallet",
