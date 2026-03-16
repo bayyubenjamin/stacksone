@@ -5,7 +5,6 @@ import {
   callReadOnlyFunction, 
   standardPrincipalCV, 
   uintCV,
-  cvToValue,
   cvToHex,
   hexToCV,
   tupleCV,
@@ -47,7 +46,21 @@ const Vault = () => {
 
   const elapsedSinceBlock = useMemo(() => {
     return Math.floor((now - Date.now()) / 1000);
-  }, [now]); // Base timer helper (hanya dipakai untuk staking sekarang)
+  }, [now]);
+
+  // --- DATA FETCHING ---
+  const fetchNetworkStatus = async () => {
+    try {
+      const response = await fetch(`${network.coreApiUrl}/v2/info`);
+      const data = await response.json();
+      // KUNCI PERBAIKAN: Kontrak menggunakan burn-block-height, bukan stacks_tip_height
+      if (data.burn_block_height) {
+        setCurrentBlockHeight(data.burn_block_height);
+      }
+    } catch (e) {
+      console.error("Failed to load block height", e);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     if (!userSession.isUserSignedIn()) {
@@ -56,26 +69,30 @@ const Vault = () => {
     }
     
     setLoading(true);
-    await fetchNetworkStatus();
     await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
     setLoading(false);
-  }, [currentBlockHeight]);
+  }, [currentBlockHeight]); // Re-fetch ketika block berubah
 
+  // Hook 1: Fetch Network awal dan interval realtime 10 detik
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchNetworkStatus, 60000); 
+    fetchNetworkStatus();
+    const interval = setInterval(fetchNetworkStatus, 10000); // Sinkronisasi block lebih agresif
     return () => clearInterval(interval);
   }, []);
 
-  // --- DATA FETCHING ---
-  const fetchNetworkStatus = async () => {
-    try {
-      const response = await fetch(`${network.coreApiUrl}/v2/info`);
-      const data = await response.json();
-      if (data.stacks_tip_height) setCurrentBlockHeight(data.stacks_tip_height);
-    } catch (e) {
-      console.error("Failed to load block height", e);
+  // Hook 2: Trigger pembaruan data setiap kali block height ter-update
+  useEffect(() => {
+    if (currentBlockHeight > 0) {
+      fetchData();
     }
+  }, [currentBlockHeight, fetchData]);
+
+  // Ekstraksi CV yang aman dan anti-error
+  const extractUintCV = (cv) => {
+    if (!cv) return 0;
+    if (cv.type === 7) return Number(cv.value.value); // Tipe (ok uXYZ)
+    if (cv.type === 1) return Number(cv.value); // Tipe uint biasa
+    return 0;
   };
 
   const fetchBalances = async () => {
@@ -88,9 +105,10 @@ const Vault = () => {
         callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-poin-v7', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress }),
         callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-one-v7', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress })
       ]);
+      
       setBalances({
-        poin: Number(cvToValue(poinData).value) / 1000000,
-        one: Number(cvToValue(oneData).value) / 1000000
+        poin: extractUintCV(poinData) / 1000000,
+        one: extractUintCV(oneData) / 1000000
       });
     } catch (e) { console.error("Failed to load balances", e); }
   };
@@ -110,11 +128,9 @@ const Vault = () => {
         senderAddress: userAddress
       });
       
-      const val = cvToValue(resultCV);
-      const getNum = (item) => item?.value !== undefined ? Number(item.value) : Number(item);
-      
-      let blocksLeft = getNum(val['blocks-left']);
-      let nextClaimBlock = getNum(val['next-claim-block']);
+      const tupleData = resultCV.type === 7 ? resultCV.value.data : resultCV.data;
+      let blocksLeft = tupleData && tupleData['blocks-left'] ? Number(tupleData['blocks-left'].value) : 0;
+      let nextClaimBlock = tupleData && tupleData['next-claim-block'] ? Number(tupleData['next-claim-block'].value) : 0;
       let isPending = false;
 
       // CEK MEMPOOL
@@ -129,15 +145,9 @@ const Vault = () => {
               tx.contract_call.contract_id === `${CONTRACT_ADDRESS}.faucet-distributor-v7` &&
               tx.contract_call.function_name === "claim"
             );
-
-            // JANGAN mengubah blocksLeft di sini agar tidak me-reset waktu, cukup set isPending
-            if (isClaimPending) {
-              isPending = true;
-            }
+            if (isClaimPending) isPending = true;
           }
-        } catch (mempoolErr) {
-          console.warn("Mempool check failed", mempoolErr);
-        }
+        } catch (mempoolErr) { console.warn("Mempool check failed", mempoolErr); }
       }
       
       setFaucetData({ blocksLeft, nextClaimBlock, isPending });
@@ -157,9 +167,10 @@ const Vault = () => {
       const nonceRes = await fetch(`${network.coreApiUrl}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery-v7/nonce`);
       if (nonceRes.ok) {
         const nonceData = await nonceRes.json();
-        maxId = Number(cvToValue(hexToCV(nonceData.data)));
+        const nonceCV = hexToCV(nonceData.data);
+        maxId = Number(nonceCV.value);
       }
-    } catch (e) { console.warn("Failed to fetch nonce"); }
+    } catch (e) { console.warn("Failed to fetch nonce", e); }
 
     for (let i = 0; i < maxId; i++) {
       try {
@@ -172,20 +183,26 @@ const Vault = () => {
 
         if (res.ok) {
           const data = await res.json();
-          if (data.data && data.data !== "0x09") { 
+          if (data.data && data.data !== "0x09") { // 0x09 = OptionalNone
             const valCV = hexToCV(data.data);
-            const val = cvToValue(valCV).value;
-            
-            if (!val.claimed) {
-              const amountVal = Number(val.amount);
-              fetchedStakes.push({ 
-                id: i, 
-                amount: amountVal / 1000000, 
-                startBlock: Number(val.start), 
-                endBlock: Number(val.end), 
-                claimed: false 
-              });
-              accumulatedTotal += (amountVal / 1000000);
+            if (valCV.type === 9) { // 9 = OptionalSome
+              const tupleData = valCV.value.data;
+              const claimed = tupleData.claimed.type === 3; // 3 = True
+              
+              if (!claimed) {
+                const amountVal = Number(tupleData.amount.value);
+                const startBlock = Number(tupleData.start.value);
+                const endBlock = Number(tupleData.end.value);
+                
+                fetchedStakes.push({ 
+                  id: i, 
+                  amount: amountVal / 1000000, 
+                  startBlock: startBlock, 
+                  endBlock: endBlock, 
+                  claimed: false 
+                });
+                accumulatedTotal += (amountVal / 1000000);
+              }
             }
           }
         }
@@ -214,7 +231,6 @@ const Vault = () => {
         setActionLoading(false);
         
         if (actionType === 'claim') {
-           // Simpan waktu klik ke local storage untuk perhitungan optimistik
            localStorage.setItem('faucet_pending_start', Date.now().toString());
            setFaucetData(prev => ({ ...prev, isPending: true }));
         }
@@ -224,7 +240,6 @@ const Vault = () => {
           if (!isNaN(amountStaked)) setBalances(prev => ({ ...prev, poin: prev.poin - amountStaked }));
           setStakeAmount('');
         }
-        setTimeout(fetchData, 10000); 
       },
       onCancel: () => {
         setStatus({ type: 'error', msg: 'Transaction cancelled by user.' });
@@ -256,32 +271,24 @@ const Vault = () => {
   // --- CALCULATIONS FOR REALTIME UI (ANTI-RESET) ---
   let faucetSecondsLeft = 0;
   
-  // Hook sinkronisasi untuk mengunci target waktu ke LocalStorage
   useEffect(() => {
     if (faucetData.isPending) {
-      if (!localStorage.getItem('faucet_pending_start')) {
-        localStorage.setItem('faucet_pending_start', Date.now().toString());
-      }
+      if (!localStorage.getItem('faucet_pending_start')) localStorage.setItem('faucet_pending_start', Date.now().toString());
     } else if (faucetData.blocksLeft > 0) {
-      // Hapus memori pending karena transaksi sudah berhasil masuk ke blok
       localStorage.removeItem('faucet_pending_start');
       const savedTargetBlock = localStorage.getItem('faucet_target_block');
-      
-      // Jika ini adalah blok klaim baru, kalkulasi dan kunci target waktunya
       if (savedTargetBlock !== faucetData.nextClaimBlock.toString()) {
         const targetDate = Date.now() + (faucetData.blocksLeft * 600 * 1000);
         localStorage.setItem('faucet_target_block', faucetData.nextClaimBlock.toString());
         localStorage.setItem('faucet_target_time', targetDate.toString());
       }
     } else {
-      // Jika sudah bisa diklaim, bersihkan semua memori
       localStorage.removeItem('faucet_target_block');
       localStorage.removeItem('faucet_target_time');
       localStorage.removeItem('faucet_pending_start');
     }
   }, [faucetData.isPending, faucetData.blocksLeft, faucetData.nextClaimBlock]);
 
-  // Eksekusi kalkulasi timer berdasarkan waktu asli (mengabaikan refresh halaman)
   if (faucetData.isPending) {
     const start = Number(localStorage.getItem('faucet_pending_start')) || Date.now();
     const elapsed = Math.floor((now - start) / 1000);
