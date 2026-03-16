@@ -8,41 +8,32 @@ import {
   cvToHex,
   hexToCV,
   tupleCV,
-  PostConditionMode,
-  cvToValue // Tambahkan ini untuk percobaan parsing otomatis
+  PostConditionMode
 } from '@stacks/transactions';
 import { userSession } from '../supabaseClient'; 
 import { CheckCircle, Clock, Zap, Box, Lock, TrendingUp, RefreshCw, AlertCircle, Unlock } from 'lucide-react';
 
 // --- CONFIGURATION V7 ---
-const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; // Pastikan ganti ke Address Deployer Anda
+const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3'; 
 const BLOCKS_PER_DAY = 144;
-const LOCK_PERIOD_BLOCKS = 1008; // ~7 Days
+const LOCK_PERIOD_BLOCKS = 1008; 
 
-// Gunakan Hiro API secara eksplisit agar lebih stabil
 const HIRO_API_URL = 'https://api.mainnet.hiro.so';
 
 const Vault = () => {
-  // State: Assets
   const [balances, setBalances] = useState({ poin: 0, one: 0 });
-  
-  // State: Network & Staking Logic
   const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
   const [faucetData, setFaucetData] = useState({ blocksLeft: 0, nextClaimBlock: 0, isPending: false }); 
   const [activeStakes, setActiveStakes] = useState([]);
   const [totalStaked, setTotalStaked] = useState(0);
-  
-  // State: UI & Actions
   const [stakeAmount, setStakeAmount] = useState('');
   const [status, setStatus] = useState(null); 
   const [loading, setLoading] = useState(true); 
   const [actionLoading, setActionLoading] = useState(false); 
-
-  // State: Realtime Ticker
   const [now, setNow] = useState(Date.now());
-  const network = new StacksMainnet({ url: HIRO_API_URL }); // Terapkan Hiro API
+  
+  const network = new StacksMainnet({ url: HIRO_API_URL });
 
-  // Tick every second for realtime countdown UI
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
@@ -52,13 +43,11 @@ const Vault = () => {
     return Math.floor((now - Date.now()) / 1000);
   }, [now]);
 
-  // --- DATA FETCHING ---
   const fetchNetworkStatus = async () => {
     try {
       const response = await fetch(`${HIRO_API_URL}/v2/info`);
       const data = await response.json();
       if (data.burn_block_height) {
-        console.log("🔥 Burn Block Height:", data.burn_block_height);
         setCurrentBlockHeight(data.burn_block_height);
       }
     } catch (e) {
@@ -71,11 +60,9 @@ const Vault = () => {
       setLoading(false);
       return;
     }
-    
     setLoading(true);
-    console.log("🔄 Starting Data Fetch...");
+    await fetchNetworkStatus();
     await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
-    console.log("✅ Data Fetch Complete.");
     setLoading(false);
   }, [currentBlockHeight]);
 
@@ -86,33 +73,14 @@ const Vault = () => {
   }, []);
 
   useEffect(() => {
-    if (currentBlockHeight > 0) {
-      fetchData();
-    }
+    if (currentBlockHeight > 0) fetchData();
   }, [currentBlockHeight, fetchData]);
 
-  // Ekstraksi CV yang SANGAT KEBUL (Robust)
+  // Ekstraksi CV Manual (Anti-NaN)
   const extractUintCV = (cv) => {
-    console.log("Extracting CV:", cv); // LOG PENTING: Lihat apa yang dikembalikan API
     if (!cv) return 0;
-
-    // Coba gunakan cvToValue bawaan stacks.js terlebih dahulu
-    try {
-        const val = cvToValue(cv);
-        console.log("cvToValue result:", val);
-        if (typeof val === 'bigint') return Number(val);
-        if (typeof val === 'number') return val;
-        // Jika kembaliannya object (seperti { value: 1000n }), ekstrak
-        if (val && typeof val === 'object' && val.value !== undefined) {
-             return Number(val.value);
-        }
-    } catch (e) {
-        console.warn("cvToValue failed, fallback to manual extraction", e);
-    }
-
-    // Fallback Manual Extraction
-    if (cv.type === 7) return Number(cv.value.value); // Tipe (ok uXYZ)
-    if (cv.type === 1) return Number(cv.value); // Tipe uint biasa
+    if (cv.type === 7) return Number(cv.value.value); // (ok uX)
+    if (cv.type === 1) return Number(cv.value); // uX
     return 0;
   };
 
@@ -120,8 +88,6 @@ const Vault = () => {
     const userData = userSession.loadUserData();
     if (!userData?.profile?.stxAddress) return;
     const userAddress = userData.profile.stxAddress.mainnet;
-    
-    console.log("Fetching balances for:", userAddress);
 
     try {
       const [poinData, oneData] = await Promise.all([
@@ -129,19 +95,11 @@ const Vault = () => {
         callReadOnlyFunction({ contractAddress: CONTRACT_ADDRESS, contractName: 'token-one-v7', functionName: 'get-balance', functionArgs: [standardPrincipalCV(userAddress)], network, senderAddress: userAddress })
       ]);
       
-      console.log("Raw POIN Data:", poinData);
-      console.log("Raw ONE Data:", oneData);
-
-      const poinBalance = extractUintCV(poinData) / 1000000;
-      const oneBalance = extractUintCV(oneData) / 1000000;
-
-      console.log(`Parsed Balances -> POIN: ${poinBalance}, ONE: ${oneBalance}`);
-
       setBalances({
-        poin: poinBalance || 0, // Fallback ke 0 jika NaN
-        one: oneBalance || 0
+        poin: extractUintCV(poinData) / 1000000,
+        one: extractUintCV(oneData) / 1000000
       });
-    } catch (e) { console.error("❌ Failed to load balances", e); }
+    } catch (e) { console.error("Failed to load balances", e); }
   };
 
   const fetchFaucetData = async () => {
@@ -159,32 +117,20 @@ const Vault = () => {
         senderAddress: userAddress
       });
       
-      console.log("Raw Faucet CV:", resultCV);
-
-      let parsedTuple;
-      try {
-          parsedTuple = cvToValue(resultCV);
-          console.log("Parsed Faucet Tuple:", parsedTuple);
-      } catch(e) {
-          console.warn("cvToValue failed for faucet, using manual extraction", e);
-          parsedTuple = resultCV.type === 7 ? resultCV.value.data : resultCV.data;
-      }
-      
-      // Akses properti dengan cara yang aman (mengakomodasi berbagai format json)
       let blocksLeft = 0;
       let nextClaimBlock = 0;
-
-      if (parsedTuple) {
-           // Jika menggunakan format object standar
-           if (parsedTuple['blocks-left'] !== undefined) blocksLeft = Number(parsedTuple['blocks-left']);
-           else if (parsedTuple.value && parsedTuple.value['blocks-left'] !== undefined) blocksLeft = Number(parsedTuple.value['blocks-left'].value || parsedTuple.value['blocks-left']);
-
-           if (parsedTuple['next-claim-block'] !== undefined) nextClaimBlock = Number(parsedTuple['next-claim-block']);
-           else if (parsedTuple.value && parsedTuple.value['next-claim-block'] !== undefined) nextClaimBlock = Number(parsedTuple.value['next-claim-block'].value || parsedTuple.value['next-claim-block']);
-      }
-      
-      console.log(`Faucet Status -> blocksLeft: ${blocksLeft}, nextClaimBlock: ${nextClaimBlock}`);
       let isPending = false;
+
+      // PARSING TUPLE SANGAT AMAN
+      const tupleData = resultCV?.type === 7 ? resultCV.value.data : resultCV?.data;
+      
+      if (tupleData) {
+         if (tupleData['blocks-left']) blocksLeft = Number(tupleData['blocks-left'].value);
+         if (tupleData['next-claim-block']) nextClaimBlock = Number(tupleData['next-claim-block'].value);
+      }
+
+      if (isNaN(blocksLeft)) blocksLeft = 0;
+      if (isNaN(nextClaimBlock)) nextClaimBlock = 0;
 
       // CEK MEMPOOL
       if (blocksLeft === 0) {
@@ -198,16 +144,13 @@ const Vault = () => {
               tx.contract_call.contract_id === `${CONTRACT_ADDRESS}.faucet-distributor-v7` &&
               tx.contract_call.function_name === "claim"
             );
-            if (isClaimPending) {
-                console.log("Mempool: Faucet claim is pending.");
-                isPending = true;
-            }
+            if (isClaimPending) isPending = true;
           }
         } catch (mempoolErr) { console.warn("Mempool check failed", mempoolErr); }
       }
       
       setFaucetData({ blocksLeft, nextClaimBlock, isPending });
-    } catch (e) { console.error("❌ Failed to fetch faucet data", e); }
+    } catch (e) { console.error("Failed to fetch faucet data", e); }
   };
 
   const fetchStakingHistory = async () => {
@@ -219,29 +162,15 @@ const Vault = () => {
     let accumulatedTotal = 0;
     let maxId = 0; 
 
-    console.log("Fetching Staking History...");
-
     try {
       const nonceRes = await fetch(`${HIRO_API_URL}/v2/data_var/${CONTRACT_ADDRESS}/staking-refinery-v7/nonce`);
       if (nonceRes.ok) {
         const nonceData = await nonceRes.json();
         const nonceCV = hexToCV(nonceData.data);
-        try {
-           maxId = Number(cvToValue(nonceCV));
-        } catch(e) {
-           maxId = Number(nonceCV.value);
-        }
-        console.log(`Current Nonce (Max Staking ID to check): ${maxId}`);
+        maxId = Number(nonceCV.value);
+        if (isNaN(maxId)) maxId = 0;
       }
     } catch (e) { console.warn("Failed to fetch nonce", e); }
-
-    // Jika maxId 0, lewati proses loop
-    if (maxId === 0) {
-        console.log("No stakes found in contract (nonce is 0).");
-        setActiveStakes([]);
-        setTotalStaked(0);
-        return;
-    }
 
     for (let i = 0; i < maxId; i++) {
       try {
@@ -254,71 +183,36 @@ const Vault = () => {
 
         if (res.ok) {
           const data = await res.json();
-          // Cek apakah data tidak sama dengan OptionalNone (0x09)
-          if (data.data && data.data !== "0x09") { 
+          if (data.data && data.data !== "0x09") { // 0x09 = OptionalNone
             const valCV = hexToCV(data.data);
-            console.log(`Raw Stake CV for ID ${i}:`, valCV);
-
-            try {
-                // Parsing aman dengan cvToValue
-                const stakeValue = cvToValue(valCV);
-                console.log(`Parsed Stake Data for ID ${i}:`, stakeValue);
+            
+            if (valCV.type === 9) { // 9 = OptionalSome
+              const tupleData = valCV.value.data;
+              const claimed = tupleData.claimed.type === 3; // 3 = True
+              
+              if (!claimed) {
+                const amountVal = Number(tupleData.amount.value);
+                const startBlock = Number(tupleData.start.value);
+                const endBlock = Number(tupleData.end.value);
                 
-                // Value biasanya terbungkus dalam properti 'value' karena OptionalSome
-                const tupleData = stakeValue.value || stakeValue;
-
-                const claimed = Boolean(tupleData.claimed);
-                
-                if (!claimed) {
-                  const amountVal = Number(tupleData.amount);
-                  const startBlock = Number(tupleData.start);
-                  const endBlock = Number(tupleData.end);
-                  
-                  fetchedStakes.push({ 
-                    id: i, 
-                    amount: amountVal / 1000000, 
-                    startBlock: startBlock, 
-                    endBlock: endBlock, 
-                    claimed: false 
-                  });
-                  accumulatedTotal += (amountVal / 1000000);
-                }
-            } catch (parseError) {
-                console.warn(`Failed to parse stake ID ${i} with cvToValue. Trying manual extraction...`, parseError);
-                // Fallback Manual Extraction (sama seperti sebelumnya)
-                if (valCV.type === 9) { 
-                  const tupleData = valCV.value.data;
-                  const claimed = tupleData.claimed.type === 3; 
-                  
-                  if (!claimed) {
-                    const amountVal = Number(tupleData.amount.value);
-                    const startBlock = Number(tupleData.start.value);
-                    const endBlock = Number(tupleData.end.value);
-                    
-                    fetchedStakes.push({ 
-                      id: i, 
-                      amount: amountVal / 1000000, 
-                      startBlock: startBlock, 
-                      endBlock: endBlock, 
-                      claimed: false 
-                    });
-                    accumulatedTotal += (amountVal / 1000000);
-                  }
-                }
+                fetchedStakes.push({ 
+                  id: i, 
+                  amount: amountVal / 1000000, 
+                  startBlock: startBlock, 
+                  endBlock: endBlock, 
+                  claimed: false 
+                });
+                accumulatedTotal += (amountVal / 1000000);
+              }
             }
           }
         }
-      } catch (error) { console.error(`❌ Error fetching stake ID ${i}`, error); }
+      } catch (error) { console.error(`Error stake ${i}`, error); }
     }
-    
-    console.log("Final Active Stakes Array:", fetchedStakes);
-    console.log("Total Staked POIN:", accumulatedTotal);
-
     setActiveStakes(fetchedStakes);
-    setTotalStaked(accumulatedTotal || 0); // Fallback jika NaN
+    setTotalStaked(accumulatedTotal);
   };
 
-  // --- ACTIONS --- (Tetap Sama)
   const handleAction = async (actionType, payload = null) => {
     if (!userSession.isUserSignedIn()) {
       setStatus({ type: 'error', msg: 'Please connect your wallet first.' });
@@ -365,16 +259,6 @@ const Vault = () => {
     }
   };
 
-  // --- FORMAT TIMER --- (Tetap Sama)
-  const formatTime = (totalSeconds) => {
-    if (totalSeconds <= 0) return 'Ready';
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-    return `${h}h ${m}m ${s}s`;
-  };
-
-  // --- CALCULATIONS FOR REALTIME UI --- (Tetap Sama)
   let faucetSecondsLeft = 0;
   
   useEffect(() => {
@@ -410,7 +294,14 @@ const Vault = () => {
 
   const isClaimable = faucetData.blocksLeft === 0 && !faucetData.isPending; 
 
-  // --- COMPONENTS --- (Tetap Sama)
+  const formatTime = (totalSeconds) => {
+    if (totalSeconds <= 0) return 'Ready';
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h}h ${m}m ${s}s`;
+  };
+
   const StatCard = ({ title, value, unit, icon: Icon, color, isLoading }) => (
     <div className="bg-[#1E293B]/50 backdrop-blur-sm border border-slate-700 p-5 rounded-2xl flex items-center justify-between hover:border-slate-500 transition-all">
       <div>
@@ -419,7 +310,6 @@ const Vault = () => {
           {isLoading ? (
             <div className="h-8 w-24 bg-slate-700/50 rounded animate-pulse"></div>
           ) : (
-             // Tambahkan pengecekan validitas angka sebelum render
             <>
               <span className="text-2xl font-bold text-white">{isNaN(value) ? '0' : Number(value).toLocaleString()}</span>
               <span className={`text-xs font-bold ${color}`}>{unit}</span>
@@ -435,7 +325,6 @@ const Vault = () => {
 
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-200 pb-20 font-sans">
-      {/* ... (UI Code tetap sama seperti sebelumnya, karena fokus kita adalah logika data fetching) ... */}
       <div className="bg-gradient-to-r from-indigo-950 to-[#0B1120] border-b border-slate-800 p-6 md:p-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -473,7 +362,6 @@ const Vault = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-          {/* DAILY FAUCET */}
           <div className="lg:col-span-5 bg-[#1E293B] border border-slate-700 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             <div className="mb-8">
@@ -514,7 +402,6 @@ const Vault = () => {
             </div>
           </div>
 
-          {/* STAKING REFINERY */}
           <div className="lg:col-span-7 bg-[#1E293B] border border-slate-700 rounded-3xl p-8 relative overflow-hidden">
              <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mb-10 pointer-events-none"></div>
              <div className="flex items-center gap-3 mb-6">
@@ -552,7 +439,6 @@ const Vault = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* HARVEST POSITIONS */}
           <div className="lg:col-span-7 bg-[#1E293B]/60 border border-slate-700 rounded-3xl p-6 flex flex-col h-[400px]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2"><Clock size={18} className="text-slate-400" /> Active Positions</h2>
@@ -609,7 +495,6 @@ const Vault = () => {
             </div>
           </div>
 
-          {/* GACHA MODULE */}
           <div className="lg:col-span-5 bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-slate-700 rounded-3xl p-6 flex flex-col justify-center text-center">
             <div className="bg-purple-500/10 w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 border border-purple-500/20"><Zap size={28} className="text-purple-400" /></div>
             <h2 className="text-xl font-bold text-white mb-2">Lucky Burn Module</h2>
