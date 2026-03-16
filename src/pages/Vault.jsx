@@ -45,9 +45,9 @@ const Vault = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Reset base timer every time block updates
-  const baseBlockTime = useMemo(() => Date.now(), [currentBlockHeight]);
-  const elapsedSinceBlock = Math.floor((now - baseBlockTime) / 1000);
+  const elapsedSinceBlock = useMemo(() => {
+    return Math.floor((now - Date.now()) / 1000);
+  }, [now]); // Base timer helper (hanya dipakai untuk staking sekarang)
 
   const fetchData = useCallback(async () => {
     if (!userSession.isUserSignedIn()) {
@@ -101,7 +101,6 @@ const Vault = () => {
     const userAddress = userData.profile.stxAddress.mainnet;
 
     try {
-      // 1. Ambil status yang valid di blockchain saat ini
       const resultCV = await callReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
         contractName: 'faucet-distributor-v7',
@@ -114,20 +113,16 @@ const Vault = () => {
       const val = cvToValue(resultCV);
       const getNum = (item) => item?.value !== undefined ? Number(item.value) : Number(item);
       
-      const currentBlock = getNum(val['current-block']);
       let blocksLeft = getNum(val['blocks-left']);
       let nextClaimBlock = getNum(val['next-claim-block']);
       let isPending = false;
 
-      // 2. CEK MEMPOOL (Penting untuk Web3!)
-      // Jika smart contract bilang "Ready" (0 blocks left), pastikan user tidak sedang menunggu transaksi diproses
+      // CEK MEMPOOL
       if (blocksLeft === 0) {
         try {
           const mempoolRes = await fetch(`${network.coreApiUrl}/extended/v1/tx/mempool?sender_address=${userAddress}`);
           if (mempoolRes.ok) {
             const mempoolData = await mempoolRes.json();
-            
-            // Cari apakah ada transaksi ke faucet yang statusnya pending
             const isClaimPending = mempoolData.results?.some(tx => 
               tx.tx_status === "pending" && 
               tx.tx_type === "contract_call" && 
@@ -135,10 +130,8 @@ const Vault = () => {
               tx.contract_call.function_name === "claim"
             );
 
-            // Jika ada yang pending, set UI menjadi menunggu secara optimistik
+            // JANGAN mengubah blocksLeft di sini agar tidak me-reset waktu, cukup set isPending
             if (isClaimPending) {
-              blocksLeft = BLOCKS_PER_DAY;
-              nextClaimBlock = currentBlock + BLOCKS_PER_DAY;
               isPending = true;
             }
           }
@@ -148,7 +141,6 @@ const Vault = () => {
       }
       
       setFaucetData({ blocksLeft, nextClaimBlock, isPending });
-      
     } catch (e) { console.error("Failed to fetch faucet data", e); }
   };
 
@@ -222,8 +214,9 @@ const Vault = () => {
         setActionLoading(false);
         
         if (actionType === 'claim') {
-           // Set state pending saat broadcast sukses (Optimistic UI)
-           setFaucetData(prev => ({ blocksLeft: BLOCKS_PER_DAY, nextClaimBlock: prev.nextClaimBlock + BLOCKS_PER_DAY, isPending: true }));
+           // Simpan waktu klik ke local storage untuk perhitungan optimistik
+           localStorage.setItem('faucet_pending_start', Date.now().toString());
+           setFaucetData(prev => ({ ...prev, isPending: true }));
         }
         else if (actionType === 'harvest' && payload) setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
         else if (actionType === 'stake') {
@@ -260,11 +253,48 @@ const Vault = () => {
     return `${h}h ${m}m ${s}s`;
   };
 
-  // --- CALCULATIONS FOR REALTIME UI ---
-  let faucetSecondsLeft = (faucetData.blocksLeft * 600) - elapsedSinceBlock; 
-  if (faucetSecondsLeft < 0) faucetSecondsLeft = 0;
+  // --- CALCULATIONS FOR REALTIME UI (ANTI-RESET) ---
+  let faucetSecondsLeft = 0;
   
-  // Hanya bisa diclaim jika blocksLeft 0 DAN tidak ada transaksi pending di Mempool
+  // Hook sinkronisasi untuk mengunci target waktu ke LocalStorage
+  useEffect(() => {
+    if (faucetData.isPending) {
+      if (!localStorage.getItem('faucet_pending_start')) {
+        localStorage.setItem('faucet_pending_start', Date.now().toString());
+      }
+    } else if (faucetData.blocksLeft > 0) {
+      // Hapus memori pending karena transaksi sudah berhasil masuk ke blok
+      localStorage.removeItem('faucet_pending_start');
+      const savedTargetBlock = localStorage.getItem('faucet_target_block');
+      
+      // Jika ini adalah blok klaim baru, kalkulasi dan kunci target waktunya
+      if (savedTargetBlock !== faucetData.nextClaimBlock.toString()) {
+        const targetDate = Date.now() + (faucetData.blocksLeft * 600 * 1000);
+        localStorage.setItem('faucet_target_block', faucetData.nextClaimBlock.toString());
+        localStorage.setItem('faucet_target_time', targetDate.toString());
+      }
+    } else {
+      // Jika sudah bisa diklaim, bersihkan semua memori
+      localStorage.removeItem('faucet_target_block');
+      localStorage.removeItem('faucet_target_time');
+      localStorage.removeItem('faucet_pending_start');
+    }
+  }, [faucetData.isPending, faucetData.blocksLeft, faucetData.nextClaimBlock]);
+
+  // Eksekusi kalkulasi timer berdasarkan waktu asli (mengabaikan refresh halaman)
+  if (faucetData.isPending) {
+    const start = Number(localStorage.getItem('faucet_pending_start')) || Date.now();
+    const elapsed = Math.floor((now - start) / 1000);
+    faucetSecondsLeft = Math.max(0, (BLOCKS_PER_DAY * 600) - elapsed);
+  } else if (faucetData.blocksLeft > 0) {
+    const targetTime = Number(localStorage.getItem('faucet_target_time'));
+    if (targetTime) {
+      faucetSecondsLeft = Math.max(0, Math.floor((targetTime - now) / 1000));
+    } else {
+      faucetSecondsLeft = faucetData.blocksLeft * 600;
+    }
+  }
+
   const isClaimable = faucetData.blocksLeft === 0 && !faucetData.isPending; 
 
   // --- COMPONENTS ---
@@ -347,7 +377,7 @@ const Vault = () => {
                 </div>
                 {!isClaimable && (
                   <div className="w-full bg-slate-800 h-2 rounded-full mb-3 overflow-hidden">
-                    <div className="bg-amber-400 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(0, 100 - (faucetData.blocksLeft / BLOCKS_PER_DAY * 100))}%` }}></div>
+                    <div className="bg-amber-400 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(0, 100 - (faucetSecondsLeft / (BLOCKS_PER_DAY * 600) * 100))}%` }}></div>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-xs font-mono text-slate-500">
