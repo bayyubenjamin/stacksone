@@ -25,7 +25,7 @@ const Vault = () => {
   
   // State: Network & Staking Logic
   const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
-  const [lastClaimHeight, setLastClaimHeight] = useState(0); 
+  const [faucetData, setFaucetData] = useState({ blocksLeft: 0, nextClaimBlock: 0 }); // REALTIME DARI KONTRAK
   const [activeStakes, setActiveStakes] = useState([]);
   const [totalStaked, setTotalStaked] = useState(0);
   
@@ -101,23 +101,26 @@ const Vault = () => {
     const userAddress = userData.profile.stxAddress.mainnet;
 
     try {
-      const claimKeyCV = standardPrincipalCV(userAddress);
-      const res = await fetch(`${network.coreApiUrl}/v2/map_entry/${CONTRACT_ADDRESS}/faucet-distributor-v7/last-claim`, {
-        method: 'POST',
-        body: JSON.stringify(cvToHex(claimKeyCV)),
-        headers: { 'Content-Type': 'application/json' }
+      // Mengambil status user secara langsung dari Read-Only Contract
+      const resultCV = await callReadOnlyFunction({
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: 'faucet-distributor-v7',
+        functionName: 'get-user-status',
+        functionArgs: [standardPrincipalCV(userAddress)],
+        network,
+        senderAddress: userAddress
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.data && data.data !== "0x09") { // 0x09 = none in Clarity
-          const valCV = hexToCV(data.data);
-          const val = cvToValue(valCV);
-          
-          // Fix: Extract .value if it exists
-          const blockHeight = val.value !== undefined ? val.value : val;
-          setLastClaimHeight(Number(blockHeight));
-        }
-      }
+      
+      const val = cvToValue(resultCV);
+      
+      // Helper untuk mengambil nilai aman dari format BigInt atau number object
+      const getNum = (item) => item?.value !== undefined ? Number(item.value) : Number(item);
+      
+      setFaucetData({
+        blocksLeft: getNum(val['blocks-left']),
+        nextClaimBlock: getNum(val['next-claim-block'])
+      });
+      
     } catch (e) { console.error("Failed to fetch faucet data", e); }
   };
 
@@ -190,7 +193,10 @@ const Vault = () => {
         setStatus({ type: 'success', msg: `Transaction Broadcasted! ID: ${data.txId.slice(0, 8)}...` });
         setActionLoading(false);
         
-        if (actionType === 'claim') setLastClaimHeight(currentBlockHeight);
+        if (actionType === 'claim') {
+           // Memberikan jeda simulasi UI cooldown saat berhasil claim
+           setFaucetData(prev => ({ blocksLeft: BLOCKS_PER_DAY, nextClaimBlock: prev.nextClaimBlock + BLOCKS_PER_DAY }));
+        }
         else if (actionType === 'harvest' && payload) setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
         else if (actionType === 'stake') {
           const amountStaked = parseFloat(stakeAmount);
@@ -227,12 +233,11 @@ const Vault = () => {
   };
 
   // --- CALCULATIONS FOR REALTIME UI ---
-  const blocksToClaim = (lastClaimHeight + BLOCKS_PER_DAY) - currentBlockHeight;
-  let faucetSecondsLeft = (blocksToClaim * 600) - elapsedSinceBlock; 
+  // Menggunakan blocksLeft asli dari kontrak
+  let faucetSecondsLeft = (faucetData.blocksLeft * 600) - elapsedSinceBlock; 
   if (faucetSecondsLeft < 0) faucetSecondsLeft = 0;
   
-  const isClaimable = lastClaimHeight === 0 || faucetSecondsLeft <= 0; 
-  const nextTargetBlock = currentBlockHeight + (isClaimable ? 0 : blocksToClaim);
+  const isClaimable = faucetData.blocksLeft === 0 || faucetSecondsLeft <= 0; 
 
   // --- COMPONENTS ---
   const StatCard = ({ title, value, unit, icon: Icon, color, isLoading }) => (
@@ -314,12 +319,12 @@ const Vault = () => {
                 </div>
                 {!isClaimable && (
                   <div className="w-full bg-slate-800 h-2 rounded-full mb-3 overflow-hidden">
-                    <div className="bg-amber-400 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(0, 100 - (blocksToClaim / BLOCKS_PER_DAY * 100))}%` }}></div>
+                    <div className="bg-amber-400 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.max(0, 100 - (faucetData.blocksLeft / BLOCKS_PER_DAY * 100))}%` }}></div>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-xs font-mono text-slate-500">
                   <span>Wait: {isClaimable ? 'Now' : formatTime(faucetSecondsLeft)}</span>
-                  <span>Target Block #{nextTargetBlock}</span>
+                  <span>Target Burn Block #{faucetData.nextClaimBlock || '...'}</span>
                 </div>
               </div>
 
