@@ -25,7 +25,7 @@ const Vault = () => {
   
   // State: Network & Staking Logic
   const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
-  const [faucetData, setFaucetData] = useState({ blocksLeft: 0, nextClaimBlock: 0 }); // REALTIME DARI KONTRAK
+  const [faucetData, setFaucetData] = useState({ blocksLeft: 0, nextClaimBlock: 0, isPending: false }); 
   const [activeStakes, setActiveStakes] = useState([]);
   const [totalStaked, setTotalStaked] = useState(0);
   
@@ -101,7 +101,7 @@ const Vault = () => {
     const userAddress = userData.profile.stxAddress.mainnet;
 
     try {
-      // Mengambil status user secara langsung dari Read-Only Contract
+      // 1. Ambil status yang valid di blockchain saat ini
       const resultCV = await callReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
         contractName: 'faucet-distributor-v7',
@@ -112,14 +112,42 @@ const Vault = () => {
       });
       
       const val = cvToValue(resultCV);
-      
-      // Helper untuk mengambil nilai aman dari format BigInt atau number object
       const getNum = (item) => item?.value !== undefined ? Number(item.value) : Number(item);
       
-      setFaucetData({
-        blocksLeft: getNum(val['blocks-left']),
-        nextClaimBlock: getNum(val['next-claim-block'])
-      });
+      const currentBlock = getNum(val['current-block']);
+      let blocksLeft = getNum(val['blocks-left']);
+      let nextClaimBlock = getNum(val['next-claim-block']);
+      let isPending = false;
+
+      // 2. CEK MEMPOOL (Penting untuk Web3!)
+      // Jika smart contract bilang "Ready" (0 blocks left), pastikan user tidak sedang menunggu transaksi diproses
+      if (blocksLeft === 0) {
+        try {
+          const mempoolRes = await fetch(`${network.coreApiUrl}/extended/v1/tx/mempool?sender_address=${userAddress}`);
+          if (mempoolRes.ok) {
+            const mempoolData = await mempoolRes.json();
+            
+            // Cari apakah ada transaksi ke faucet yang statusnya pending
+            const isClaimPending = mempoolData.results?.some(tx => 
+              tx.tx_status === "pending" && 
+              tx.tx_type === "contract_call" && 
+              tx.contract_call.contract_id === `${CONTRACT_ADDRESS}.faucet-distributor-v7` &&
+              tx.contract_call.function_name === "claim"
+            );
+
+            // Jika ada yang pending, set UI menjadi menunggu secara optimistik
+            if (isClaimPending) {
+              blocksLeft = BLOCKS_PER_DAY;
+              nextClaimBlock = currentBlock + BLOCKS_PER_DAY;
+              isPending = true;
+            }
+          }
+        } catch (mempoolErr) {
+          console.warn("Mempool check failed", mempoolErr);
+        }
+      }
+      
+      setFaucetData({ blocksLeft, nextClaimBlock, isPending });
       
     } catch (e) { console.error("Failed to fetch faucet data", e); }
   };
@@ -194,8 +222,8 @@ const Vault = () => {
         setActionLoading(false);
         
         if (actionType === 'claim') {
-           // Memberikan jeda simulasi UI cooldown saat berhasil claim
-           setFaucetData(prev => ({ blocksLeft: BLOCKS_PER_DAY, nextClaimBlock: prev.nextClaimBlock + BLOCKS_PER_DAY }));
+           // Set state pending saat broadcast sukses (Optimistic UI)
+           setFaucetData(prev => ({ blocksLeft: BLOCKS_PER_DAY, nextClaimBlock: prev.nextClaimBlock + BLOCKS_PER_DAY, isPending: true }));
         }
         else if (actionType === 'harvest' && payload) setActiveStakes(prev => prev.filter(s => s.id !== payload.id));
         else if (actionType === 'stake') {
@@ -233,11 +261,11 @@ const Vault = () => {
   };
 
   // --- CALCULATIONS FOR REALTIME UI ---
-  // Menggunakan blocksLeft asli dari kontrak
   let faucetSecondsLeft = (faucetData.blocksLeft * 600) - elapsedSinceBlock; 
   if (faucetSecondsLeft < 0) faucetSecondsLeft = 0;
   
-  const isClaimable = faucetData.blocksLeft === 0 || faucetSecondsLeft <= 0; 
+  // Hanya bisa diclaim jika blocksLeft 0 DAN tidak ada transaksi pending di Mempool
+  const isClaimable = faucetData.blocksLeft === 0 && !faucetData.isPending; 
 
   // --- COMPONENTS ---
   const StatCard = ({ title, value, unit, icon: Icon, color, isLoading }) => (
@@ -313,8 +341,8 @@ const Vault = () => {
               <div className="bg-[#0F172A] border border-slate-700 rounded-2xl p-5 mb-6">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-slate-400 text-sm">Status</span>
-                  <span className={`text-sm font-bold px-2 py-1 rounded-md ${isClaimable ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                    {isClaimable ? 'Ready to Claim' : 'Cooling Down'}
+                  <span className={`text-sm font-bold px-2 py-1 rounded-md ${isClaimable ? 'bg-emerald-500/20 text-emerald-400' : faucetData.isPending ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                    {isClaimable ? 'Ready to Claim' : faucetData.isPending ? 'Pending in Mempool' : 'Cooling Down'}
                   </span>
                 </div>
                 {!isClaimable && (
@@ -336,7 +364,7 @@ const Vault = () => {
                 }`}
               >
                 {actionLoading ? <RefreshCw className="animate-spin" size={18} /> : (isClaimable ? <Zap size={18} /> : <Clock size={18} />)}
-                {isClaimable ? 'Claim 100 POIN' : `Cooldown (${formatTime(faucetSecondsLeft)})`}
+                {isClaimable ? 'Claim 100 POIN' : faucetData.isPending ? 'Awaiting Confirmation...' : `Cooldown (${formatTime(faucetSecondsLeft)})`}
               </button>
             </div>
           </div>
