@@ -39,75 +39,75 @@ function App() {
   const [userLevel, setUserLevel] = useState(1);
 
   const [tasks] = useState([
-    {
-      id: 1,
-      name: "Connect Wallet",
-      desc: "Connect your Stacks wallet",
-      reward: 10,
-      icon: "🔗"
-    },
-    {
-      id: 2,
-      name: "Submit Transaction",
-      desc: "Execute first protocol interaction",
+{
+      id: 11,
+      name: "Swap Tokens",
+      desc: "Complete your first token swap on the Genesis DEX",
       reward: 20,
-      icon: "⚡"
+      icon: "💱"
     },
     {
-      id: 3,
-      name: "Explore Modules",
-      desc: "Open and explore Genesis modules",
-      reward: 15,
-      icon: "🧪"
-    },
-    {
-      id: 4,
-      name: "Play Games",
-      desc: "Launch a Genesis on-chain game",
-      reward: 25,
-      icon: "🎮"
-    },
-    {
-      id: 5,
-      name: "Execute Smart Contract",
-      desc: "Submit a transaction to interact with the Genesis protocol",
-      reward: 30,
-      icon: "⚙️"
-    },
-    {
-      id: 6,
-      name: "Earn XP Milestone",
-      desc: "Reach a new XP milestone within the Genesis ecosystem",
-      reward: 40,
-      icon: "🚀"
-    },
-    {
-      id: 7,
-      name: "Claim Genesis Badge",
-      desc: "Unlock and mint your first Genesis badge on-chain",
+      id: 12,
+      name: "Participate in Governance",
+      desc: "Cast your vote on an active Genesis DAO proposal",
       reward: 50,
-      icon: "🏅"
+      icon: "🗳️"
     },
     {
-      id: 8,
-      name: "Stake Tokens",
-      desc: "Stake your assets in the Genesis liquidity pool",
-      reward: 35,
-      icon: "🏦"
+      id: 13,
+      name: "Read the Whitepaper",
+      desc: "Visit the Genesis documentation and read the core mechanics",
+      reward: 10,
+      icon: "📖"
     },
     {
-      id: 9,
-      name: "Join Discord",
-      desc: "Join our community and verify your Stacks wallet",
+      id: 14,
+      name: "Daily Check-In",
+      desc: "Log into the Genesis dApp for 7 consecutive days",
+      reward: 30,
+      icon: "📅"
+    },
+    {
+      id: 15,
+      name: "Mint Avatar NFT",
+      desc: "Mint your unique Genesis profile avatar on the Stacks blockchain",
+      reward: 40,
+      icon: "🖼️"
+    },
+    {
+      id: 16,
+      name: "Harvest Yield",
+      desc: "Claim your accumulated staking rewards from the liquidity pool",
+      reward: 25,
+      icon: "🌾"
+    },
+    {
+      id: 17,
+      name: "Follow on X",
+      desc: "Follow Genesis on X (Twitter) and retweet our pinned post",
       reward: 15,
-      icon: "💬"
+      icon: "🐦"
     },
     {
-      id: 10,
-      name: "Refer a Friend",
-      desc: "Invite a friend to complete their first Genesis transaction",
+      id: 18,
+      name: "Add Liquidity",
+      desc: "Supply a token pair to the Genesis Automated Market Maker (AMM)",
       reward: 45,
-      icon: "🤝"
+      icon: "💧"
+    },
+    {
+      id: 19,
+      name: "Reach the Top 100",
+      desc: "Climb the Genesis gaming leaderboard to reach the top 100 players",
+      reward: 100,
+      icon: "🏆"
+    },
+    {
+      id: 20,
+      name: "Bridge Assets",
+      desc: "Bridge your assets from Bitcoin (BTC) to Stacks using the Genesis bridge",
+      reward: 60,
+      icon: "🌉"
     }
   ]);
 
