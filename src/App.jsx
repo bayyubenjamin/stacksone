@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 21,
-      name: "Mint sBTC",
-      desc: "Deposit BTC to securely mint sBTC on the Stacks layer",
-      reward: 75,
-      icon: "₿"
-    },
-    {
-      id: 22,
-      name: "Deploy Clarity Contract",
-      desc: "Write and deploy your first Clarity smart contract on testnet",
-      reward: 100,
-      icon: "📜"
-    },
-    {
-      id: 23,
-      name: "Claim Diamond Identity",
-      desc: "Upgrade your on-chain profile to the exclusive Diamond tier",
-      reward: 150,
-      icon: "💎"
-    },
-    {
-      id: 24,
-      name: "Delegate STX (Stacking)",
-      desc: "Lock your STX by delegating to a trusted pool to earn Bitcoin yields",
+      id: 31,
+      name: "Write Documentation",
+      desc: "Contribute to the Genesis wiki or technical documentation",
       reward: 80,
-      icon: "🥞"
-    },
-    {
-      id: 25,
-      name: "Buy Genesis NFT",
-      desc: "Purchase a verified Genesis collection NFT from the secondary marketplace",
-      reward: 50,
-      icon: "🛍️"
-    },
-    {
-      id: 26,
-      name: "Join Bug Bounty",
-      desc: "Find and report a valid bug in the protocol's GitHub repository",
-      reward: 300,
-      icon: "🐛"
-    },
-    {
-      id: 27,
-      name: "Write a Thread",
-      desc: "Create an X (Twitter) thread explaining how the Genesis ecosystem works",
-      reward: 35,
       icon: "✍️"
     },
     {
-      id: 28,
-      name: "Run a Local Node",
-      desc: "Set up and run a local node to support network decentralization",
-      reward: 200,
-      icon: "🖥️"
+      id: 32,
+      name: "Verify Contract Source",
+      desc: "Verify your deployed Clarity contract on the Stacks Explorer",
+      reward: 50,
+      icon: "🔍"
     },
     {
-      id: 29,
-      name: "Create DAO Proposal",
-      desc: "Draft and submit a formal governance proposal for the community to vote on",
+      id: 33,
+      name: "Create a Subnet",
+      desc: "Initialize a custom Genesis subnet for high-speed transactions",
+      reward: 150,
+      icon: "🌐"
+    },
+    {
+      id: 34,
+      name: "Refer 5 Users",
+      desc: "Successfully onboard 5 active users through your referral link",
       reward: 120,
-      icon: "📝"
+      icon: "👨‍👩‍👧‍👦"
     },
     {
-      id: 30,
-      name: "Complete KYC Verification",
-      desc: "Verify your decentralized identity to unlock advanced protocol features",
-      reward: 45,
+      id: 35,
+      name: "Stake for 1 Year",
+      desc: "Commit your assets to a long-term 12-month staking cycle",
+      reward: 250,
+      icon: "⏳"
+    },
+    {
+      id: 36,
+      name: "Join Developer AMA",
+      desc: "Attend the monthly Genesis developer Q&A session on Discord",
+      reward: 20,
+      icon: "🎙️"
+    },
+    {
+      id: 37,
+      name: "Integrate API",
+      desc: "Successfully connect an external API to your Genesis dApp",
+      reward: 90,
+      icon: "🔌"
+    },
+    {
+      id: 38,
+      name: "Audit a Contract",
+      desc: "Submit a peer-review report for a community-submitted Clarity contract",
+      reward: 180,
       icon: "🛡️"
+    },
+    {
+      id: 39,
+      name: "Host a Meetup",
+      desc: "Organize a local or virtual meetup for Genesis community members",
+      reward: 300,
+      icon: "⛺"
+    },
+    {
+      id: 40,
+      name: "Genesis Master",
+      desc: "Complete all previous 39 tasks to earn the Master Badge",
+      reward: 500,
+      icon: "👑"
     }
   ]);
 
