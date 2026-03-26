@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 41,
-      name: "Ordinal Inscription",
-      desc: "Inscribe your first Genesis-themed Ordinal on the Bitcoin base layer",
-      reward: 100,
-      icon: "🖼️"
+      id: 51,
+      name: "Verify GitHub Account",
+      desc: "Link your GitHub profile to your Diamond Identity for developer perks",
+      reward: 20,
+      icon: "🐙"
     },
     {
-      id: 42,
-      name: "Liquidity Provider Pro",
-      desc: "Maintain a liquidity position for more than 30 days without withdrawal",
-      reward: 150,
-      icon: "🌊"
+      id: 52,
+      name: "Cross-chain Bridge",
+      desc: "Transfer assets from Ethereum to Stacks using the Genesis Portal",
+      reward: 85,
+      icon: "🌉"
     },
     {
-      id: 43,
-      name: "Vote on SIP",
-      desc: "Participate in a Stacks Improvement Proposal (SIP) discussion",
+      id: 53,
+      name: "Identify Phishing",
+      desc: "Complete the Genesis security quiz to identify common Web3 scams",
+      reward: 30,
+      icon: "🎣"
+    },
+    {
+      id: 54,
+      name: "Create NFT Collection",
+      desc: "Launch a collection of 10+ items on the Genesis Minting Protocol",
+      reward: 120,
+      icon: "🎨"
+    },
+    {
+      id: 55,
+      name: "Stablecoin Minting",
+      desc: "Mint USDA or other stablecoins by over-collateralizing your STX",
+      reward: 70,
+      icon: "💵"
+    },
+    {
+      id: 56,
+      name: "Bug Hunter Bronze",
+      desc: "Submit a UI/UX improvement suggestion on the official GitHub Issues",
       reward: 40,
-      icon: "🗣️"
+      icon: "🥉"
     },
     {
-      id: 44,
-      name: "Flash Loan Mastery",
-      desc: "Execute a successful flash loan transaction within the protocol",
-      reward: 200,
-      icon: "⚡"
+      id: 57,
+      name: "Early Bird Stacker",
+      desc: "Participate in the very first cycle of a new Stacking pool",
+      reward: 95,
+      icon: "🐦"
     },
     {
-      id: 45,
-      name: "BNS Name Registration",
-      desc: "Register a .btc domain name using the BNS protocol",
-      reward: 60,
-      icon: "🆔"
+      id: 58,
+      name: "Social Media Mentor",
+      desc: "Help 3 new users in the Discord 'Help' channel",
+      reward: 55,
+      icon: "🙋"
     },
     {
-      id: 46,
-      name: "Testnet Validator",
-      desc: "Successfully validate 1,000 transactions on the Genesis testnet",
-      reward: 300,
-      icon: "🏁"
+      id: 59,
+      name: "Clarity Optimization",
+      desc: "Refactor an existing contract to reduce execution cost (gas fees)",
+      reward: 140,
+      icon: "⛽"
     },
     {
-      id: 47,
-      name: "Write a Tutorial",
-      desc: "Publish a Medium or Substack article about building on Genesis",
-      reward: 90,
-      icon: "📝"
-    },
-    {
-      id: 48,
-      name: "Claim Early Adopter Airdrop",
-      desc: "Claim your reward for being one of the first 1,000 users",
-      reward: 50,
-      icon: "🎁"
-    },
-    {
-      id: 49,
-      name: "Multi-sig Setup",
-      desc: "Create a multi-signature wallet to manage group assets",
+      id: 60,
+      name: "Diamond Guardian",
+      desc: "Set up a hardware wallet (Ledger/Trezor) to secure your Genesis assets",
       reward: 110,
-      icon: "🔐"
-    },
-    {
-      id: 50,
-      name: "Genesis Legend",
-      desc: "Achieve the ultimate status by contributing to core protocol code",
-      reward: 1000,
-      icon: "🌌"
+      icon: "🛡️"
     }
   ]);
 
