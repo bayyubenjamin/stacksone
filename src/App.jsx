@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 31,
-      name: "Write Documentation",
-      desc: "Contribute to the Genesis wiki or technical documentation",
-      reward: 80,
-      icon: "✍️"
+      id: 41,
+      name: "Ordinal Inscription",
+      desc: "Inscribe your first Genesis-themed Ordinal on the Bitcoin base layer",
+      reward: 100,
+      icon: "🖼️"
     },
     {
-      id: 32,
-      name: "Verify Contract Source",
-      desc: "Verify your deployed Clarity contract on the Stacks Explorer",
-      reward: 50,
-      icon: "🔍"
-    },
-    {
-      id: 33,
-      name: "Create a Subnet",
-      desc: "Initialize a custom Genesis subnet for high-speed transactions",
+      id: 42,
+      name: "Liquidity Provider Pro",
+      desc: "Maintain a liquidity position for more than 30 days without withdrawal",
       reward: 150,
-      icon: "🌐"
+      icon: "🌊"
     },
     {
-      id: 34,
-      name: "Refer 5 Users",
-      desc: "Successfully onboard 5 active users through your referral link",
-      reward: 120,
-      icon: "👨‍👩‍👧‍👦"
+      id: 43,
+      name: "Vote on SIP",
+      desc: "Participate in a Stacks Improvement Proposal (SIP) discussion",
+      reward: 40,
+      icon: "🗣️"
     },
     {
-      id: 35,
-      name: "Stake for 1 Year",
-      desc: "Commit your assets to a long-term 12-month staking cycle",
-      reward: 250,
-      icon: "⏳"
+      id: 44,
+      name: "Flash Loan Mastery",
+      desc: "Execute a successful flash loan transaction within the protocol",
+      reward: 200,
+      icon: "⚡"
     },
     {
-      id: 36,
-      name: "Join Developer AMA",
-      desc: "Attend the monthly Genesis developer Q&A session on Discord",
-      reward: 20,
-      icon: "🎙️"
+      id: 45,
+      name: "BNS Name Registration",
+      desc: "Register a .btc domain name using the BNS protocol",
+      reward: 60,
+      icon: "🆔"
     },
     {
-      id: 37,
-      name: "Integrate API",
-      desc: "Successfully connect an external API to your Genesis dApp",
-      reward: 90,
-      icon: "🔌"
-    },
-    {
-      id: 38,
-      name: "Audit a Contract",
-      desc: "Submit a peer-review report for a community-submitted Clarity contract",
-      reward: 180,
-      icon: "🛡️"
-    },
-    {
-      id: 39,
-      name: "Host a Meetup",
-      desc: "Organize a local or virtual meetup for Genesis community members",
+      id: 46,
+      name: "Testnet Validator",
+      desc: "Successfully validate 1,000 transactions on the Genesis testnet",
       reward: 300,
-      icon: "⛺"
+      icon: "🏁"
     },
     {
-      id: 40,
-      name: "Genesis Master",
-      desc: "Complete all previous 39 tasks to earn the Master Badge",
-      reward: 500,
-      icon: "👑"
+      id: 47,
+      name: "Write a Tutorial",
+      desc: "Publish a Medium or Substack article about building on Genesis",
+      reward: 90,
+      icon: "📝"
+    },
+    {
+      id: 48,
+      name: "Claim Early Adopter Airdrop",
+      desc: "Claim your reward for being one of the first 1,000 users",
+      reward: 50,
+      icon: "🎁"
+    },
+    {
+      id: 49,
+      name: "Multi-sig Setup",
+      desc: "Create a multi-signature wallet to manage group assets",
+      reward: 110,
+      icon: "🔐"
+    },
+    {
+      id: 50,
+      name: "Genesis Legend",
+      desc: "Achieve the ultimate status by contributing to core protocol code",
+      reward: 1000,
+      icon: "🌌"
     }
   ]);
 
