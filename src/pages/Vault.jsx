@@ -55,53 +55,26 @@ const Vault = () => {
     }
   };
 
-  // FUNGSI BARU: Fetching ringan di background tanpa loading UI
-  const fetchLightData = useCallback(async () => {
-    if (!userSession.isUserSignedIn()) return;
-    try {
-      await Promise.all([fetchBalances(), fetchFaucetData()]);
-    } catch (e) {
-      console.warn("Silent fetch interrupted", e);
-    }
-  }, []);
-
-  // MODIFIKASI: Menambahkan parameter isSilent agar bisa dipanggil tanpa memicu UI berkedip
-  const fetchData = useCallback(async (isSilent = false) => {
-    // Handle jika dipanggil oleh event onClick button
-    const silent = typeof isSilent === 'boolean' ? isSilent : false;
-    
+  const fetchData = useCallback(async () => {
     if (!userSession.isUserSignedIn()) {
-      if (!silent) setLoading(false);
+      setLoading(false);
       return;
     }
-    if (!silent) setLoading(true);
+    setLoading(true);
     await fetchNetworkStatus();
     await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
-    if (!silent) setLoading(false);
-  }, []);
+    setLoading(false);
+  }, [currentBlockHeight]);
 
   useEffect(() => {
     fetchNetworkStatus();
-    // OPTIMASI: Polling network status dipercepat dari 10 detik ke 3 detik
-    const interval = setInterval(fetchNetworkStatus, 3000);
+    const interval = setInterval(fetchNetworkStatus, 10000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    // Fetch data penuh saat tinggi block berubah (ada block baru)
-    if (currentBlockHeight > 0) fetchData(false);
+    if (currentBlockHeight > 0) fetchData();
   }, [currentBlockHeight, fetchData]);
-
-  // OPTIMASI BARU: Polling data ringan (Balance & Mempool) super cepat setiap 4 detik
-  useEffect(() => {
-    const silentInterval = setInterval(() => {
-      // Jangan fetch jika sedang melakukan transaksi untuk mencegah race condition UI
-      if (currentBlockHeight > 0 && !actionLoading) {
-        fetchLightData();
-      }
-    }, 4000);
-    return () => clearInterval(silentInterval);
-  }, [currentBlockHeight, fetchLightData, actionLoading]);
 
   // Ekstraksi CV Manual (Anti-NaN)
   const extractUintCV = (cv) => {
@@ -364,9 +337,15 @@ const Vault = () => {
                 Mainnet Live • Block #{currentBlockHeight || '...'}
               </p>
             </div>
-            <button onClick={fetchData} disabled={loading || actionLoading} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 text-sm font-medium transition-all disabled:opacity-50">
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-              Refresh Data
+            
+            {/* INI BAGIAN YANG DIUBAH: Pake window.location.reload() */}
+            <button 
+              onClick={() => window.location.reload()} 
+              disabled={actionLoading} 
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 text-sm font-medium transition-all disabled:opacity-50"
+            >
+              <RefreshCw size={16} />
+              Reload Page
             </button>
           </div>
 
