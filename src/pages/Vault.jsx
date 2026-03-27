@@ -55,26 +55,53 @@ const Vault = () => {
     }
   };
 
-  const fetchData = useCallback(async () => {
+  // FUNGSI BARU: Fetching ringan di background tanpa loading UI
+  const fetchLightData = useCallback(async () => {
+    if (!userSession.isUserSignedIn()) return;
+    try {
+      await Promise.all([fetchBalances(), fetchFaucetData()]);
+    } catch (e) {
+      console.warn("Silent fetch interrupted", e);
+    }
+  }, []);
+
+  // MODIFIKASI: Menambahkan parameter isSilent agar bisa dipanggil tanpa memicu UI berkedip
+  const fetchData = useCallback(async (isSilent = false) => {
+    // Handle jika dipanggil oleh event onClick button
+    const silent = typeof isSilent === 'boolean' ? isSilent : false;
+    
     if (!userSession.isUserSignedIn()) {
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     await fetchNetworkStatus();
     await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
-    setLoading(false);
-  }, [currentBlockHeight]);
+    if (!silent) setLoading(false);
+  }, []);
 
   useEffect(() => {
     fetchNetworkStatus();
-    const interval = setInterval(fetchNetworkStatus, 10000);
+    // OPTIMASI: Polling network status dipercepat dari 10 detik ke 3 detik
+    const interval = setInterval(fetchNetworkStatus, 3000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (currentBlockHeight > 0) fetchData();
+    // Fetch data penuh saat tinggi block berubah (ada block baru)
+    if (currentBlockHeight > 0) fetchData(false);
   }, [currentBlockHeight, fetchData]);
+
+  // OPTIMASI BARU: Polling data ringan (Balance & Mempool) super cepat setiap 4 detik
+  useEffect(() => {
+    const silentInterval = setInterval(() => {
+      // Jangan fetch jika sedang melakukan transaksi untuk mencegah race condition UI
+      if (currentBlockHeight > 0 && !actionLoading) {
+        fetchLightData();
+      }
+    }, 4000);
+    return () => clearInterval(silentInterval);
+  }, [currentBlockHeight, fetchLightData, actionLoading]);
 
   // Ekstraksi CV Manual (Anti-NaN)
   const extractUintCV = (cv) => {
