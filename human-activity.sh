@@ -1,49 +1,61 @@
 #!/bin/bash
 
-TOTAL=100
+TOTAL=200
+COUNT=0
 
 MESSAGES=(
-  "refactor: improve logic structure"
-  "docs: update explanation"
-  "feat: add small improvement"
+  "refactor: improve structure"
+  "docs: enhance explanation"
+  "feat: small improvement"
   "fix: minor adjustment"
-  "chore: cleanup file"
-  "docs: enhance readability"
+  "chore: cleanup"
+  "docs: improve clarity"
   "feat: tweak behavior"
+  "refactor: optimize flow"
 )
 
 FILES=(
   "src/utils.js"
-  "docs/notes.md"
-  "temp-log.txt"
   "src/helper.js"
+  "docs/notes.md"
+  "docs/devlog.md"
+  "temp-log.txt"
 )
 
-for ((i=1; i<=TOTAL; i++))
+while [ $COUNT -lt $TOTAL ]
 do
-  echo "Commit $i"
+  # SESSION MODE (kayak orang kerja 5–15 commit)
+  SESSION=$(( (RANDOM % 10) + 5 ))
 
-  # pilih file random
-  FILE=${FILES[$RANDOM % ${#FILES[@]}]}
+  echo "Session start: $SESSION commits"
 
-  # pastikan folder ada
-  mkdir -p "$(dirname "$FILE")"
+  for ((i=1; i<=SESSION && COUNT<TOTAL; i++))
+  do
+    COUNT=$((COUNT+1))
+    echo "Commit $COUNT"
 
-  # update isi file
-  echo "// update $i at $(date)" >> $FILE
+    FILE=${FILES[$RANDOM % ${#FILES[@]}]}
+    mkdir -p "$(dirname "$FILE")"
 
-  git add .
+    echo "// update $COUNT at $(date)" >> $FILE
 
-  # commit message random
-  MSG=${MESSAGES[$RANDOM % ${#MESSAGES[@]}]}
+    git add .
 
-  git commit -m "$MSG"
+    MSG=${MESSAGES[$RANDOM % ${#MESSAGES[@]}]}
+    git commit -m "$MSG"
 
-  git push origin main
+    git push origin main
 
-  # delay random 1 - 10 menit
-  SLEEP=$(( (RANDOM % 600) + 60 ))
-  echo "sleep $SLEEP sec"
-  sleep $SLEEP
+    # delay antar commit (30 detik – 3 menit)
+    SLEEP=$(( (RANDOM % 150) + 30 ))
+    sleep $SLEEP
+  done
+
+  # BREAK antar session (5 – 20 menit)
+  BREAK=$(( (RANDOM % 900) + 300 ))
+  echo "Break time: $BREAK sec"
+  sleep $BREAK
 
 done
+
+echo "DONE 200 COMMITS"
