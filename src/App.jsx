@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 51,
-      name: "Verify GitHub Account",
-      desc: "Link your GitHub profile to your Diamond Identity for developer perks",
-      reward: 20,
-      icon: "🐙"
+      id: 61,
+      name: "Run API Node",
+      desc: "Deploy a Genesis-specific API node to help other developers query data",
+      reward: 200,
+      icon: "📡"
     },
     {
-      id: 52,
-      name: "Cross-chain Bridge",
-      desc: "Transfer assets from Ethereum to Stacks using the Genesis Portal",
-      reward: 85,
-      icon: "🌉"
+      id: 62,
+      name: "Social Graph Link",
+      desc: "Connect your Lens or Farcaster profile to your Genesis account",
+      reward: 45,
+      icon: "🌿"
     },
     {
-      id: 53,
-      name: "Identify Phishing",
-      desc: "Complete the Genesis security quiz to identify common Web3 scams",
-      reward: 30,
-      icon: "🎣"
+      id: 63,
+      name: "Diamond Refinement",
+      desc: "Staking 1,000+ STX to 'refine' your Diamond Identity status",
+      reward: 180,
+      icon: "💎"
     },
     {
-      id: 54,
-      name: "Create NFT Collection",
-      desc: "Launch a collection of 10+ items on the Genesis Minting Protocol",
-      reward: 120,
-      icon: "🎨"
-    },
-    {
-      id: 55,
-      name: "Stablecoin Minting",
-      desc: "Mint USDA or other stablecoins by over-collateralizing your STX",
-      reward: 70,
-      icon: "💵"
-    },
-    {
-      id: 56,
-      name: "Bug Hunter Bronze",
-      desc: "Submit a UI/UX improvement suggestion on the official GitHub Issues",
-      reward: 40,
-      icon: "🥉"
-    },
-    {
-      id: 57,
-      name: "Early Bird Stacker",
-      desc: "Participate in the very first cycle of a new Stacking pool",
-      reward: 95,
-      icon: "🐦"
-    },
-    {
-      id: 58,
-      name: "Social Media Mentor",
-      desc: "Help 3 new users in the Discord 'Help' channel",
+      id: 64,
+      name: "Governance Delegate",
+      desc: "Accept delegation from another user to vote on their behalf",
       reward: 55,
-      icon: "🙋"
+      icon: "🤝"
     },
     {
-      id: 59,
-      name: "Clarity Optimization",
-      desc: "Refactor an existing contract to reduce execution cost (gas fees)",
-      reward: 140,
-      icon: "⛽"
+      id: 65,
+      name: "Write a Post-Mortem",
+      desc: "Analyze and document a failed transaction or bug for the community",
+      reward: 70,
+      icon: "📝"
     },
     {
-      id: 60,
-      name: "Diamond Guardian",
-      desc: "Set up a hardware wallet (Ledger/Trezor) to secure your Genesis assets",
-      reward: 110,
-      icon: "🛡️"
+      id: 66,
+      name: "Zk-Proof Submission",
+      desc: "Submit a zero-knowledge proof to verify a private credential",
+      reward: 130,
+      icon: "🕵️"
+    },
+    {
+      id: 67,
+      name: "Liquidity Migration",
+      desc: "Successfully migrate your LP tokens to the Genesis V2 pool",
+      reward: 90,
+      icon: "🔄"
+    },
+    {
+      id: 68,
+      name: "Translate UI",
+      desc: "Help translate the Genesis dApp interface into a local language",
+      reward: 65,
+      icon: "🌐"
+    },
+    {
+      id: 69,
+      name: "Refer a Developer",
+      desc: "Invite a developer who successfully deploys a contract on Genesis",
+      reward: 250,
+      icon: "👨‍💻"
+    },
+    {
+      id: 70,
+      name: "Diamond Multiversal",
+      desc: "Sync your Diamond Identity across 3 different Stacks-based dApps",
+      reward: 160,
+      icon: "🌌"
     }
   ]);
 
