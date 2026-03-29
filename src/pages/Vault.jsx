@@ -68,8 +68,7 @@ const Vault = () => {
 
   useEffect(() => {
     fetchNetworkStatus();
-    const interval = setInterval(fetchNetworkStatus, 10000);
-    return () => clearInterval(interval);
+    // INTERVAL DIHAPUS SESUAI PERMINTAAN AGAR TIDAK BERAT
   }, []);
 
   useEffect(() => {
