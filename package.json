@@ -1,13 +1,24 @@
 {
-  "name": "stacks-tool",
-  "version": "1.0.0",
+  "name": "@bayybays/stacks-tool",
+  "version": "1.0.1",
   "type": "module",
+  "description": "Stacks smart contract tools and utilities",
+  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "keywords": [
+    "stacks",
+    "clarity",
+    "stacks-blockchain",
+    "web3",
+    "smart-contract"
+  ],
+  "author": "bayybays",
+  "license": "MIT",
   "dependencies": {
     "@stacks/auth": "^6.13.0",
     "@stacks/common": "^6.13.0",
