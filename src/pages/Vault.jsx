@@ -34,6 +34,7 @@ const Vault = () => {
   
   const network = new StacksMainnet({ url: HIRO_API_URL });
 
+  // Update real-time clock untuk countdown
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
@@ -61,14 +62,17 @@ const Vault = () => {
       return;
     }
     setLoading(true);
+    // Jalankan fetchNetworkStatus dulu untuk dapet base block height
     await fetchNetworkStatus();
+    // Jalankan semua fetching data user secara paralel
     await Promise.all([fetchBalances(), fetchFaucetData(), fetchStakingHistory()]);
     setLoading(false);
   }, [currentBlockHeight]);
 
+  // Initial fetch saat komponen di-mount
   useEffect(() => {
     fetchNetworkStatus();
-    // INTERVAL DIHAPUS SESUAI PERMINTAAN AGAR TIDAK BERAT
+    // Auto-refresh interval blockchain dihapus agar tidak berat (sesuai permintaan)
   }, []);
 
   useEffect(() => {
@@ -120,7 +124,6 @@ const Vault = () => {
       let nextClaimBlock = 0;
       let isPending = false;
 
-      // PARSING TUPLE SANGAT AMAN
       const tupleData = resultCV?.type === 7 ? resultCV.value.data : resultCV?.data;
       
       if (tupleData) {
@@ -131,7 +134,7 @@ const Vault = () => {
       if (isNaN(blocksLeft)) blocksLeft = 0;
       if (isNaN(nextClaimBlock)) nextClaimBlock = 0;
 
-      // CEK MEMPOOL
+      // Cek Mempool untuk status pending claim
       if (blocksLeft === 0) {
         try {
           const mempoolRes = await fetch(`${HIRO_API_URL}/extended/v1/tx/mempool?sender_address=${userAddress}`);
@@ -152,6 +155,7 @@ const Vault = () => {
     } catch (e) { console.error("Failed to fetch faucet data", e); }
   };
 
+  // --- FIXED & OPTIMIZED: Fetch Staking History (Parallel Request) ---
   const fetchStakingHistory = async () => {
     const userData = userSession.loadUserData();
     if (!userData?.profile?.stxAddress) return;
@@ -171,43 +175,54 @@ const Vault = () => {
       }
     } catch (e) { console.warn("Failed to fetch nonce", e); }
 
-    for (let i = 0; i < maxId; i++) {
-      try {
-        const keyCV = tupleCV({ user: standardPrincipalCV(userAddress), id: uintCV(i) });
-        const res = await fetch(`${HIRO_API_URL}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery-v7/stakes`, {
-          method: 'POST',
-          body: JSON.stringify(cvToHex(keyCV)),
-          headers: { 'Content-Type': 'application/json' }
-        });
+    if (maxId === 0) {
+      setActiveStakes([]);
+      setTotalStaked(0);
+      return;
+    }
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.data && data.data !== "0x09") { // 0x09 = OptionalNone
-            const valCV = hexToCV(data.data);
+    // Buat batch request secara paralel
+    const fetchPromises = [];
+    for (let i = 0; i < maxId; i++) {
+      const keyCV = tupleCV({ user: standardPrincipalCV(userAddress), id: uintCV(i) });
+      const request = fetch(`${HIRO_API_URL}/v2/map_entry/${CONTRACT_ADDRESS}/staking-refinery-v7/stakes`, {
+        method: 'POST',
+        body: JSON.stringify(cvToHex(keyCV)),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => ({ id: i, data: data?.data }))
+      .catch(() => null);
+
+      fetchPromises.push(request);
+    }
+
+    const results = await Promise.all(fetchPromises);
+
+    results.forEach(result => {
+      if (result && result.data && result.data !== "0x09") {
+        const valCV = hexToCV(result.data);
+        if (valCV.type === 9) { // Some
+          const tupleData = valCV.value.data;
+          const claimed = tupleData.claimed.type === 3;
+          if (!claimed) {
+            const amountVal = Number(tupleData.amount.value);
+            const startBlock = Number(tupleData.start.value);
+            const endBlock = Number(tupleData.end.value);
             
-            if (valCV.type === 9) { // 9 = OptionalSome
-              const tupleData = valCV.value.data;
-              const claimed = tupleData.claimed.type === 3; // 3 = True
-              
-              if (!claimed) {
-                const amountVal = Number(tupleData.amount.value);
-                const startBlock = Number(tupleData.start.value);
-                const endBlock = Number(tupleData.end.value);
-                
-                fetchedStakes.push({ 
-                  id: i, 
-                  amount: amountVal / 1000000, 
-                  startBlock: startBlock, 
-                  endBlock: endBlock, 
-                  claimed: false 
-                });
-                accumulatedTotal += (amountVal / 1000000);
-              }
-            }
+            fetchedStakes.push({ 
+              id: result.id, 
+              amount: amountVal / 1000000, 
+              startBlock, 
+              endBlock, 
+              claimed: false 
+            });
+            accumulatedTotal += (amountVal / 1000000);
           }
         }
-      } catch (error) { console.error(`Error stake ${i}`, error); }
-    }
+      }
+    });
+
     setActiveStakes(fetchedStakes);
     setTotalStaked(accumulatedTotal);
   };
@@ -337,7 +352,6 @@ const Vault = () => {
               </p>
             </div>
             
-            {/* INI BAGIAN YANG DIUBAH: Pake window.location.reload() */}
             <button 
               onClick={() => window.location.reload()} 
               disabled={actionLoading} 
