@@ -8,3 +8,5 @@
   (ok true))
 (define-read-only (get-value-4)
   (ok u4))
+(define-read-only (get-value-32)
+  (ok u32))
