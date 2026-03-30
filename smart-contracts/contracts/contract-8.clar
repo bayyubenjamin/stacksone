@@ -2,3 +2,5 @@
   (ok u119))
 (define-read-only (get-value-144)
   (ok u144))
+(define-public (hello-148)
+  (ok true))
