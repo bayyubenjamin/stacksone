@@ -4,3 +4,5 @@
   (ok true))
 (define-read-only (get-value-37)
   (ok u37))
+(define-read-only (get-value-44)
+  (ok u44))
