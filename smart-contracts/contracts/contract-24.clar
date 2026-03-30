@@ -6,3 +6,5 @@
   (ok u41))
 (define-public (hello-156)
   (ok true))
+(define-read-only (get-value-4)
+  (ok u4))
