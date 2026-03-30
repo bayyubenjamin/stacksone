@@ -1,2 +1,4 @@
 (define-public (hello-84)
   (ok true))
+(define-public (hello-21)
+  (ok true))
