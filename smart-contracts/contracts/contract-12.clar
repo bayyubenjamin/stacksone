@@ -4,3 +4,5 @@
   (ok true))
 (define-public (hello-9)
   (ok true))
+(define-public (hello-27)
+  (ok true))
