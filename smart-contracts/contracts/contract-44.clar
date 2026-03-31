@@ -6,3 +6,6 @@
   (ok u154))
 (define-read-only (get-value-22)
   (ok u22))
+
+(define-public (ping-80)
+  (ok true))
