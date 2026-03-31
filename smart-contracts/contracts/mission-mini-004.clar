@@ -10,3 +10,6 @@
 (define-read-only (get-counter)
   (ok (var-get counter))
 )
+
+(define-public (ping-82)
+  (ok true))
