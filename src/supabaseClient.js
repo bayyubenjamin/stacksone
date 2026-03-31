@@ -10,3 +10,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // --- STACKS SESSION CONFIG (Baru Ditambahkan) ---
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 export const userSession = new UserSession({ appConfig });
+// update 17 at Sel 31 Mar 2026 16:29:32 WIB
