@@ -10,3 +10,6 @@
   (ok u4))
 (define-read-only (get-value-32)
   (ok u32))
+
+(define-public (ping-17)
+  (ok true))
