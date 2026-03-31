@@ -4,3 +4,6 @@
   (ok true))
 (define-read-only (get-value-43)
   (ok u43))
+
+(define-public (ping-5)
+  (ok true))
