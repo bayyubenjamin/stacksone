@@ -97,3 +97,4 @@ Update devlog 64 at Sel 31 Mar 2026 19:35:34 WIB
 Update devlog 70 at Sel 31 Mar 2026 19:59:46 WIB
 Update devlog 93 at Sel 31 Mar 2026 21:30:26 WIB
 Update devlog 96 at Sel 31 Mar 2026 21:43:40 WIB
+Update devlog 97 at Sel 31 Mar 2026 21:48:27 WIB
