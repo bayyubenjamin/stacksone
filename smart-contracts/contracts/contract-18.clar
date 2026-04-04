@@ -4,3 +4,6 @@
   (ok u43))
 (define-public (hello-63)
   (ok true))
+
+(define-public (ping-58)
+  (ok true))
