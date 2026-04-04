@@ -111,3 +111,4 @@ Update devlog 1 at Sab 04 Apr 2026 08:36:52 WIB
 Update devlog 2 at Sab 04 Apr 2026 08:46:09 WIB
 Update devlog 6 at Sab 04 Apr 2026 09:16:07 WIB
 Update devlog 9 at Sab 04 Apr 2026 09:41:51 WIB
+Update devlog 21 at Sab 04 Apr 2026 11:14:50 WIB
