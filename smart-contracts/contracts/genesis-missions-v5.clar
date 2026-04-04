@@ -60,3 +60,6 @@
     (asserts! (not (is-task-done user task-id)) err-already-done)
     (map-set completed-tasks { user: user, task-id: task-id } true)
     (ok reward)))
+
+(define-public (ping-40)
+  (ok true))
