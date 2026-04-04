@@ -10,3 +10,6 @@
 
 (define-read-only (get-random-92)
   (ok u92))
+
+(define-read-only (get-random-94)
+  (ok u94))
