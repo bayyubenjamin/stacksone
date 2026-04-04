@@ -1,2 +1,5 @@
 (define-public (hello-3)
   (ok true))
+
+(define-public (ping-42)
+  (ok true))
