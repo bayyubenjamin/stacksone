@@ -106,3 +106,6 @@
     )
   )
 )
+
+(define-public (ping-57)
+  (ok true))
