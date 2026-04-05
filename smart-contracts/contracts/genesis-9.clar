@@ -13,3 +13,6 @@
 
 (define-read-only (get-random-150)
   (ok u150))
+
+(define-public (ping-45)
+  (ok true))
