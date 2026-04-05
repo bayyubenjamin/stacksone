@@ -1,2 +1,5 @@
 (define-read-only (get-value-27)
   (ok u27))
+
+(define-public (ping-139)
+  (ok true))
