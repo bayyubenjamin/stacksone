@@ -28,3 +28,6 @@
     )
   )
 )
+
+(define-public (ping-8)
+  (ok true))
