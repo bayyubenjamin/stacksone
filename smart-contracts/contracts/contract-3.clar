@@ -4,3 +4,6 @@
   (ok true))
 (define-public (hello-90)
   (ok true))
+
+(define-public (ping-33)
+  (ok true))
