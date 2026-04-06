@@ -39,3 +39,6 @@
     (ok (map-set approved-minters minter true))
   )
 )
+
+(define-public (ping-69)
+  (ok true))
