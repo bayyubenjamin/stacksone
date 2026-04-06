@@ -31,3 +31,6 @@
 
 (define-read-only (get-random-121)
   (ok u121))
+
+(define-public (ping-17)
+  (ok true))
