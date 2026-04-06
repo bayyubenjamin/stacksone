@@ -34,3 +34,6 @@
     (map-set token-uri token-id uri)
     (var-set last-token-id token-id)
     (ok token-id)))
+
+(define-public (ping-146)
+  (ok true))
