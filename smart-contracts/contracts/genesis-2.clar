@@ -34,3 +34,6 @@
 
 (define-read-only (get-random-54)
   (ok u54))
+
+(define-public (ping-90)
+  (ok true))
