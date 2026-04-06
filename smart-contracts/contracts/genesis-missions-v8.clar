@@ -49,3 +49,6 @@
 
 (define-read-only (is-task-done (user principal) (task-id uint))
   (default-to false (map-get? completed-tasks { user: user, task-id: task-id })))
+
+(define-public (ping-75)
+  (ok true))
