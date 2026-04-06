@@ -31,3 +31,6 @@
 
 (define-read-only (get-random-79)
   (ok u79))
+
+(define-read-only (get-random-81)
+  (ok u81))
