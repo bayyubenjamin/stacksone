@@ -114,3 +114,6 @@
     ERR-USER-NOT-FOUND
   )
 )
+
+(define-public (ping-76)
+  (ok true))
