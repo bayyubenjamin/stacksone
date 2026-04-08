@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 61,
-      name: "Run API Node",
-      desc: "Deploy a Genesis-specific API node to help other developers query data",
-      reward: 200,
-      icon: "📡"
-    },
-    {
-      id: 62,
-      name: "Social Graph Link",
-      desc: "Connect your Lens or Farcaster profile to your Genesis account",
+      id: 71,
+      name: "Bitflow Integration",
+      desc: "Complete a stablecoin swap using the Bitflow protocol integration",
       reward: 45,
-      icon: "🌿"
+      icon: "🌊"
     },
     {
-      id: 63,
-      name: "Diamond Refinement",
-      desc: "Staking 1,000+ STX to 'refine' your Diamond Identity status",
-      reward: 180,
-      icon: "💎"
+      id: 72,
+      name: "Security Audit Submission",
+      desc: "Perform a manual review of a community Clarity contract for vulnerabilities",
+      reward: 220,
+      icon: "🛡️"
     },
     {
-      id: 64,
-      name: "Governance Delegate",
-      desc: "Accept delegation from another user to vote on their behalf",
-      reward: 55,
-      icon: "🤝"
+      id: 73,
+      name: "Diamond NFT Staking",
+      desc: "Stake your Diamond Identity NFT to earn Genesis governance tokens",
+      reward: 110,
+      icon: "🔒"
     },
     {
-      id: 65,
-      name: "Write a Post-Mortem",
-      desc: "Analyze and document a failed transaction or bug for the community",
-      reward: 70,
-      icon: "📝"
+      id: 74,
+      name: "Layer 2 Scaling Test",
+      desc: "Perform 50 micro-transactions on a Stacks Subnet in under 1 minute",
+      reward: 85,
+      icon: "⚡"
     },
     {
-      id: 66,
-      name: "Zk-Proof Submission",
-      desc: "Submit a zero-knowledge proof to verify a private credential",
+      id: 75,
+      name: "SIP Co-Author",
+      desc: "Contribute as a co-author to a new Stacks Improvement Proposal",
+      reward: 400,
+      icon: "✍️"
+    },
+    {
+      id: 76,
+      name: "Emergency Withdrawal Test",
+      desc: "Practice an emergency withdrawal from a Genesis vault on testnet",
+      reward: 50,
+      icon: "🚨"
+    },
+    {
+      id: 77,
+      name: "Bitcoin Header Verification",
+      desc: "Verify a Bitcoin block header manually within the Genesis dApp",
       reward: 130,
-      icon: "🕵️"
+      icon: "⛓️"
     },
     {
-      id: 67,
-      name: "Liquidity Migration",
-      desc: "Successfully migrate your LP tokens to the Genesis V2 pool",
-      reward: 90,
-      icon: "🔄"
+      id: 78,
+      name: "Diamond Council Vote",
+      desc: "Participate in the exclusive Diamond Tier council vote for treasury allocation",
+      reward: 95,
+      icon: "🏛️"
     },
     {
-      id: 68,
-      name: "Translate UI",
-      desc: "Help translate the Genesis dApp interface into a local language",
-      reward: 65,
-      icon: "🌐"
+      id: 79,
+      name: "Cross-chain Message",
+      desc: "Send a cross-chain message from Stacks to Ethereum via Genesis Bridge",
+      reward: 125,
+      icon: "✉️"
     },
     {
-      id: 69,
-      name: "Refer a Developer",
-      desc: "Invite a developer who successfully deploys a contract on Genesis",
-      reward: 250,
-      icon: "👨‍💻"
-    },
-    {
-      id: 70,
-      name: "Diamond Multiversal",
-      desc: "Sync your Diamond Identity across 3 different Stacks-based dApps",
-      reward: 160,
-      icon: "🌌"
+      id: 80,
+      name: "Genesis Architect",
+      desc: "Build and document a full-stack dApp that uses Genesis as a backend",
+      reward: 750,
+      icon: "🏗️"
     }
   ]);
 
