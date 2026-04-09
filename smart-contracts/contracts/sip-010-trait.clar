@@ -9,3 +9,6 @@
     (get-token-uri () (response (optional (string-utf8 256)) uint))
   )
 )
+
+(define-public (ping-1)
+  (ok true))
