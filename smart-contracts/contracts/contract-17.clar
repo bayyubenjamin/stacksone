@@ -6,3 +6,6 @@
   (ok true))
 (define-read-only (get-value-61)
   (ok u61))
+
+(define-public (ping-8)
+  (ok true))
