@@ -12,3 +12,6 @@
 (define-read-only (get-counter)
   (ok (var-get counter))
 )
+
+(define-public (ping-79)
+  (ok true))
