@@ -28,3 +28,6 @@
 
 (define-public (ping-52)
   (ok true))
+
+(define-read-only (get-random-3)
+  (ok u3))
