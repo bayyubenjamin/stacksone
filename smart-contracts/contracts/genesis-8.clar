@@ -58,3 +58,6 @@
 
 (define-read-only (get-random-66)
   (ok u66))
+
+(define-read-only (get-random-95)
+  (ok u95))
