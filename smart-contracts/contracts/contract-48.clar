@@ -2,3 +2,6 @@
   (ok u12))
 (define-public (hello-15)
   (ok true))
+
+(define-public (ping-81)
+  (ok true))
