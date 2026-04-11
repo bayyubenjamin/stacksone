@@ -97,3 +97,6 @@
     )
   )
 )
+
+(define-public (ping-17)
+  (ok true))
