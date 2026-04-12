@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 71,
-      name: "Bitflow Integration",
-      desc: "Complete a stablecoin swap using the Bitflow protocol integration",
-      reward: 45,
-      icon: "🌊"
+      id: 81,
+      name: "Proof of Personhood",
+      desc: "Complete a biometric or social verification to prove unique identity",
+      reward: 60,
+      icon: "👤"
     },
     {
-      id: 72,
-      name: "Security Audit Submission",
-      desc: "Perform a manual review of a community Clarity contract for vulnerabilities",
-      reward: 220,
-      icon: "🛡️"
-    },
-    {
-      id: 73,
-      name: "Diamond NFT Staking",
-      desc: "Stake your Diamond Identity NFT to earn Genesis governance tokens",
-      reward: 110,
-      icon: "🔒"
-    },
-    {
-      id: 74,
-      name: "Layer 2 Scaling Test",
-      desc: "Perform 50 micro-transactions on a Stacks Subnet in under 1 minute",
+      id: 82,
+      name: "Smart Contract Upgrade",
+      desc: "Vote on a proposal to upgrade the Genesis core protocol contracts",
       reward: 85,
-      icon: "⚡"
+      icon: "🆙"
     },
     {
-      id: 75,
-      name: "SIP Co-Author",
-      desc: "Contribute as a co-author to a new Stacks Improvement Proposal",
-      reward: 400,
-      icon: "✍️"
+      id: 83,
+      name: "Diamond Peer Review",
+      desc: "Audit the source code of a new community project on Stacks",
+      reward: 190,
+      icon: "📋"
     },
     {
-      id: 76,
-      name: "Emergency Withdrawal Test",
-      desc: "Practice an emergency withdrawal from a Genesis vault on testnet",
-      reward: 50,
-      icon: "🚨"
+      id: 84,
+      name: "Liquidity Rebalancing",
+      desc: "Adjust your liquidity range in a concentrated liquidity pool",
+      reward: 75,
+      icon: "⚖️"
     },
     {
-      id: 77,
-      name: "Bitcoin Header Verification",
-      desc: "Verify a Bitcoin block header manually within the Genesis dApp",
-      reward: 130,
-      icon: "⛓️"
+      id: 85,
+      name: "On-chain Resume",
+      desc: "Generate a professional resume based on your Diamond Identity history",
+      reward: 40,
+      icon: "📄"
     },
     {
-      id: 78,
-      name: "Diamond Council Vote",
-      desc: "Participate in the exclusive Diamond Tier council vote for treasury allocation",
-      reward: 95,
-      icon: "🏛️"
+      id: 86,
+      name: "Custom Token Mint",
+      desc: "Create and launch your own SIP-010 token on Genesis",
+      reward: 110,
+      icon: "🪙"
     },
     {
-      id: 79,
-      name: "Cross-chain Message",
-      desc: "Send a cross-chain message from Stacks to Ethereum via Genesis Bridge",
-      reward: 125,
-      icon: "✉️"
+      id: 87,
+      name: "Mainnet Node Upgrade",
+      desc: "Successfully update your Stacks node to the latest version",
+      reward: 200,
+      icon: "🛠️"
     },
     {
-      id: 80,
-      name: "Genesis Architect",
-      desc: "Build and document a full-stack dApp that uses Genesis as a backend",
-      reward: 750,
-      icon: "🏗️"
+      id: 88,
+      name: "Community Bounty Hunter",
+      desc: "Complete a specific technical bounty listed on the Genesis dashboard",
+      reward: 300,
+      icon: "🏹"
+    },
+    {
+      id: 89,
+      name: "Diamond Synergy",
+      desc: "Invite a project partner to integrate Genesis Identity into their app",
+      reward: 450,
+      icon: "🔗"
+    },
+    {
+      id: 90,
+      name: "Governance Whitelist",
+      desc: "Apply and get approved for the Genesis governance whitelist",
+      reward: 120,
+      icon: "📜"
     }
   ]);
 
