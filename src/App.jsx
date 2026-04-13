@@ -21,6 +21,7 @@ import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 import Vault from './pages/Vault';
+import Gaming from './pages/Gaming';
 
 const CONTRACT_ADDRESS = 'SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3';
 const CONTRACT_NAME = 'genesis-core-v10';
@@ -39,7 +40,7 @@ function App() {
   const [userLevel, setUserLevel] = useState(1);
 
   const [tasks] = useState([
-{
+    {
       id: 91,
       name: "Bitcoin Finality Check",
       desc: "Verify a transaction's settlement status on the Bitcoin blockchain",
@@ -343,6 +344,10 @@ function App() {
         <Route path="/vault" element={<Vault userData={userData} />} />
         
         <Route path="/profile" element={<Profile userData={userData} />} />
+
+        {/* --- TAMBAHAN ROUTE GAMING DI SINI --- */}
+        <Route path="/gaming" element={<Gaming userData={userData} />} />
+
       </Routes>
     </Layout>
   );
