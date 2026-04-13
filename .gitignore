@@ -32,3 +32,4 @@ settings/Devnet.toml
 .env
 human-activity.sh
 bot.sh
+keys.txt
