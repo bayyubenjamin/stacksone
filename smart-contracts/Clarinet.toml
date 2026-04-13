@@ -5,24 +5,7 @@ authors = []
 telemetry = true
 cache_dir = "./.cache"
 
-[contracts.token-poin-v7]
-path = 'contracts/token-poin-v7.clar'
+[contracts.chaintap]
+path = 'contracts/chaintap.clar'
 clarity_version = 2
 epoch = 2.5
-
-[contracts.token-one-v7]
-path = 'contracts/token-one-v7.clar'
-clarity_version = 2
-epoch = 2.5
-
-[contracts.faucet-distributor-v7]
-path = 'contracts/faucet-distributor-v7.clar'
-clarity_version = 2
-epoch = 2.5
-depends_on = ["token-poin-v7"]
-
-[contracts.staking-refinery-v7]
-path = 'contracts/staking-refinery-v7.clar'
-clarity_version = 2
-epoch = 2.5
-depends_on = ["token-poin-v7", "token-one-v7"]
