@@ -40,74 +40,74 @@ function App() {
 
   const [tasks] = useState([
 {
-      id: 81,
-      name: "Proof of Personhood",
-      desc: "Complete a biometric or social verification to prove unique identity",
-      reward: 60,
-      icon: "👤"
+      id: 91,
+      name: "Bitcoin Finality Check",
+      desc: "Verify a transaction's settlement status on the Bitcoin blockchain",
+      reward: 55,
+      icon: "🏁"
     },
     {
-      id: 82,
-      name: "Smart Contract Upgrade",
-      desc: "Vote on a proposal to upgrade the Genesis core protocol contracts",
-      reward: 85,
-      icon: "🆙"
+      id: 92,
+      name: "Identity Oracle Setup",
+      desc: "Set up a decentralized oracle to feed off-chain data to your identity",
+      reward: 180,
+      icon: "🔮"
     },
     {
-      id: 83,
-      name: "Diamond Peer Review",
-      desc: "Audit the source code of a new community project on Stacks",
-      reward: 190,
-      icon: "📋"
+      id: 93,
+      name: "Diamond Vault Creation",
+      desc: "Create a time-locked vault for your most valuable digital assets",
+      reward: 140,
+      icon: "🔒"
     },
     {
-      id: 84,
-      name: "Liquidity Rebalancing",
-      desc: "Adjust your liquidity range in a concentrated liquidity pool",
-      reward: 75,
-      icon: "⚖️"
-    },
-    {
-      id: 85,
-      name: "On-chain Resume",
-      desc: "Generate a professional resume based on your Diamond Identity history",
-      reward: 40,
-      icon: "📄"
-    },
-    {
-      id: 86,
-      name: "Custom Token Mint",
-      desc: "Create and launch your own SIP-010 token on Genesis",
-      reward: 110,
-      icon: "🪙"
-    },
-    {
-      id: 87,
-      name: "Mainnet Node Upgrade",
-      desc: "Successfully update your Stacks node to the latest version",
-      reward: 200,
+      id: 94,
+      name: "Clarity SDK Contribution",
+      desc: "Submit a pull request to improve the Stacks/Clarity developer tools",
+      reward: 350,
       icon: "🛠️"
     },
     {
-      id: 88,
-      name: "Community Bounty Hunter",
-      desc: "Complete a specific technical bounty listed on the Genesis dashboard",
-      reward: 300,
-      icon: "🏹"
+      id: 95,
+      name: "Cross-chain Arbitrage",
+      desc: "Execute a successful trade between Stacks and another L2 chain",
+      reward: 200,
+      icon: "📈"
     },
     {
-      id: 89,
-      name: "Diamond Synergy",
-      desc: "Invite a project partner to integrate Genesis Identity into their app",
-      reward: 450,
-      icon: "🔗"
+      id: 96,
+      name: "Genesis Ambassador",
+      desc: "Represent Genesis in an official Web3 conference or hackathon",
+      reward: 500,
+      icon: "👔"
     },
     {
-      id: 90,
-      name: "Governance Whitelist",
-      desc: "Apply and get approved for the Genesis governance whitelist",
-      reward: 120,
-      icon: "📜"
+      id: 97,
+      name: "Metadata Optimization",
+      desc: "Optimize your NFT metadata for faster loading on decentralized storage",
+      reward: 65,
+      icon: "📦"
+    },
+    {
+      id: 98,
+      name: "Diamond Governance Lead",
+      desc: "Moderate a governance discussion and summarize the community consensus",
+      reward: 150,
+      icon: "🗣️"
+    },
+    {
+      id: 99,
+      name: "Project Whitepaper V2",
+      desc: "Co-write the updated technical roadmap for AFA-Identity-Diamond",
+      reward: 400,
+      icon: "🗺️"
+    },
+    {
+      id: 100,
+      name: "The Genesis Ultimate",
+      desc: "Achieve all 99 previous milestones to become a Genesis Legend",
+      reward: 5000,
+      icon: "🌌"
     }
   ]);
 
