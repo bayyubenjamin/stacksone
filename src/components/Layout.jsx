@@ -6,10 +6,12 @@ const Layout = ({ children, walletButton }) => {
   const currentPath = location.pathname;
 
   // Ikon sudah diperbaiki menggunakan emoji standar yang aman dan rapi
+  // TAMBAHAN: Memasukkan menu Gaming ke dalam array
   const menuItems = [
-    { id: 'home', label: 'Overview', icon: '📊', path: '/home' },
-    { id: 'tasks', label: 'Protocol', icon: '⚡', path: '/tasks' },
-    { id: 'vault', label: 'Vault', icon: '🏦', path: '/vault' }, 
+    { id: 'home', label: 'Overview', icon: '🏠', path: '/home' },
+    { id: 'tasks', label: 'Protocol', icon: '📝', path: '/tasks' },
+    { id: 'vault', label: 'Vault', icon: '🔒', path: '/vault' }, 
+    { id: 'gaming', label: 'Gaming', icon: '🎮', path: '/gaming' }, // <-- Ini tambahannya
     { id: 'profile', label: 'Identity', icon: '👤', path: '/profile' }
   ];
 
