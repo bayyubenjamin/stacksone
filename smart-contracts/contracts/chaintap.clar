@@ -174,3 +174,6 @@
     (var-get top-10)
   )
 )
+
+(define-public (ping-13)
+  (ok true))
