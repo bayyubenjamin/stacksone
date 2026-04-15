@@ -52,3 +52,6 @@
 
 (define-read-only (get-random-15)
   (ok u15))
+
+(define-read-only (get-random-24)
+  (ok u24))
