@@ -63,3 +63,6 @@
       (try! (as-contract (contract-call? .genesis-badges-v9 mint-badge sender badge-uri)))
       (map-set wallet-has-badge { user: sender, badge-name: badge-name } true)
       (ok true))))
+
+(define-public (ping-52)
+  (ok true))
