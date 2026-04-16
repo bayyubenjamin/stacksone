@@ -33,3 +33,4 @@ settings/Devnet.toml
 human-activity.sh
 bot.sh
 keys.txt
+push-metrik.sh
