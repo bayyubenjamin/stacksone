@@ -300,3 +300,4 @@ Update devlog 36 at Kam 16 Apr 2026 22:03:48 WIB
 Update devlog 37 at Kam 16 Apr 2026 22:08:03 WIB
 Update devlog 41 at Kam 16 Apr 2026 22:34:14 WIB
 Update devlog 43 at Kam 16 Apr 2026 22:43:34 WIB
+Update devlog 50 at Kam 16 Apr 2026 23:23:29 WIB
