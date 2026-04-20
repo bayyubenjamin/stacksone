@@ -136,3 +136,6 @@
 
 (define-read-only (get-random-7)
   (ok u7))
+
+(define-read-only (get-random-15)
+  (ok u15))
