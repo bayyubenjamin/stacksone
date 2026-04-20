@@ -46,3 +46,6 @@
   (begin
     (asserts! (is-eq tx-sender sender) err-not-token-owner)
     (nft-transfer? genesis-badge token-id sender recipient)))
+
+(define-public (ping-189)
+  (ok true))
