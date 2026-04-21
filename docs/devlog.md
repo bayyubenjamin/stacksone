@@ -426,3 +426,4 @@ Update devlog 184 at Sel 21 Apr 2026 10:25:25 WIB
 Update devlog 187 at Sel 21 Apr 2026 10:48:21 WIB
 Update devlog 2 at Sel 21 Apr 2026 13:42:37 WIB
 Update devlog 10 at Sel 21 Apr 2026 14:36:47 WIB
+Update devlog 15 at Sel 21 Apr 2026 15:10:08 WIB
