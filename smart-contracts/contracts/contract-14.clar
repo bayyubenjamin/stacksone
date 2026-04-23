@@ -6,3 +6,6 @@
 
 (define-public (ping-153)
   (ok true))
+
+(define-public (ping-95)
+  (ok true))
