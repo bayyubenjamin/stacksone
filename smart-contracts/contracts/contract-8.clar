@@ -4,3 +4,6 @@
   (ok u144))
 (define-public (hello-148)
   (ok true))
+
+(define-public (ping-10)
+  (ok true))
