@@ -4,3 +4,6 @@
   (ok u102))
 (define-read-only (get-value-135)
   (ok u135))
+
+(define-public (ping-28)
+  (ok true))
