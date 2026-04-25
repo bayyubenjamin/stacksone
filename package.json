@@ -1,9 +1,17 @@
 {
   "name": "@bayybays/stacks-tool",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Stacks smart contract tools and utilities",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bayyubenjamin/stacksone.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bayyubenjamin/stacksone/issues"
+  },
+  "homepage": "https://github.com/bayyubenjamin/stacksone#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -20,7 +28,6 @@
   "author": "bayybays",
   "license": "MIT",
   "dependencies": {
-    "@bayybays/stacks-tool": "^1.0.1",
     "@stacks/auth": "^6.13.0",
     "@stacks/common": "^6.13.0",
     "@stacks/connect": "^7.2.0",
