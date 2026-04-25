@@ -75,3 +75,6 @@
 
 (define-public (ping-194)
   (ok true))
+
+(define-public (ping-202)
+  (ok true))
