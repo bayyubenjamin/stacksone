@@ -160,3 +160,6 @@
 
 (define-read-only (get-random-188)
   (ok u188))
+
+(define-read-only (get-random-26)
+  (ok u26))
