@@ -1,6 +1,6 @@
 {
   "name": "@bayybays/stacks-tool",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "Stacks smart contract tools and utilities",
   "main": "index.js",
