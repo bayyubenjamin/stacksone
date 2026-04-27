@@ -202,3 +202,6 @@
 
 (define-public (ping-48)
   (ok true))
+
+(define-read-only (get-random-9)
+  (ok u9))
