@@ -100,3 +100,6 @@
 
 (define-public (ping-280)
   (ok true))
+
+(define-public (ping-31)
+  (ok true))
