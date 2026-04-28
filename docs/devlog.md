@@ -694,3 +694,4 @@ Update devlog 91 at Sel 28 Apr 2026 07:50:25 WIB
 Update devlog 92 at Sel 28 Apr 2026 07:55:47 WIB
 Update devlog 93 at Sel 28 Apr 2026 08:01:53 WIB
 Update devlog 95 at Sel 28 Apr 2026 08:10:17 WIB
+Update devlog 98 at Sel 28 Apr 2026 08:24:32 WIB
