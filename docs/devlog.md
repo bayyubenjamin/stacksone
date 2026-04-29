@@ -749,3 +749,4 @@ Update devlog 46 at Rab 29 Apr 2026 17:05:09 WIB
 Update devlog 63 at Rab 29 Apr 2026 18:33:40 WIB
 Update devlog 66 at Rab 29 Apr 2026 18:46:47 WIB
 Update devlog 71 at Rab 29 Apr 2026 19:14:21 WIB
+Update devlog 75 at Rab 29 Apr 2026 19:36:07 WIB
