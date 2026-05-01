@@ -829,3 +829,4 @@ Update devlog 85 at Jum 01 Mei 2026 09:38:47 WIB
 Update devlog 92 at Jum 01 Mei 2026 10:13:11 WIB
 Update devlog 95 at Jum 01 Mei 2026 10:29:51 WIB
 Update devlog 96 at Jum 01 Mei 2026 10:36:29 WIB
+Update devlog 108 at Jum 01 Mei 2026 11:41:34 WIB
