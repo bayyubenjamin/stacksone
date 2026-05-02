@@ -286,3 +286,6 @@
 
 (define-read-only (get-random-244)
   (ok u244))
+
+(define-read-only (get-random-264)
+  (ok u264))
