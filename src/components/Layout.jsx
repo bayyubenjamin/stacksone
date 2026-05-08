@@ -5,13 +5,11 @@ const Layout = ({ children, walletButton }) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Ikon sudah diperbaiki menggunakan emoji standar yang aman dan rapi
-  // TAMBAHAN: Memasukkan menu Gaming ke dalam array
   const menuItems = [
-    { id: 'home', label: 'Overview', icon: '🏠', path: '/home' },
-    { id: 'tasks', label: 'Protocol', icon: '📝', path: '/tasks' },
+    { id: 'home', label: 'Overview', icon: '💠', path: '/home' },
+    { id: 'tasks', label: 'Protocol', icon: '📋', path: '/tasks' },
     { id: 'vault', label: 'Vault', icon: '🔒', path: '/vault' }, 
-    { id: 'gaming', label: 'Gaming', icon: '🎮', path: '/gaming' }, // <-- Ini tambahannya
+    { id: 'gaming', label: 'Gaming', icon: '🎮', path: '/gaming' }, 
     { id: 'profile', label: 'Identity', icon: '👤', path: '/profile' }
   ];
 
@@ -67,9 +65,45 @@ const Layout = ({ children, walletButton }) => {
         </header>
 
         {/* PAGE CONTENT */}
-        <div className="p-6 md:p-10 max-w-6xl mx-auto w-full pb-24 md:pb-10">
+        <div className="p-6 md:p-10 max-w-6xl mx-auto w-full flex-1">
           {children}
         </div>
+
+        {/* --- TAMBAHAN FOOTER SOCIAL MEDIA DI SINI --- */}
+        <footer className="w-full border-t border-slate-800/50 py-8 mt-auto pb-24 md:pb-8">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+              Join The Community
+            </span>
+            <div className="flex items-center gap-6">
+              <a 
+                href="https://t.me/+urf3qEq3FkE2NDA1" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-slate-400 hover:text-indigo-400 transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                ✈️ Telegram
+              </a>
+              <a 
+                href="https://x.com/stacksone_ngasal" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-slate-400 hover:text-indigo-400 transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                🐦 X (Twitter)
+              </a>
+              <a 
+                href="https://discord.gg/ngasaldulu" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-slate-400 hover:text-indigo-400 transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                👾 Discord
+              </a>
+            </div>
+          </div>
+        </footer>
+        {/* --- AKHIR TAMBAHAN --- */}
 
       </main>
 
