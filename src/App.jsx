@@ -40,75 +40,75 @@ function App() {
   const [userLevel, setUserLevel] = useState(1);
 
   const [tasks] = useState([
-    {
-      id: 91,
-      name: "Bitcoin Finality Check",
-      desc: "Verify a transaction's settlement status on the Bitcoin blockchain",
-      reward: 55,
-      icon: "🏁"
+{
+      id: 101,
+      name: "Security Audit Sentinel",
+      desc: "Perform a comprehensive vulnerability scan on the smart contracts",
+      reward: 300,
+      icon: "🛡️"
     },
     {
-      id: 92,
-      name: "Identity Oracle Setup",
-      desc: "Set up a decentralized oracle to feed off-chain data to your identity",
-      reward: 180,
-      icon: "🔮"
+      id: 102,
+      name: "SIP Implementation",
+      desc: "Implement a new Stacks Improvement Proposal (SIP) standard in your app",
+      reward: 450,
+      icon: "📜"
     },
     {
-      id: 93,
-      name: "Diamond Vault Creation",
-      desc: "Create a time-locked vault for your most valuable digital assets",
-      reward: 140,
-      icon: "🔒"
+      id: 103,
+      name: "Gasless Transaction Setup",
+      desc: "Enable meta-transactions to allow users to interact without STX gas fees",
+      reward: 220,
+      icon: "⛽"
     },
     {
-      id: 94,
-      name: "Clarity SDK Contribution",
-      desc: "Submit a pull request to improve the Stacks/Clarity developer tools",
-      reward: 350,
-      icon: "🛠️"
+      id: 104,
+      name: "DeFi Liquidity Provider",
+      desc: "Provide liquidity to a Stacks-based DEX using your Diamond assets",
+      reward: 190,
+      icon: "💧"
     },
     {
-      id: 95,
-      name: "Cross-chain Arbitrage",
-      desc: "Execute a successful trade between Stacks and another L2 chain",
-      reward: 200,
-      icon: "📈"
+      id: 105,
+      name: "Identity Recovery Protocol",
+      desc: "Set up a social recovery mechanism for your decentralized identity",
+      reward: 280,
+      icon: "🔑"
     },
     {
-      id: 96,
-      name: "Genesis Ambassador",
-      desc: "Represent Genesis in an official Web3 conference or hackathon",
-      reward: 500,
-      icon: "👔"
+      id: 106,
+      name: "Multi-sig Governance",
+      desc: "Deploy a multi-signature wallet for shared project treasury management",
+      reward: 320,
+      icon: "👥"
     },
     {
-      id: 97,
-      name: "Metadata Optimization",
-      desc: "Optimize your NFT metadata for faster loading on decentralized storage",
-      reward: 65,
-      icon: "📦"
+      id: 107,
+      name: "Zero-Knowledge Proofs",
+      desc: "Integrate ZK-proofs for private identity verification on-chain",
+      reward: 550,
+      icon: "🕵️"
     },
     {
-      id: 98,
-      name: "Diamond Governance Lead",
-      desc: "Moderate a governance discussion and summarize the community consensus",
-      reward: 150,
-      icon: "🗣️"
+      id: 108,
+      name: "Community Workshop Lead",
+      desc: "Host a technical workshop for new developers joining the Genesis ecosystem",
+      reward: 250,
+      icon: "🎓"
     },
     {
-      id: 99,
-      name: "Project Whitepaper V2",
-      desc: "Co-write the updated technical roadmap for AFA-Identity-Diamond",
-      reward: 400,
-      icon: "🗺️"
+      id: 109,
+      name: "Cross-chain Bridge Test",
+      desc: "Successfully bridge assets from Ethereum to Stacks via an official portal",
+      reward: 210,
+      icon: "🌉"
     },
     {
-      id: 100,
-      name: "The Genesis Ultimate",
-      desc: "Achieve all 99 previous milestones to become a Genesis Legend",
-      reward: 5000,
-      icon: "🌌"
+      id: 110,
+      name: "Genesis Overlord",
+      desc: "Consolidate 10 high-tier Diamond Vaults into a single Master Node",
+      reward: 1200,
+      icon: "👑"
     }
   ]);
 
@@ -354,140 +354,4 @@ function App() {
 }
 
 export default App;
-// update 85 at Sel 31 Mar 2026 14:53:04 WIB
-// update 26 at Sel 31 Mar 2026 17:03:08 WIB
-// update 98 at Sel 31 Mar 2026 21:53:04 WIB
-// update 146 at Rab 01 Apr 2026 01:18:54 WIB
-// update 44 at Sab 04 Apr 2026 14:14:40 WIB
-// update 70 at Sab 04 Apr 2026 17:24:33 WIB
-// update 87 at Sab 04 Apr 2026 19:41:02 WIB
-// update 90 at Sab 04 Apr 2026 20:04:10 WIB
-// update 118 at Sab 04 Apr 2026 23:41:52 WIB
-// update 27 at Min 05 Apr 2026 16:33:33 WIB
-// update 32 at Min 05 Apr 2026 17:07:56 WIB
-// update 79 at Min 05 Apr 2026 22:58:11 WIB
-// update 107 at Sen 06 Apr 2026 02:16:48 WIB
-// update 134 at Sen 06 Apr 2026 05:31:53 WIB
-// update 138 at Sen 06 Apr 2026 06:07:09 WIB
-// update 41 at Sen 06 Apr 2026 23:11:34 WIB
-// update 66 at Sel 07 Apr 2026 02:19:42 WIB
-// update 74 at Sel 07 Apr 2026 03:17:08 WIB
-// update 37 at Rab 08 Apr 2026 15:17:46 WIB
-// update 64 at Rab 08 Apr 2026 18:38:15 WIB
-// update 68 at Rab 08 Apr 2026 19:07:48 WIB
-// update 84 at Rab 08 Apr 2026 21:04:15 WIB
-// update 105 at Rab 08 Apr 2026 23:37:42 WIB
-// update 112 at Kam 09 Apr 2026 00:29:09 WIB
-// update 123 at Kam 09 Apr 2026 01:54:42 WIB
-// update 146 at Kam 09 Apr 2026 04:44:22 WIB
-// update 25 at Jum 10 Apr 2026 14:20:47 WIB
-// update 82 at Jum 10 Apr 2026 21:19:41 WIB
-// update 16 at Sab 11 Apr 2026 16:07:33 WIB
-// update 33 at Sab 11 Apr 2026 18:13:44 WIB
-// update 4 at Min 12 Apr 2026 15:13:52 WIB
-// update 12 at Min 12 Apr 2026 19:13:25 WIB
-// update 4 at Sen 13 Apr 2026 09:29:10 WIB
-// update 5 at Sen 13 Apr 2026 09:34:21 WIB
-// update 57 at Sen 13 Apr 2026 14:44:03 WIB
-// update 72 at Sen 13 Apr 2026 16:20:26 WIB
-// update 45 at Sel 14 Apr 2026 12:48:21 WIB
-// update 2 at Rab 15 Apr 2026 08:59:19 WIB
-// update 26 at Rab 15 Apr 2026 11:21:55 WIB
-// update 5 at Rab 15 Apr 2026 23:28:09 WIB
-// update 23 at Kam 16 Apr 2026 01:16:36 WIB
-// update 28 at Kam 16 Apr 2026 01:46:46 WIB
-// update 66 at Kam 16 Apr 2026 05:36:20 WIB
-// update 125 at Kam 16 Apr 2026 11:37:13 WIB
-// update 126 at Kam 16 Apr 2026 11:41:45 WIB
-// update 39 at Kam 16 Apr 2026 22:22:16 WIB
-// update 42 at Kam 16 Apr 2026 22:38:23 WIB
-// update 88 at Jum 17 Apr 2026 03:05:06 WIB
-// update 1 at Jum 17 Apr 2026 11:22:24 WIB
-// update 18 at Sab 18 Apr 2026 11:31:04 WIB
-// update 27 at Sab 18 Apr 2026 12:25:48 WIB
-// update 64 at Sab 18 Apr 2026 16:32:28 WIB
-// update 199 at Min 19 Apr 2026 07:00:33 WIB
-// update 214 at Min 19 Apr 2026 08:38:58 WIB
-// update 218 at Min 19 Apr 2026 09:03:52 WIB
-// update 230 at Min 19 Apr 2026 10:17:20 WIB
-// update 231 at Min 19 Apr 2026 10:25:01 WIB
-// update 234 at Min 19 Apr 2026 10:41:57 WIB
-// update 235 at Min 19 Apr 2026 10:48:34 WIB
-// update 250 at Min 19 Apr 2026 12:21:09 WIB
-// update 23 at Min 19 Apr 2026 18:53:15 WIB
-// update 59 at Min 19 Apr 2026 22:58:28 WIB
-// update 70 at Sen 20 Apr 2026 00:11:22 WIB
-// update 91 at Sen 20 Apr 2026 02:29:18 WIB
-// update 135 at Sen 20 Apr 2026 07:02:56 WIB
-// update 45 at Sen 20 Apr 2026 19:30:46 WIB
-// update 72 at Sen 20 Apr 2026 22:35:37 WIB
-// update 126 at Sel 21 Apr 2026 04:09:25 WIB
-// update 142 at Sel 21 Apr 2026 05:49:15 WIB
-// update 181 at Sel 21 Apr 2026 10:04:46 WIB
-// update 13 at Sel 21 Apr 2026 14:56:18 WIB
-// update 31 at Sel 21 Apr 2026 16:47:45 WIB
-// update 82 at Sel 21 Apr 2026 22:09:39 WIB
-// update 19 at Rab 22 Apr 2026 16:41:13 WIB
-// update 23 at Rab 22 Apr 2026 17:10:31 WIB
-// update 47 at Rab 22 Apr 2026 19:43:26 WIB
-// update 73 at Rab 22 Apr 2026 22:34:22 WIB
-// update 15 at Kam 23 Apr 2026 00:40:49 WIB
-// update 23 at Kam 23 Apr 2026 01:33:19 WIB
-// update 42 at Kam 23 Apr 2026 03:28:33 WIB
-// update 88 at Kam 23 Apr 2026 08:32:41 WIB
-// update 26 at Kam 23 Apr 2026 10:43:01 WIB
-// update 17 at Kam 23 Apr 2026 14:35:39 WIB
-// update 108 at Kam 23 Apr 2026 22:23:44 WIB
-// update 113 at Kam 23 Apr 2026 22:45:15 WIB
-// update 122 at Kam 23 Apr 2026 23:22:41 WIB
-// update 178 at Jum 24 Apr 2026 04:01:43 WIB
-// update 14 at Jum 24 Apr 2026 13:23:25 WIB
-// update 26 at Jum 24 Apr 2026 14:21:03 WIB
-// update 129 at Sab 25 Apr 2026 02:34:07 WIB
-// update 174 at Sab 25 Apr 2026 06:22:08 WIB
-// update 177 at Sab 25 Apr 2026 06:40:16 WIB
-// update 203 at Sab 25 Apr 2026 08:53:09 WIB
-// update 163 at Min 26 Apr 2026 00:23:55 WIB
-// update 207 at Min 26 Apr 2026 04:05:11 WIB
-// update 264 at Min 26 Apr 2026 08:40:16 WIB
-// update 271 at Min 26 Apr 2026 09:16:15 WIB
-// update 287 at Min 26 Apr 2026 10:33:56 WIB
-// update 9 at Sen 27 Apr 2026 13:17:12 WIB
-// update 54 at Sen 27 Apr 2026 17:00:15 WIB
-// update 108 at Sen 27 Apr 2026 21:35:16 WIB
-// update 119 at Sen 27 Apr 2026 22:30:40 WIB
-// update 68 at Sel 28 Apr 2026 05:54:00 WIB
-// update 158 at Sel 28 Apr 2026 13:37:10 WIB
-// update 210 at Sel 28 Apr 2026 18:01:08 WIB
-// update 264 at Sel 28 Apr 2026 22:35:18 WIB
-// update 269 at Sel 28 Apr 2026 23:01:42 WIB
-// update 6 at Rab 29 Apr 2026 10:19:53 WIB
-// update 12 at Rab 29 Apr 2026 14:08:08 WIB
-// update 109 at Rab 29 Apr 2026 22:34:12 WIB
-// update 10 at Kam 30 Apr 2026 00:16:04 WIB
-// update 24 at Kam 30 Apr 2026 03:46:47 WIB
-// update 187 at Kam 30 Apr 2026 17:09:13 WIB
-// update 220 at Kam 30 Apr 2026 20:01:26 WIB
-// update 10 at Jum 01 Mei 2026 03:06:39 WIB
-// update 20 at Jum 01 Mei 2026 04:02:40 WIB
-// update 35 at Jum 01 Mei 2026 05:25:25 WIB
-// update 39 at Jum 01 Mei 2026 05:43:25 WIB
-// update 40 at Jum 01 Mei 2026 05:49:29 WIB
-// update 77 at Jum 01 Mei 2026 08:58:09 WIB
-// update 89 at Jum 01 Mei 2026 09:58:53 WIB
-// update 100 at Jum 01 Mei 2026 10:56:36 WIB
-// update 4 at Jum 01 Mei 2026 14:15:20 WIB
-// update 22 at Jum 01 Mei 2026 15:49:22 WIB
-// update 32 at Jum 01 Mei 2026 16:41:33 WIB
-// update 35 at Jum 01 Mei 2026 16:57:19 WIB
-// update 39 at Jum 01 Mei 2026 17:17:37 WIB
-// update 49 at Jum 01 Mei 2026 18:08:32 WIB
-// update 122 at Sab 02 Mei 2026 00:17:40 WIB
-// update 127 at Sab 02 Mei 2026 00:44:58 WIB
-// update 149 at Sab 02 Mei 2026 02:33:57 WIB
-// update 249 at Sab 02 Mei 2026 11:13:48 WIB
-// update 46 at Min 03 Mei 2026 21:13:12 WIB
-// update 47 at Min 03 Mei 2026 21:18:33 WIB
-// update 51 at Min 03 Mei 2026 21:36:52 WIB
-// update 80 at Min 03 Mei 2026 23:57:55 WIB
-// update 152 at Sen 04 Mei 2026 05:54:32 WIB
+
