@@ -1,6 +1,6 @@
 {
   "name": "@bayybays/stacksone-sdk",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "type": "module",
   "description": "The official high-performance SDK for StacksOne ecosystem. Tools and utilities for Clarity smart contracts and Web3 integration.",
   "main": "index.js",
