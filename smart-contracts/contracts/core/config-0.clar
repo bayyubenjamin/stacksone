@@ -1,6 +1,6 @@
-;; Config updated 2026-05-30T07:23:17Z
+;; Config updated 2026-05-30T11:05:37Z
 (define-constant ERR-UNAUTHORIZED (err u401))
-(define-data-var config-version uint u3)
+(define-data-var config-version uint u17)
 
 (define-read-only (get-config-version)
   (ok (var-get config-version))
