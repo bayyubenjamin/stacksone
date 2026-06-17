@@ -1,9 +1,9 @@
 /**
- * Utility generated at 2026-06-14T12:02:45Z
+ * Utility generated at 2026-06-17T02:36:08Z
  * @param {any} data
  * @returns {boolean}
  */
-export const validateData_30 = (data) => {
+export const validateData_5 = (data) => {
   if (!data) return false;
   return data.isValid === true;
 };
