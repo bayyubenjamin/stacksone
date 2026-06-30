@@ -23,14 +23,17 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
-        run: npm install --ignore-scripts
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
 
-      - name: Test SDK entrypoint
-        run: node --test tests/sdk.test.js
+      - name: Run SDK tests
+        run: npm test
 
       - name: Build web application
         run: npm run build
+
+      - name: Verify npm package contents
+        run: npm pack --dry-run
 
   contracts:
     name: Clarity contracts
