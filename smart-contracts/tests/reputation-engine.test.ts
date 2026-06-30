@@ -1,41 +1,58 @@
-import { Clarinet, Tx, Chain, Account, types } from "clarinet";
+import { describe, expect, it } from "vitest";
+import { Cl } from "@stacks/transactions";
 
-Clarinet.test({
-  name: "Initialize and increase reputation",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+const accounts = simnet.getAccounts();
+const deployer = accounts.get("deployer")!;
+const wallet1 = accounts.get("wallet_1")!;
+const wallet2 = accounts.get("wallet_2")!;
 
-    const deployer = accounts.get("deployer")!;
-    const wallet1 = accounts.get("wallet_1")!;
+describe("Reputation Engine", () => {
+  it("initializes a user and increases reputation through an admin", () => {
+    const initialized = simnet.callPublicFn(
+      "reputation-engine",
+      "init-user",
+      [Cl.principal(wallet1)],
+      wallet1,
+    );
+    expect(initialized.result).toBeOk(Cl.bool(true));
 
-    let block = chain.mineBlock([
-      Tx.contractCall(
-        "reputation-engine",
-        "init-user",
-        [types.principal(wallet1.address)],
-        wallet1.address
-      )
-    ]);
+    const increased = simnet.callPublicFn(
+      "reputation-engine",
+      "increase-score",
+      [Cl.principal(wallet1), Cl.uint(100)],
+      deployer,
+    );
+    expect(increased.result).toBeOk(Cl.bool(true));
 
-    block.receipts[0].result.expectOk();
-
-    block = chain.mineBlock([
-      Tx.contractCall(
-        "reputation-engine",
-        "increase-score",
-        [types.principal(wallet1.address), types.uint(100)],
-        deployer.address
-      )
-    ]);
-
-    block.receipts[0].result.expectOk();
-
-    let call = chain.callReadOnlyFn(
+    const user = simnet.callReadOnlyFn(
       "reputation-engine",
       "get-user",
-      [types.principal(wallet1.address)],
-      deployer.address
+      [Cl.principal(wallet1)],
+      deployer,
+    );
+    expect(user.result).toBeSome(
+      Cl.tuple({
+        score: Cl.uint(100),
+        multiplier: Cl.uint(2),
+      }),
+    );
+  });
+
+  it("rejects reputation increases from non-admin wallets", () => {
+    simnet.callPublicFn(
+      "reputation-engine",
+      "init-user",
+      [Cl.principal(wallet1)],
+      wallet1,
     );
 
-    call.result.expectSome();
-  }
+    const result = simnet.callPublicFn(
+      "reputation-engine",
+      "increase-score",
+      [Cl.principal(wallet1), Cl.uint(50)],
+      wallet2,
+    );
+
+    expect(result.result).toBeErr(Cl.uint(100));
+  });
 });
