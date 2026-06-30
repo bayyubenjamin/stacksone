@@ -1,11 +1,24 @@
 [project]
-name = "stacksone-vault-v7"
-description = "StacksOne Vault V7"
-authors = []
-telemetry = true
+name = "stacksone"
+description = "StacksOne protocol contracts and integration tests"
+authors = ["Bayu Benjamin"]
+telemetry = false
 cache_dir = "./.cache"
+requirements = [
+  { contract_id = "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard" }
+]
 
 [contracts.chaintap]
-path = 'contracts/chaintap.clar'
+path = "contracts/chaintap.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.token-one]
+path = "contracts/token-one.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.reputation-engine]
+path = "contracts/reputation-engine.clar"
 clarity_version = 2
 epoch = 2.5

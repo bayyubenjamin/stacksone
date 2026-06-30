@@ -1,11 +1,20 @@
 # Contract Registry
 
-| Module | Contract | Status | Network |
-|--------|----------|--------|---------|
-| Core | reputation-engine | Deployed | Mainnet |
-| Core | genesis-boost-v1 | Deployed | Mainnet |
-| Module | genesis-duel-v1 | Deployed | Mainnet |
-| Module | genesis-lucky-v1 | Deployed | Mainnet |
-| Module | genesis-predict-v1 | Deployed | Mainnet |
+Canonical configuration lives in `sdk/contracts.js`.
 
-Last Updated: Feb 27, 2026
+Deployer: `SP3GHKMV4GSYNA8WGBX83DACG80K1RRVQZAZMB9J3`
+
+| Capability | Contract |
+|---|---|
+| Core | `genesis-core-v10` |
+| Missions | `genesis-missions-v10` |
+| Badges | `genesis-badges-v10` |
+| Leaderboard | `genesis-leaderboard-v1` |
+| Boost | `genesis-boost-v1` |
+| ChainTap | `chaintap` |
+| POIN | `token-poin` |
+| ONE | `token-one` |
+
+Frontend code should import these values instead of repeating identifiers.
+
+Last reviewed: June 30, 2026.

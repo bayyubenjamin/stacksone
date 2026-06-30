@@ -23,14 +23,17 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
-        run: npm install --ignore-scripts
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
 
-      - name: Test SDK entrypoint
-        run: node --test tests/sdk.test.js
+      - name: Run SDK tests
+        run: npm test
 
       - name: Build web application
         run: npm run build
+
+      - name: Verify npm package contents
+        run: npm pack --dry-run
 
   contracts:
     name: Clarity contracts
@@ -54,4 +57,26 @@ jobs:
         run: npm ci
 
       - name: Run contract tests
-        run: npm test
+        id: contract-tests
+        shell: bash
+        run: |
+          set +e
+          npm test > contract-test.log 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload contract test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-test-log
+          path: smart-contracts/contract-test.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce contract test result
+        shell: bash
+        run: |
+          cat contract-test.log
+          test "${{ steps.contract-tests.outputs.status }}" -eq 0
