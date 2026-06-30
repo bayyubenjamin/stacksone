@@ -1,47 +1,28 @@
 # Security Policy
 
-## Supported Versions
+## Supported line
 
-The current supported version is:
+The actively maintained package line is `2.x`.
 
-- v0.1.0
+## Reporting
 
-Older versions may not receive security updates.
+Report suspected security issues privately to the repository maintainer. Include the affected component, reproducible steps, observed behavior, expected behavior, and impact. Do not disclose an unresolved issue in a public discussion.
 
----
+## Boundaries
 
-## Reporting a Vulnerability
+- Clarity contracts enforce authorization and ownership.
+- Frontend validation is a user-experience control.
+- Wallet submission is not final confirmation.
+- On-chain records remain authoritative.
+- Supabase is optional and must not override chain state.
+- Contract identifiers are centralized in `sdk/contracts.js`.
 
-If you discover a security vulnerability within StacksOne Vault:
+## Current limitations
 
-- Do NOT open a public issue.
-- Contact the maintainer directly via GitHub.
-- Provide:
-  - Detailed description of the issue
-  - Steps to reproduce
-  - Expected vs actual behavior
-  - Potential impact assessment
+- No independent third-party audit has been completed.
+- Administrative operation needs a documented multisig process.
+- No protocol-wide pause mechanism is available.
+- Deployed contracts require a new version for logic changes.
+- The v10 mission interface keeps caller-supplied reward arguments for compatibility; a future version should resolve rewards from contract-controlled state.
 
-All valid security reports will be acknowledged and reviewed.
-
----
-
-## Security Model Overview
-
-StacksOne Vault implements:
-
-- Dual-Authorization contract architecture
-- Restricted minting logic (Core-only access)
-- Explicit error-based authorization checks (`err u101`)
-- Deterministic testing via Clarinet simnet
-- CI-based validation pipeline
-
----
-
-## Known Limitations
-
-- Admin privileges are currently single-sig.
-- No emergency pause mechanism implemented (planned).
-- No third-party audit completed yet.
-
-Security improvements are part of the ongoing roadmap.
+Changes to authorization, rewards, contract identifiers, or asset presentation require tests and CI validation.
