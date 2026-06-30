@@ -1,11 +1,16 @@
-name: Stacks Smart Contracts CI
+name: Repository CI
 
 on:
+  pull_request:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  web:
+    name: Web app and SDK
     runs-on: ubuntu-latest
 
     steps:
@@ -15,19 +20,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: npm
 
-      # Install root dependencies (untuk tailwind/postcss)
-      - name: Install root dependencies
-        run: npm install
+      - name: Install dependencies
+        run: npm install --ignore-scripts
 
-      # Install smart-contract dependencies
-      - name: Install smart-contract dependencies
-        run: |
-          cd smart-contracts
-          npm install
+      - name: Test SDK entrypoint
+        run: node --test tests/sdk.test.js
 
-      - name: Run tests
-        run: |
-          cd smart-contracts
-          npm run test
+      - name: Build web application
+        run: npm run build
+
+  contracts:
+    name: Clarity contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smart-contracts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: smart-contracts/package-lock.json
+
+      - name: Install contract test dependencies
+        run: npm ci
+
+      - name: Run contract tests
+        run: npm test
