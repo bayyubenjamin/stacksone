@@ -57,4 +57,26 @@ jobs:
         run: npm ci
 
       - name: Run contract tests
-        run: npm test
+        id: contract-tests
+        shell: bash
+        run: |
+          set +e
+          npm test > contract-test.log 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload contract test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-test-log
+          path: smart-contracts/contract-test.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce contract test result
+        shell: bash
+        run: |
+          cat contract-test.log
+          test "${{ steps.contract-tests.outputs.status }}" -eq 0
