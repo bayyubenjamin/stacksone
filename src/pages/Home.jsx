@@ -40,12 +40,13 @@ const BadgeCard = ({ id, title, subtitle, reqText, isLocked, isMinted, isPending
 const Home = ({ userData, userXP, userLevel, handleMint }) => {
   const [loadingBadges, setLoadingBadges] = useState(false);
   const [badges, setBadges] = useState(() => BADGE_CATALOG.map((badge) => ({ ...badge, isMinted: false })));
-  const [pendingBadgeId, setPendingBadgeId] = useState(null);
+  const [pendingBadgeIds, setPendingBadgeIds] = useState(() => new Set());
   const wallet = userData?.profile?.stxAddress?.mainnet;
 
   const syncBadgeStatusFromBlockchain = useCallback(async () => {
     if (!wallet) {
       setBadges(BADGE_CATALOG.map((badge) => ({ ...badge, isMinted: false })));
+      setPendingBadgeIds(new Set());
       return;
     }
 
@@ -55,26 +56,33 @@ const Home = ({ userData, userXP, userLevel, handleMint }) => {
         ...badge,
         isMinted: await client.hasBadge(wallet, badge.id),
       })));
+
       setBadges(updatedBadges);
-      if (updatedBadges.some((badge) => badge.id === pendingBadgeId && badge.isMinted)) {
-        setPendingBadgeId(null);
-      }
+      setPendingBadgeIds((current) => {
+        const next = new Set(current);
+        updatedBadges.forEach((badge) => {
+          if (badge.isMinted) next.delete(badge.id);
+        });
+        return next;
+      });
     } catch (error) {
       console.error('Error syncing badges:', error);
     } finally {
       setLoadingBadges(false);
     }
-  }, [pendingBadgeId, wallet]);
+  }, [wallet]);
 
   useEffect(() => {
     syncBadgeStatusFromBlockchain();
   }, [syncBadgeStatusFromBlockchain]);
 
   const onMintClick = async (badgeId) => {
+    if (pendingBadgeIds.has(badgeId)) return;
+
     const submitted = await handleMint(badgeId);
     if (!submitted) return;
 
-    setPendingBadgeId(badgeId);
+    setPendingBadgeIds((current) => new Set(current).add(badgeId));
     window.setTimeout(syncBadgeStatusFromBlockchain, 20_000);
     window.setTimeout(syncBadgeStatusFromBlockchain, 60_000);
   };
@@ -101,7 +109,7 @@ const Home = ({ userData, userXP, userLevel, handleMint }) => {
             <div key={badge.id} style={{ animationDelay: `${index * 100}ms` }}>
               <BadgeCard
                 {...badge}
-                isPending={pendingBadgeId === badge.id}
+                isPending={pendingBadgeIds.has(badge.id)}
                 isLocked={!userData || userLevel < badge.minLevel || userXP < badge.minXP}
                 isLoading={loadingBadges}
                 onMint={onMintClick}
